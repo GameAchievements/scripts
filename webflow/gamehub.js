@@ -231,7 +231,7 @@ function reviewsBarsHandler({ listData, elemId }) {
     const $bar = $(`.gas-bar-${barName}`, $barsContainer);
     if ($bar.length) {
       // when barItems == 0, 1% width shows a little bit of the bar
-      $bar.css("width", `${100 * (barItems.length / listData.length || 1)}%`);
+      $bar.css("width", `${100 * (barItems.length / listData.length) || 1}%`);
     }
     const $barText = $(`.gas-bar-text-${barName}`, $barsContainer);
     if ($barText.length) {
@@ -239,16 +239,15 @@ function reviewsBarsHandler({ listData, elemId }) {
     }
   });
 
-  const $rateWrapper = $(`.gas-avg-rate-wrapper`, $barsContainer);
-  if ($rateWrapper.length) {
-    const avgRating = Math.round(
-      listData
-        .map((li) => li.rating)
-        .reduce((prevLi, currLi) => prevLi + currLi) / listData.length
-    );
-    $rateWrapper.prepend(ratingSVG(avgRating));
-    $(".gas-avg-rate-text", $rateWrapper).text(avgRating);
-  }
+  const avgRating = Math.round(
+    listData
+      .map((li) => li.rating)
+      .reduce((prevLi, currLi) => prevLi + currLi) / listData.length
+  );
+  $(`.gas-avg-rate-wrapper`).each((idx, rateEl) => {
+    $(rateEl).prepend(ratingSVG(avgRating));
+    $(".gas-avg-rate-text", rateEl).text(avgRating);
+  });
 }
 
 async function listFetcher({
@@ -276,8 +275,15 @@ async function listFetcher({
               )?.length;
       });
     }
-    if (listName === "reviews") {
-      reviewsBarsHandler({ listData, elemId });
+    switch (listName) {
+      case "reviews":
+        reviewsBarsHandler({ listData, elemId });
+        break;
+      case "guides":
+        $(`${elemIdPrefix}-top .gas-count-guides`).text(listName.length);
+        break;
+      default:
+        break;
     }
     listResponseHandler({
       listData,
@@ -288,14 +294,6 @@ async function listFetcher({
       tabMatcher,
     });
   }
-  setTimeout(() => {
-    $(`${elemId} .ga-loader-container`).hide();
-    $(`${elemId} .gas-list-header`).show();
-    if (!listData?.length) {
-      $(`${elemId} .gas-list-empty`).show();
-      return;
-    }
-  }, 600);
 }
 
 function achieversHandler({
@@ -373,33 +371,21 @@ function achieversHandler({
 }
 
 async function achieversFetcher({
+  listName,
   numKeysToReplace,
   textKeysToReplace,
-  tabs,
-  tabMatcher,
 }) {
-  const sectionName = "achievers";
-  const elemId = `${elemIdPrefix}-${sectionName}`;
+  const elemId = `${elemIdPrefix}-${listName}`;
   const resLists = await fetch(
-    `https://${apiDomain}/api/game/${gameId}/${sectionName}`
+    `https://${apiDomain}/api/game/${gameId}/${listName}`
   );
   const listsData = await resLists.json();
-  if (listsData?.firstAchievers?.length) {
-    achieversHandler({
-      listsData,
-      elemId,
-      numKeysToReplace,
-      textKeysToReplace,
-    });
-  }
-  setTimeout(() => {
-    $(`${elemId} .ga-loader-container`).hide();
-    $(`${elemId} .gas-list-header`).show();
-    if (!listsData?.firstAchievers?.length) {
-      $(`${elemId} .gas-list-empty`).show();
-      return;
-    }
-  }, 600);
+  achieversHandler({
+    listsData,
+    elemId,
+    numKeysToReplace,
+    textKeysToReplace,
+  });
 }
 
 window.onload = async () => {
@@ -436,12 +422,9 @@ window.onload = async () => {
     tabMatcher: "classification",
   });
   await achieversFetcher({
-    listName: "guides",
+    listName: "achievers",
     numKeysToReplace: ["id", "achievementId"],
     textKeysToReplace: ["profileId", "achievementName", "playerName", "name"],
   });
-
-  setTimeout(() => {
-    $(".ga-loader-container").hide();
-  }, 600);
+  $("#gas-wf-tab-activator").click();
 };
