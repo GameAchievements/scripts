@@ -180,9 +180,12 @@ function listResponseHandler({
               `{|${key}|}`,
               Math.round(value || 0)
             );
-            const $rateBgImg = $(`.gas-list-entry-rating`, dataTemplateActual);
-            if ($rateBgImg.length) {
-              dataTemplateActual = $rateBgImg
+            const $rateWrapper = $(
+              `.gas-list-entry-rating`,
+              dataTemplateActual
+            );
+            if ($rateWrapper.length) {
+              dataTemplateActual = $rateWrapper
                 .prepend(ratingSVG(value))
                 .parents(".gas-list-entry")
                 .prop("outerHTML");
@@ -235,6 +238,17 @@ function reviewsBarsHandler({ listData, elemId }) {
       $barText.text(barItems?.length);
     }
   });
+
+  const $rateWrapper = $(`.gas-avg-rate-wrapper`, $barsContainer);
+  if ($rateWrapper.length) {
+    const avgRating = Math.round(
+      listData
+        .map((li) => li.rating)
+        .reduce((prevLi, currLi) => prevLi + currLi) / listData.length
+    );
+    $rateWrapper.prepend(ratingSVG(avgRating));
+    $(".gas-avg-rate-text", $rateWrapper).text(avgRating);
+  }
 }
 
 async function listFetcher({
