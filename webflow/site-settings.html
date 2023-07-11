@@ -1,0 +1,419 @@
+<!------------------------------------- Header code ------------------------------------->
+<meta name="domain" content="gameachievements.up.railway.app" />
+<!-- for pages that should redirect to profile
+  <meta name="loginRedirectPath" content="/profile" />
+-->
+
+<style>
+  .auth-visible,
+  .auth-invisible {
+    visibility: hidden;
+  }
+
+  .auth-hidden {
+    display: none !important;
+  }
+
+  .ga-list-header,
+  .ga-list,
+  .ga-list-empty,
+  .ga-logo-playstation,
+  .ga-logo-xbox,
+  .ga-logo-steam,
+  .gas-list,
+  .gas-list-empty,
+  .gas-platform-psn,
+  .gas-platform-xbox,
+  .gas-platform-steam {
+    display: none;
+  }
+
+  .bg-review-score {
+    width: 7.5rem
+  }
+
+  .gas-text-2-lines,
+  .ga-list-entry-description {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .ga-tags-entry {
+    background: #fff;
+    border-radius: 3px;
+    color: #000;
+    font-size: 7px;
+    font-weight: 700;
+    height: min-content;
+    line-height: normal;
+    min-width: 50px;
+    padding: 2px;
+  }
+
+  /* from https://cssloaders.github.io */
+  .ga-loader {
+    transform: rotateZ(45deg);
+    perspective: 1000px;
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    color: #fff;
+    margin: 0 auto;
+  }
+
+  .ga-loader:before,
+  .ga-loader:after {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: inherit;
+    height: inherit;
+    border-radius: 50%;
+    transform: rotateX(70deg);
+    animation: 0.3s spin linear infinite;
+  }
+
+  .ga-loader:after {
+    color: #aa00dd;
+    transform: rotateY(70deg);
+    animation-delay: 0.4s;
+  }
+
+  @keyframes rotate {
+    0% {
+      transform: translate(-50%, -50%) rotateZ(0deg);
+    }
+
+    100% {
+      transform: translate(-50%, -50%) rotateZ(360deg);
+    }
+  }
+
+  @keyframes rotateccw {
+    0% {
+      transform: translate(-50%, -50%) rotate(0deg);
+    }
+
+    100% {
+      transform: translate(-50%, -50%) rotate(-360deg);
+    }
+  }
+
+  @keyframes spin {
+
+    0%,
+    100% {
+      box-shadow: 0.35em 0px 0 0px currentcolor;
+    }
+
+    12% {
+      box-shadow: 0.35em 0.35em 0 0 currentcolor;
+    }
+
+    25% {
+      box-shadow: 0 0.35em 0 0px currentcolor;
+    }
+
+    37% {
+      box-shadow: -0.35em 0.35em 0 0 currentcolor;
+    }
+
+    50% {
+      box-shadow: -0.35em 0 0 0 currentcolor;
+    }
+
+    62% {
+      box-shadow: -0.35em -0.35em 0 0 currentcolor;
+    }
+
+    75% {
+      box-shadow: 0px -0.35em 0 0 currentcolor;
+    }
+
+    87% {
+      box-shadow: 0.35em -0.35em 0 0 currentcolor;
+    }
+  }
+</style>
+
+<!------------------------------------- Footer code ------------------------------------->
+
+<!-- ~~~ Layout helpers ~~~ -->
+<script>
+  const gaDate = (isoDate) => {
+    const pad = (v) => `0${v}`.slice(-2);
+    const dateObj = new Date(isoDate);
+    return `${dateObj.getFullYear()} . ${pad(dateObj.getMonth() + 1)} . ${pad(dateObj.getDate())}`;
+    //_${pad(dateObj.getHours())}-${pad(dateObj.getMinutes())}`
+  }
+  const gaDateTime = (isoDate) => {
+    const dateObj = new Date(isoDate);
+    const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    const date = dateObj.getDate() + " " + month[dateObj.getMonth()] + ", " + dateObj.getFullYear();
+    const time = dateObj.toLocaleTimeString().toLowerCase();
+    return { date, time }
+  }
+  const showPlatform = (
+    platformName,
+    dataTemplateActual,
+    parentSelector = '.gas-list-entry'
+  ) => {
+    const platformVerifier = {
+      ps: { rgx: /playstation/gi },
+      xbox: { rgx: /xbox/gi },
+      steam: { rgx: /steam|pc|windows|mac|linux/gi }
+    };
+    if (platformVerifier.ps.rgx.test(platformName)) {
+      dataTemplateActual = $(`.gas-platform-psn`, dataTemplateActual)
+        .css('display', 'inherit')
+        .parents(parentSelector)
+        .prop('outerHTML');
+    }
+    if (platformVerifier.steam.rgx.test(platformName)) {
+      dataTemplateActual = $(`.gas-platform-steam`, dataTemplateActual)
+        .css('display', 'inherit')
+        .parents(parentSelector)
+        .prop('outerHTML');
+    }
+    if (platformVerifier.xbox.rgx.test(platformName)) {
+      dataTemplateActual = $(`.gas-platform-xbox`, dataTemplateActual)
+        .css('display', 'inherit')
+        .parents(parentSelector)
+        .prop('outerHTML');
+    }
+    return dataTemplateActual;
+  }
+  const rarityClassCalc = (percent) => {
+    if (percent < 25) {
+      return 'common';
+    } else if (percent < 5) {
+      return 'rare';
+    } else if (percent < 75) {
+      return 'very-rare';
+    } else if (percent >= 75) {
+      return 'ultra-rare';
+    }
+  }
+</script>
+
+<!-- ~~~ users and auth0 helpers ~~~ -->
+<script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
+<script>
+  let auth0Client = null; // auth0 client initialized in configureClient()
+  let userAuth0Data = null;
+
+  /**
+   * Starts the authentication flow
+   */
+  const login = async () => {
+    try {
+      const targetUrl = document.querySelector(
+        'meta[name=loginRedirectPath]'
+      )?.content;
+      console.log(`[auth0] On "${targetUrl}" path`);
+      const options = {
+        authorizationParams: {
+          redirect_uri: window.location.origin
+        }
+      };
+
+      if (targetUrl) {
+        options.appState = { targetUrl };
+      }
+
+      await auth0Client.loginWithRedirect(options);
+    } catch (err) {
+      console.log('[auth0] Log in failed', err);
+    }
+  };
+
+  /**
+   * Executes the logout flow
+   */
+  const logout = () => {
+    try {
+      console.log('[auth0] Logging out');
+      auth0Client.logout({
+        logoutParams: {
+          returnTo: window.location.origin
+        }
+      });
+    } catch (err) {
+      console.log('[auth0] Log out failed', err);
+    }
+  };
+
+  /**
+   * Initializes the Auth0 client
+   */
+  const configureClient = async () => {
+    const apiDomain = document.querySelector('meta[name=domain]')?.content;
+    const response = await fetch(`https://${apiDomain}/api/config`);
+    const config = await response.json();
+
+    if (!config?.clientId?.length) {
+      console.log('[auth0] config is invalid');
+      return;
+    }
+
+    auth0Client = await auth0.createAuth0Client({
+      domain: config.domain,
+      clientId: config.clientId,
+      authorizationParams: {
+        audience: config.audience
+      }
+    });
+  };
+
+  const callApi = async () => {
+    try {
+      // Get the access token from the Auth0 client
+      const token = await auth0Client.getTokenSilently();
+
+      const apiDomain = document.querySelector('meta[name=domain]')?.content;
+      const response = await fetch(`https://${apiDomain}/api/authorized`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const responseData = await response.json();
+      // Display the result in the output element
+      const responseElement = document.getElementById('api-call-result');
+      if (responseElement) {
+        responseElement.innerText = JSON.stringify(
+          { ...responseData, ...userAuth0Data },
+          {},
+          2
+        );
+      }
+    } catch (err) {
+      console.error('[auth0] calling API error', err);
+    }
+  };
+
+  /**
+   * Add click events
+   */
+  const setButtonsTriggers = () => {
+    const loginBtn = document.getElementById('login-btn');
+    const signUpBtn = document.getElementById('signup-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+    const apiBtn = document.getElementById('api-btn');
+
+    if (loginBtn) {
+      loginBtn.addEventListener('click', login);
+    }
+
+    if (signUpBtn) {
+      signUpBtn.addEventListener('click', login);
+    }
+
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', logout);
+    }
+
+    if (apiBtn) {
+      apiBtn.addEventListener('click', callApi);
+    }
+  };
+
+  /**
+   * Iterates over the elements matching 'selector' and passes them
+   * to 'fn'
+   * @param {*} selector The CSS selector to find
+   * @param {*} fn The function to execute for every element
+   */
+  const eachElement = (selector, fn) => {
+    for (let e of document.querySelectorAll(selector)) {
+      fn(e);
+    }
+  };
+
+  /**
+   * Shows and hides UI elements
+   */
+  const updateUI = async (isAuthenticated) => {
+    try {
+      if (isAuthenticated) {
+        userAuth0Data = await auth0Client.getUser();
+
+        eachElement('.auth-invisible', (e) => e.classList.add('auth-hidden'));
+        eachElement('.auth-visible', (e) => {
+          e.classList.remove('auth-hidden');
+          e.style.visibility = 'visible';
+        });
+      } else {
+        eachElement('.auth-invisible', (e) => {
+          e.classList.remove('auth-hidden');
+          e.style.visibility = 'visible';
+        });
+        eachElement('.auth-visible', (e) => e.classList.add('auth-hidden'));
+      }
+    } catch (err) {
+      console.log('[auth0] Error updating UI!', err);
+      return;
+    }
+  };
+
+  const auth0Bootstrap = async (replaceURL = false) => {
+    try {
+      await configureClient();
+    } catch (err) {
+      console.error('[auth0] Config error or auth0 unavailable.');
+      return;
+    }
+    setButtonsTriggers();
+
+    const isAuthenticated = await auth0Client.isAuthenticated();
+
+    if (isAuthenticated) {
+      console.log(
+        '[auth0] User is authenticated on ' + window.location.pathname
+      );
+      if (replaceURL) {
+        // "query parameters must be removed from the URL so that if the user refreshes the page,
+        //  the app does not try to parse the state and code parameters again.
+        //  This is achieved with the window.history.replaceState method"
+        //  https://auth0.com/docs/quickstart/spa/vanillajs
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        );
+      }
+      return await updateUI(isAuthenticated);
+    }
+
+    console.log('[auth0] User not authenticated');
+
+    const query = window.location.search;
+    const shouldParseResult =
+      query.includes('code=') && query.includes('state=');
+
+    if (shouldParseResult) {
+      console.log('[auth0] Parsing redirect');
+      try {
+        const result = await auth0Client.handleRedirectCallback();
+
+        if (result.appState && result.appState.targetUrl) {
+          window.location.replace(result.appState.targetUrl);
+        } else {
+          window.location.reload();
+        }
+
+        console.log('[auth0] Logged in!');
+      } catch (err) {
+        console.log('[auth0] Error parsing redirect:', err);
+      }
+    }
+
+    updateUI(isAuthenticated);
+    return userAuth0Data;
+  };
+</script>
