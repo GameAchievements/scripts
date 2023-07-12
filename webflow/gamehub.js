@@ -52,17 +52,16 @@ function gamehubResponseHandler(res, elemId) {
   ];
   const dateKeysToReplace = ["releaseDate"];
   const keysWithArrays = ["genres", "modes", "publishers", "developers"];
-  $(".gas-cover", dataTemplateActual).each((idx, elm) => {
-    dataTemplateActual = $(elm)
+  if (elemId.endsWith("top")) {
+    dataTemplateActual = $ghContainer
       .css(
         "background-image",
         `linear-gradient(rgba(255,255,255,0),#030922),
-        linear-gradient(rgba(70,89,255,.4),rgba(70,89,255,.4)),
-        url(${res.coverURL || res.imageURL})`
+          linear-gradient(rgba(70,89,255,.4),rgba(70,89,255,.4)),
+          url(${res.coverURL || res.imageURL})`
       )
-      .parents(elemId)
       .prop("outerHTML");
-  });
+  }
   $(".gas-img", dataTemplateActual).each((idx, elm) => {
     dataTemplateActual = $(elm)
       .removeAttr("srcset")
@@ -103,6 +102,9 @@ async function fetchGamehub(elemIdsSuffixes) {
   const resFetch = await fetch(`https://${apiDomain}/api/game/${gameId}`);
   const resData = await resFetch.json();
   if (Object.keys(resData).length > 0 && resData.id) {
+    document.title = `${resData.name?.length ? resData.name : resData.id} | ${
+      document.title
+    }`;
     elemIdsSuffixes.forEach((elemIdSuf) => {
       gamehubResponseHandler(resData, `${elemIdPrefix}-${elemIdSuf}`);
     });
@@ -124,7 +126,7 @@ function listResponseHandler({
     tabMatcher = "platform";
     tabCounts = {
       allCnt: listData.length,
-      psCnt: listData.filter(
+      playstationCnt: listData.filter(
         (item) => item[tabMatcher].toLowerCase() === "playstation"
       )?.length,
       xboxCnt: listData.filter(
@@ -223,31 +225,42 @@ function listResponseHandler({
 
 function reviewsBarsHandler({ listData, elemId }) {
   const $barsContainer = $(elemId + "-bars");
-  let barItems;
-  ["positive", "mixed", "negative"].forEach((barName) => {
-    barItems = listData.filter(
-      (item) => item.classification?.toLowerCase() === barName
-    );
-    const $bar = $(`.gas-bar-${barName}`, $barsContainer);
-    if ($bar.length) {
-      // when barItems == 0, 1% width shows a little bit of the bar
-      $bar.css("width", `${100 * (barItems.length / listData.length) || 1}%`);
-    }
-    const $barText = $(`.gas-bar-text-${barName}`, $barsContainer);
-    if ($barText.length) {
-      $barText.text(barItems?.length);
-    }
-  });
+  let barItems = [];
+  const bars = ["positive", "mixed", "negative"];
+  if (listData.length) {
+    bars.forEach((barName) => {
+      barItems = listData.filter(
+        (item) => item.classification?.toLowerCase() === barName
+      );
+      const $bar = $(`.gas-bar-${barName}`, $barsContainer);
+      if ($bar.length) {
+        // when barItems == 0, 1% width shows a little bit of the bar
+        $bar.css("width", `${100 * (barItems.length / listData.length) || 1}%`);
+      }
+      const $barText = $(`.gas-bar-text-${barName}`, $barsContainer);
+      if ($barText.length) {
+        $barText.text(barItems?.length);
+      }
+    });
 
-  const avgRating = Math.round(
-    listData
-      .map((li) => li.rating)
-      .reduce((prevLi, currLi) => prevLi + currLi) / listData.length
-  );
-  $(`.gas-avg-rate-wrapper`).each((idx, rateEl) => {
-    $(rateEl).prepend(ratingSVG(avgRating));
-    $(".gas-avg-rate-text", rateEl).text(avgRating);
-  });
+    const avgRating = Math.round(
+      listData
+        .map((li) => li.rating)
+        .reduce((prevLi, currLi) => prevLi + currLi) / listData.length
+    );
+    $(`.gas-avg-rate-wrapper`).each((idx, rateEl) => {
+      $(rateEl).prepend(ratingSVG(avgRating));
+      $(".gas-avg-rate-text", rateEl).text(avgRating);
+    });
+  } else {
+    bars.forEach((barName) => {
+      $(`.gas-bar-${barName}`, $barsContainer).css("width", "1%");
+    });
+    $(`.gas-avg-rate-wrapper`).each((idx, rateEl) => {
+      $(rateEl).prepend(ratingSVG(0));
+      $(".gas-avg-rate-text", rateEl).text("-");
+    });
+  }
 }
 
 async function listFetcher({
@@ -278,6 +291,22 @@ async function listFetcher({
     switch (listName) {
       case "reviews":
         reviewsBarsHandler({ listData, elemId });
+
+        $(`.gas-count-reviews`).each((idx, revEl) => {
+          $(revEl).text(
+            $(revEl).text().replace("{|reviewsCnt|}", listData.length)
+          );
+          if (idx > 0) {
+            $(revEl).text(
+              $(revEl)
+                .text()
+                .replace(
+                  `{|${tabs[idx]}ReviewsCnt|}`,
+                  tabCounts[`${tabs[idx]}Cnt`]
+                )
+            );
+          }
+        });
         break;
       case "guides":
         $(`${elemIdPrefix}-top .gas-count-guides`).text(listName.length);
@@ -310,14 +339,15 @@ function achieversHandler({
     const $list = $(listEl);
     let dataTemplate = $list.prop("outerHTML");
     const $emptyList = $(`.gas-list-empty`, $list);
+    const $listHeader = $list.children().first();
+    const $entryTemplate = $(".gas-list-entry", $list).first();
+    $list.html($listHeader);
     const listDataToRead =
       listsData[listIdx === 0 ? "firstAchievers" : "latestAchievers"];
     if (listDataToRead?.length > 0) {
-      const $listHeader = $list.children().first();
-      const $entryTemplate = $(".gas-list-entry", $list).first();
       $entryTemplate.show();
+      $list.append($entryTemplate);
       dataTemplate = $entryTemplate.prop("outerHTML");
-      $list.html($listHeader).append($entryTemplate);
       $entryTemplate.hide();
       listDataToRead.forEach((item, itemIdx) => {
         let dataTemplateActual = dataTemplate;
@@ -364,7 +394,7 @@ function achieversHandler({
           .addClass(`bg-${itemIdx % 2 > 0 ? "light" : "dark"}`);
       });
     } else {
-      $list.html($emptyList);
+      $list.append($emptyList);
       $emptyList.show();
     }
   });
