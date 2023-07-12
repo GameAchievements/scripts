@@ -309,7 +309,7 @@ async function listFetcher({
         });
         break;
       case "guides":
-        $(`${elemIdPrefix}-top .gas-count-guides`).text(listName.length);
+        $(`${elemIdPrefix}-top .gas-count-guides`).text(listData.length);
         break;
       default:
         break;
