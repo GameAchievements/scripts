@@ -9,26 +9,18 @@
 const axios = require("axios");
 
 exports.onExecutePostUserRegistration = async (event, api) => {
-  try {
-    const { email, name, username, nickname, user_id } = event.user;
-    const resSignup = await axios({
-      method: "post",
-      url: "https://gameachievements.up.railway.app/api/user",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      data: {
-        email,
-        name: name || username || nickname,
-        auth0Id: user_id,
-      },
-    });
-    console.log("[auth0][pos-reg] signed up", resSignup?.data);
-  } catch (err) {
-    console.log(
-      `[auth0][pos-reg] Error on "${event.user.email}" signup`,
-      err.message
-    );
-  }
+  const { email, name, username, nickname, user_id } = event.user;
+  return await axios({
+    method: "post",
+    url: "https://gameachievements.up.railway.app/api/user",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    data: {
+      email,
+      name: name || username || nickname,
+      auth0Id: user_id,
+    },
+  });
 };

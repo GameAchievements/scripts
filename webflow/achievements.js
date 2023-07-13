@@ -116,7 +116,7 @@ async function fetchAchievements(elemId) {
   }, 600);
 }
 window.onload = async () => {
-  // await auth0Bootstrap();
+  await auth0Bootstrap();
   const achievementsElemId = "#gas-list-achievements";
   $(`${achievementsElemId} .gas-filters-sw-li`).on("click", (ev) =>
     filterByLetter(achievementsElemId, ev)
