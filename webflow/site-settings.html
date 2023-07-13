@@ -32,6 +32,12 @@
     width: 7.5rem
   }
 
+  .gas-text-overflow {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .gas-text-2-lines,
   .ga-list-entry-description {
     display: -webkit-box;
@@ -343,6 +349,8 @@
       if (isAuthenticated) {
         userAuth0Data = await auth0Client.getUser();
 
+        // sub is useful as id https://stackoverflow.com/a/43429956/6225838
+        $(".gas-profile-email").text(userAuth0Data.email);
         eachElement('.auth-invisible', (e) => e.classList.add('auth-hidden'));
         eachElement('.auth-visible', (e) => {
           e.classList.remove('auth-hidden');

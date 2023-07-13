@@ -419,7 +419,7 @@ async function achieversFetcher({
 }
 
 window.onload = async () => {
-  // await auth0Bootstrap();
+  await auth0Bootstrap();
   await fetchGamehub(["top", "about"]);
   await listFetcher({
     listName: "achievements",

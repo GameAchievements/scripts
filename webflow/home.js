@@ -106,7 +106,7 @@ async function fetchAchievements(type) {
   }, 300);
 }
 window.onload = async () => {
-  // await auth0Bootstrap();
+  await auth0Bootstrap();
   await Promise.all(
     ["recent", "top"].map(async (type) => await fetchGames(type))
   );

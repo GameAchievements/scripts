@@ -83,7 +83,7 @@ async function fetchGames(elemId) {
   }, 600);
 }
 window.onload = async () => {
-  // await auth0Bootstrap();
+  await auth0Bootstrap();
   const gamesElemId = "#gas-list-games";
   $(`${gamesElemId} .gas-filters-sw-li`).on("click", (ev) =>
     filterByLetter(gamesElemId, ev)
