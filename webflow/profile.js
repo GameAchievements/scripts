@@ -6,7 +6,26 @@ let profileId = urlParams.get("id");
 const elemIdPrefix = "#ga-profile";
 const fetchURLPrefix = `https://${apiDomain}/api/profile`;
 let token;
+$(".ga-loader-container").show();
+$("#ga-profile-sections,.gas-role-premium,.gas-role-regular").hide();
 
+const profileAvatarUpdater = async () => {
+  if (userAuth0Data?.sub?.length) {
+    $(".gas-avatar-btn").click(function () {
+      const platformId = $(this).data("pid");
+      // const resFetch = await fetch(`${fetchURLPrefix}/avatar`, {
+      //   method: "POST",
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //   },
+      //   body: { platformId },
+      // });
+      // console.log(resFetch)
+      // const resData = await resFetch.json();
+      // $('.gas-my-avatar').attr('src', resData.imageURL);
+    });
+  }
+};
 function profileResponseHandler(res) {
   const elemId = elemIdPrefix;
   const $ghContainer = $(`${elemId}`);
@@ -22,16 +41,6 @@ function profileResponseHandler(res) {
     "completion",
     "achievedCount",
   ];
-  if (res.imageURL) {
-    $(".gas-img", dataTemplateActual).each((idx, elm) => {
-      dataTemplateActual = $(elm)
-        .removeAttr("srcset")
-        .removeAttr("sizes")
-        .attr("src", res.imageURL)
-        .parents(elemId)
-        .prop("outerHTML");
-    });
-  }
   Object.entries(res).forEach(([key, value]) => {
     if (textKeysToReplace.includes(key)) {
       dataTemplateActual = dataTemplateActual.replaceAll(`{|${key}|}`, value);
@@ -46,6 +55,17 @@ function profileResponseHandler(res) {
     }
   });
   $ghContainer.prop("outerHTML", dataTemplateActual);
+  // global (all sections) replacers
+  profileAvatarUpdater();
+  if (res.imageURL?.length) {
+    $(".gas-my-avatar")
+      .removeAttr("srcset")
+      .removeAttr("sizes")
+      .attr("src", res.imageURL);
+  }
+  if (res.role?.length) {
+    $(".gas-role-" + res.role.toLowerCase()).show();
+  }
 }
 
 const fetchGAUserData = async () => {
@@ -228,8 +248,18 @@ async function listFetcher({
   tabMatcher,
 }) {
   const elemId = `${elemIdPrefix}-${listName}`;
-  const resList = await fetch(`${fetchURLPrefix}/id/${profileId}/${listName}`);
-  const listPageData = await resList.json();
+  let resFetch;
+  if (profileId?.length) {
+    const fetchURL = `${fetchURLPrefix}/id/${profileId}/${listName}`;
+    resFetch = await fetch(fetchURL);
+  } else if (userAuth0Data?.sub?.length) {
+    resFetch = await fetch(`${fetchURLPrefix}/my/${listName}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  }
+  const listPageData = await resFetch.json();
   const listData = listPageData?.results;
   if (listPageData?.count) {
     let tabCounts;
@@ -281,36 +311,50 @@ async function listFetcher({
 }
 
 window.onload = async () => {
-  $(".ga-loader").show();
   await auth0Bootstrap();
   token = await auth0Client.getTokenSilently();
+  if (profileId?.length) {
+    $("#user-settings, #ga-user-settings-tab").hide();
+  }
   if (await fetchGAUserData()) {
-    $(".ga-loader").hide();
-
-    await listFetcher({
-      listName: "achievements",
-      numKeysToReplace: ["id", "score", "achieversCount", "gAPoints"],
-      textKeysToReplace: ["name", "description", "updatedAt"],
-    });
-    await listFetcher({
-      listName: "guides",
-      numKeysToReplace: ["id", "commentsCount", "viewsCount", "likesCount"],
-      textKeysToReplace: ["profileId", "name", "description", "updatedAt"],
-    });
-    await listFetcher({
-      listName: "reviews",
-      numKeysToReplace: ["id", "likesCount"],
-      textKeysToReplace: [
-        "profileId",
-        "name",
-        "content",
-        "gameName",
-        "classification",
-        "updatedAt",
-      ],
-      tabs: ["all", "positive", "mixed", "negative"],
-      tabMatcher: "classification",
-    });
+    await Promise.all([
+      await listFetcher({
+        listName: "games",
+        numKeysToReplace: [
+          "id",
+          "completion",
+          "achievementsCount",
+          "hoursPlayed",
+        ],
+        textKeysToReplace: ["name", "description", "updatedAt", "playedAt"],
+      }),
+      await listFetcher({
+        listName: "achievements",
+        numKeysToReplace: ["id", "score", "achieversCount", "gAPoints"],
+        textKeysToReplace: ["name", "description", "updatedAt"],
+      }),
+      await listFetcher({
+        listName: "guides",
+        numKeysToReplace: ["id", "commentsCount", "viewsCount", "likesCount"],
+        textKeysToReplace: ["profileId", "name", "description", "updatedAt"],
+      }),
+      await listFetcher({
+        listName: "reviews",
+        numKeysToReplace: ["id", "likesCount", "gameId"],
+        textKeysToReplace: [
+          "profileId",
+          "name",
+          "content",
+          "gameName",
+          "classification",
+          "updatedAt",
+        ],
+        tabs: ["all", "positive", "mixed", "negative"],
+        tabMatcher: "classification",
+      }),
+    ]);
+    $(".ga-loader-container").hide();
+    $("#ga-profile-sections").show();
     $("#gas-wf-tab-activator").click();
     return;
   }
