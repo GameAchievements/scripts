@@ -8,10 +8,12 @@ function gamesResponseHandler(res, elemId, limit = 0) {
   $list.children().eq(0).hide();
   console.info(`=== ${elemId} games ===`, res);
   const keysToReplace = [
-    "achievements",
+    "id",
     "name",
-    "players",
     "description",
+    "achievements",
+    "lastPlayed",
+    "players",
     "externalGameId",
   ];
   let itemsArray = limit ? res.slice(0, limit) : res;
