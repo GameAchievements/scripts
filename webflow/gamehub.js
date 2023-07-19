@@ -398,24 +398,18 @@ const setupReviewForm = () => {
   const $errorDiv = $("div", $errEl);
   const txtError = $errEl.text();
   const $successEl = $(".gas-form-success", $formWrapper);
-  const $rateEl = $(".gas-rating-scale", $formWrapper);
-  const $selectedRating = $(".gas-rating-selected", $formWrapper);
-  let rating = 7;
-
-  for (let rate = 1; rate < 11; rate++) {
-    $rateEl.append(`<li data-rate="${rate}"><p>${rate}</p>${ratingSVG(rate)}`);
-  }
-  $("li", $rateEl).click(function () {
-    $(this).siblings().removeClass("rating-active");
-    $(this).addClass("rating-active");
-    rating = Number($(this).data("rate"));
-    $selectedRating.text(`${rating}/10`).css("color", ratingColor(rating));
-  });
+  let rating = 0;
+  ratingScale(
+    $(".gas-rating-scale", $formWrapper),
+    $(".gas-rating-selected", $formWrapper)
+  );
   $submitBtn.click(async (e) => {
     e.preventDefault();
-    if (!$titleField.val()?.length) {
+    if (!rating || !$titleField.val()?.length || !$contentField.val().length) {
       $errEl.show();
-      $errorDiv.text("Please fill-in the review title");
+      $errorDiv.text(
+        "Please choose a rating and fill-in both title and review boxes with your review"
+      );
       setTimeout(() => {
         $errEl.hide();
         $errorDiv.text(txtError);
