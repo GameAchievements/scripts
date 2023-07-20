@@ -12,7 +12,14 @@ function achievementResponseHandler(res) {
   const $ghContainer = $(elemId);
   let dataTemplateActual = $ghContainer.prop("outerHTML");
   console.info(`=== ${elemId} ===`, res);
-  const textKeysToReplace = ["id", "name", "rarityClass"];
+  const textKeysToReplace = [
+    "id",
+    "name",
+    "description",
+    "rarityClass",
+    "gameId",
+    "gameName",
+  ];
   const numKeysToReplace = [
     "ownersCount",
     "recentGamersCount",
@@ -20,7 +27,7 @@ function achievementResponseHandler(res) {
     "rarity",
     "gaPoints",
   ];
-  const achievementImg = res.coverURL || res.imageURL;
+  const achievementImg = res.coverURL || res.imageURL || res.gameImageURL;
   if (achievementImg?.length) {
     dataTemplateActual = $ghContainer
       .css(
@@ -34,6 +41,8 @@ function achievementResponseHandler(res) {
   Object.entries(res).forEach(([key, value]) => {
     if (textKeysToReplace.includes(key)) {
       dataTemplateActual = dataTemplateActual.replaceAll(`{|${key}|}`, value);
+      // global replacements
+      $(`${elemIdPrefix.replace("#", ".")}-${key}`).text(value);
     } else if (numKeysToReplace.includes(key)) {
       dataTemplateActual = dataTemplateActual.replaceAll(
         `{|${key}|}`,
@@ -110,6 +119,7 @@ function listResponseHandler({
     $list.html($emptyList);
     $emptyList.show();
   }
+  $list.show();
 }
 
 async function listFetcher({ listName, numKeysToReplace, textKeysToReplace }) {
@@ -129,6 +139,7 @@ async function listFetcher({ listName, numKeysToReplace, textKeysToReplace }) {
 
 function achieversHandler({
   listsData,
+  listResultsKey,
   elemId,
   numKeysToReplace,
   textKeysToReplace,
@@ -140,7 +151,7 @@ function achieversHandler({
   const $listHeader = $list.children().first();
   const $entryTemplate = $(".gas-list-entry", $list).first();
   $list.html($listHeader);
-  const listDataToRead = listsData.results;
+  const listDataToRead = listsData[listResultsKey];
   if (listDataToRead?.length > 0) {
     $entryTemplate.show();
     $list.append($entryTemplate);
@@ -194,6 +205,7 @@ function achieversHandler({
     $list.append($emptyList);
     $emptyList.show();
   }
+  $list.show();
 }
 
 async function achieversFetcher({
@@ -202,13 +214,16 @@ async function achieversFetcher({
   numKeysToReplace,
   textKeysToReplace,
 }) {
-  const elemId = `${elemIdPrefix}-${listName}-${type}`;
+  const elemId = `${elemIdPrefix}-${listName}-${
+    type === "last" ? "latest" : type
+  }`;
   const resLists = await fetch(
     `https://${apiDomain}/api/achievement/${achievementId}/${listName}?type=${type}`
   );
   const listsData = await resLists.json();
   achieversHandler({
     listsData,
+    listResultsKey: listName,
     elemId,
     numKeysToReplace,
     textKeysToReplace,
@@ -225,13 +240,7 @@ window.onload = async () => {
     await listFetcher({
       listName: "guides",
       numKeysToReplace: ["id", "commentsCount", "viewsCount", "likesCount"],
-      textKeysToReplace: [
-        "profileId",
-        "name",
-        "achievementName",
-        "achievementDescription",
-        "author",
-      ],
+      textKeysToReplace: ["profileId", "name", "description", "author"],
     }),
     await achieversFetcher({
       listName: "achievers",
@@ -241,7 +250,7 @@ window.onload = async () => {
     }),
     await achieversFetcher({
       listName: "achievers",
-      type: "latest",
+      type: "last",
       numKeysToReplace: ["profileId"],
       textKeysToReplace: ["name"],
     }),

@@ -398,13 +398,11 @@ const setupReviewForm = () => {
   const $errorDiv = $("div", $errEl);
   const txtError = $errEl.text();
   const $successEl = $(".gas-form-success", $formWrapper);
-  let rating = 0;
-  ratingScale(
-    $(".gas-rating-scale", $formWrapper),
-    $(".gas-rating-selected", $formWrapper)
-  );
+  const $rateChosen = $(".gas-rating-selected", $formWrapper);
+  ratingScale($(".gas-rating-scale", $formWrapper), $rateChosen);
   $submitBtn.click(async (e) => {
     e.preventDefault();
+    const rating = Number($rateChosen.data("rate") || 0);
     if (!rating || !$titleField.val()?.length || !$contentField.val().length) {
       $errEl.show();
       $errorDiv.text(
