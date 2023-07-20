@@ -389,32 +389,56 @@ async function achieversFetcher({
 }
 
 const setupReviewForm = () => {
-  const $formWrapper = `${elemIdPrefix}-review-form`;
-  const $submitBtn = $(`input[type=submit]`, $formWrapper);
-  const $titleField = $(`input[name=title]`, $formWrapper);
-  const $contentField = $(`input[name=content]`, $formWrapper);
+  const formWrapperId = `${elemIdPrefix}-review-form`;
+  const $submitBtn = $(`.submit-button`, formWrapperId);
+  $submitBtn.attr("disabled", true);
+  const $titleField = $(`input[name=title]`, formWrapperId);
+  const $contentField = $(`input[name=content]`, formWrapperId);
+  const $requiredFields = $(`input[name][required]`, formWrapperId);
   const submitText = $submitBtn.text();
-  const $errEl = $(".gas-form-error", $formWrapper);
+  const $errEl = $(".gas-form-error", formWrapperId);
   const $errorDiv = $("div", $errEl);
   const txtError = $errEl.text();
-  const $successEl = $(".gas-form-success", $formWrapper);
-  const $rateChosen = $(".gas-rating-selected", $formWrapper);
-  ratingScale($(".gas-rating-scale", $formWrapper), $rateChosen);
-  $submitBtn.click(async (e) => {
+  const $successEl = $(".gas-form-success", formWrapperId);
+  const $ratingScale = $(".gas-rating-scale", formWrapperId);
+  const $rateChosen = $(".gas-rating-selected", formWrapperId);
+  ratingScale($ratingScale, $rateChosen);
+  let requiredFilled = false;
+  const canSubmit = () => {
+    if (requiredFilled && Number($rateChosen.data("rate"))) {
+      $submitBtn.removeClass("disabled-button").attr("disabled", false);
+    }
+  };
+  $requiredFields.on("focusout keyup", function () {
+    $requiredFields.each(function () {
+      if (!$(this).val()?.length) {
+        requiredFilled = false;
+        $(this).prev("label").addClass("field-label-missing");
+        $submitBtn.addClass("disabled-button").attr("disabled", true);
+      } else {
+        requiredFilled = true;
+        $(this).prev("label").removeClass("field-label-missing");
+      }
+    });
+    canSubmit();
+  });
+  $("li", $ratingScale).one("click", function () {
+    $ratingScale.parent().prev("label").removeClass("field-label-missing");
+    canSubmit();
+  });
+  $submitBtn.on("click", async (e) => {
     e.preventDefault();
     const rating = Number($rateChosen.data("rate") || 0);
     if (!rating || !$titleField.val()?.length || !$contentField.val().length) {
       $errEl.show();
-      $errorDiv.text(
-        "Please choose a rating and fill-in both title and review boxes with your review"
-      );
+      $errorDiv.text("Please choose a rating and fill-in required fields");
       setTimeout(() => {
         $errEl.hide();
         $errorDiv.text(txtError);
       }, formMessageDelay);
       return;
     }
-    $(`input`, $formWrapper).attr("disabled", true);
+    $(`input`, formWrapperId).attr("disabled", true);
     $submitBtn.text($submitBtn.data("wait"));
     const reqData = {
       title: $titleField.val(),
@@ -440,12 +464,12 @@ const setupReviewForm = () => {
       setTimeout(() => {
         $errEl.hide();
         $errorDiv.text(txtError);
-        $(`input`, $formWrapper).attr("disabled", false);
+        $(`input`, formWrapperId).attr("disabled", false);
         $submitBtn.text(submitText);
       }, formMessageDelay);
       return;
     }
-    $(`form`, $formWrapper).hide();
+    $(`form`, formWrapperId).hide();
     $successEl.attr("title", revData?.message).show();
   });
 };
