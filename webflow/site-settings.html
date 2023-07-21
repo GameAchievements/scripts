@@ -248,6 +248,22 @@
   }
   // usage:
   // ratingScale($(".gas-rating-scale"), $(".gas-rating-selected"));
+
+  let isUserInputActive = false;
+  $(window).on('beforeunload', (evt) => {
+    if (isUserInputActive) {
+      // Cancel the event as stated by the standard
+      evt.preventDefault();
+      // Chrome requires returnValue to be set
+      evt.returnValue = '';
+      $('#gas-popup-leave-confirmation').show();
+    }
+    return undefined;
+  });
+  $('.gas-form').on('input', (evt) => {
+    // any input containing text will prompt the user before leaving
+    isUserInputActive = Boolean(evt.target.value?.length)
+  });
 </script>
 
 <!-- ~~~ users and auth0 helpers ~~~ -->

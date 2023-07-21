@@ -21,6 +21,8 @@ function gamesResponseHandler(res, elemId) {
         const $imgEl = $(`.gas-list-entry-cover`, dataTemplateActual);
         if ($imgEl.length) {
           dataTemplateActual = $imgEl
+            .removeAttr("srcset")
+            .removeAttr("sizes")
             .attr("src", item.imageURL)
             .parents(".gas-list-entry")
             .data("id", item.id)

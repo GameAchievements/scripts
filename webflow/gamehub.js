@@ -438,6 +438,8 @@ const setupReviewForm = () => {
       }, formMessageDelay);
       return;
     }
+    // disable show popup on leave page (site-settings)
+    isUserInputActive = false;
     $(`input`, formWrapperId).attr("disabled", true);
     $submitBtn.text($submitBtn.data("wait"));
     const reqData = {

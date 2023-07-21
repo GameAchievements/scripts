@@ -42,7 +42,7 @@ function achievementResponseHandler(res) {
     if (textKeysToReplace.includes(key)) {
       dataTemplateActual = dataTemplateActual.replaceAll(`{|${key}|}`, value);
       // global replacements
-      $(`${elemIdPrefix.replace("#", ".")}-${key}`).text(value);
+      // $(`${elemIdPrefix.replace("#", ".")}-${key}`).text(value);
     } else if (numKeysToReplace.includes(key)) {
       dataTemplateActual = dataTemplateActual.replaceAll(
         `{|${key}|}`,
@@ -92,6 +92,8 @@ function listResponseHandler({
         const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
         if ($entryImg && item.iconURL?.length) {
           dataTemplateActual = $entryImg
+            .removeAttr("srcset")
+            .removeAttr("sizes")
             .attr("src", item.iconURL)
             .parents(".gas-list-entry")
             .prop("outerHTML");
@@ -141,7 +143,6 @@ function achieversHandler({
   listsData,
   listResultsKey,
   elemId,
-  numKeysToReplace,
   textKeysToReplace,
 }) {
   console.info(`=== ${elemId} results ===`, listsData);
@@ -163,9 +164,10 @@ function achieversHandler({
         const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
         if ($entryImg && item.iconURL?.length) {
           dataTemplateActual = $entryImg
-            .attr("src", item.avatar)
+            .removeAttr("srcset")
+            .removeAttr("sizes")
+            .attr("src", item.iconURL)
             .parents(".gas-list-entry")
-            .data("id", item.id)
             .prop("outerHTML");
         }
         dataTemplateActual = dataTemplateActual.replaceAll(
@@ -187,11 +189,6 @@ function achieversHandler({
             `{|${key}|}`,
             value || ""
           );
-        } else if (numKeysToReplace.includes(key)) {
-          dataTemplateActual = dataTemplateActual.replaceAll(
-            `{|${key}|}`,
-            Math.round(value || 0)
-          );
         }
       });
       $list
@@ -208,12 +205,7 @@ function achieversHandler({
   $list.show();
 }
 
-async function achieversFetcher({
-  listName,
-  type,
-  numKeysToReplace,
-  textKeysToReplace,
-}) {
+async function achieversFetcher({ listName, type, textKeysToReplace }) {
   const elemId = `${elemIdPrefix}-${listName}-${
     type === "last" ? "latest" : type
   }`;
@@ -225,7 +217,6 @@ async function achieversFetcher({
     listsData,
     listResultsKey: listName,
     elemId,
-    numKeysToReplace,
     textKeysToReplace,
   });
 }
@@ -245,14 +236,12 @@ window.onload = async () => {
     await achieversFetcher({
       listName: "achievers",
       type: "first",
-      numKeysToReplace: ["profileId"],
-      textKeysToReplace: ["name"],
+      textKeysToReplace: ["name", "profileId"],
     }),
     await achieversFetcher({
       listName: "achievers",
       type: "last",
-      numKeysToReplace: ["profileId"],
-      textKeysToReplace: ["name"],
+      textKeysToReplace: ["name", "profileId"],
     }),
   ]);
   $(".ga-loader-container").hide();
