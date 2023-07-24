@@ -26,9 +26,8 @@ const tmceObj = {
   height: 200,
   menubar: false,
   toolbar_mode: "floating",
-  plugins: "link image lists searchreplace emoticons",
-  toolbar:
-    "undo redo | emoticons bold italic underline removeformat | numlist bullist  outdent indent | styleselect | alignleft aligncenter alignright alignjustify | searchreplace link image",
+  plugins: "link image lists",
+  toolbar: "undo redo | bold italic underline | numlist bullist",
   content_style: "body { font-family:Gantari,sans-serif; font-size:1rem }",
 };
 

@@ -3,6 +3,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const gameId = urlParams.get("id") || 1044;
 const elemIdPrefix = `#gas-gh`;
 const formMessageDelay = 4000;
+const platformsTabNames = ["all", "playstation", "xbox", "steam"];
 let token;
 $(".ga-loader-container").show();
 $("#ga-sections-container").hide();
@@ -95,29 +96,27 @@ function listResponseHandler({
   if (!tabCounts) {
     tabMatcher = "platform";
     tabCounts = {
-      allCnt: listData.length,
-      playstationCnt: listData.filter(
+      all: listData.length,
+      playstation: listData.filter(
         (item) => item[tabMatcher].toLowerCase() === "playstation"
       )?.length,
-      xboxCnt: listData.filter(
-        (item) => item[tabMatcher].toLowerCase() === "xbox"
-      )?.length,
-      steamCnt: listData.filter(
+      xbox: listData.filter((item) => item[tabMatcher].toLowerCase() === "xbox")
+        ?.length,
+      steam: listData.filter(
         (item) => item[tabMatcher].toLowerCase() === "steam"
       )?.length,
     };
+    platformsTabNames.forEach((tabName) => {
+      dataTemplate =
+        dataTemplate.replaceAll(`{|${tabName}Cnt|}`, tabCounts[tabName]) || "0";
+    });
   }
-  const tabKeysToReplace = Object.keys(tabCounts);
-  tabKeysToReplace.forEach((key) => {
-    dataTemplate = dataTemplate.replaceAll(`{|${key}|}`, tabCounts[key]) || "0";
-  });
   // replace counts
   $listTabs.prop("outerHTML", dataTemplate);
-  tabKeysToReplace.forEach((key) => {
-    const tabName = key.slice(0, key.indexOf("Cnt"));
+  Object.keys(tabCounts).forEach((tabName) => {
     const $list = $(`${elemId} .gas-list-${tabName}`);
     const $emptyList = $(`.gas-list-empty`, $list);
-    if (tabCounts[key] > 0) {
+    if (tabCounts[tabName] > 0) {
       const $listHeader = $list.children().first();
       const $entryTemplate = $(".gas-list-entry", $list).first();
       $entryTemplate.show();
@@ -250,7 +249,7 @@ async function listFetcher({
     if (Array.isArray(tabs)) {
       tabCounts = {};
       tabs.forEach((tabName) => {
-        tabCounts[`${tabName}Cnt`] =
+        tabCounts[tabName] =
           tabName === "all"
             ? listData.length
             : listData.filter(
@@ -270,10 +269,7 @@ async function listFetcher({
             $(revEl).text(
               $(revEl)
                 .text()
-                .replace(
-                  `{|${tabs[idx]}ReviewsCnt|}`,
-                  tabCounts[`${tabs[idx]}Cnt`]
-                )
+                .replace(`{|${tabs[idx]}ReviewsCnt|}`, tabCounts[tabs[idx]])
             );
           }
         });
@@ -476,6 +472,115 @@ const setupReviewForm = () => {
   });
 };
 
+async function fetchListLeaderboards() {
+  const elemId = `${elemIdPrefix}-leaderboard`;
+  let dataTemplate = $(elemId).prop("outerHTML");
+  platformsTabNames.forEach(async (tabName) => {
+    const $list = $(`${elemId} .gas-list-${tabName}`);
+    let paramPlatformId = 0;
+    switch (tabName) {
+      case `playstation`:
+        paramPlatformId = 1;
+        break;
+      case `xbox`:
+        paramPlatformId = 2;
+        break;
+      case `steam`:
+        paramPlatformId = 3;
+        break;
+      default:
+        break;
+    }
+    const resList = await fetch(
+      `https://${apiDomain}/api/leaderboard?gameId=${gameId}${
+        paramPlatformId ? `&type=${paramPlatformId}` : ""
+      }`
+    );
+    const listData = await resList.json();
+    const textKeysToReplace = ["profileId", "name"];
+    const numKeysToReplace = ["totalAchievements", "gaPoints"];
+    switch (paramPlatformId) {
+      case 1:
+        numKeysToReplace.push("silver", "bronze", "gold", "platinum");
+        break;
+      case 2:
+        numKeysToReplace.push("gamescore");
+        break;
+      case 3:
+        numKeysToReplace.push("games");
+        break;
+    }
+    const $emptyList = $(`.gas-list-empty`, $list);
+    if (listData.count > 0 && listData.profiles?.length) {
+      const $listHeader = $list.children().first();
+      const $entryTemplate = $(".gas-list-entry", $list).first();
+      $entryTemplate.show();
+      dataTemplate = $entryTemplate.prop("outerHTML");
+      $list.html($listHeader).append($entryTemplate);
+      $entryTemplate.hide();
+      listData.profiles.forEach((item, resIdx) => {
+        let dataTemplateActual = dataTemplate;
+        dataTemplateActual = dataTemplateActual.replaceAll(
+          `{|idx|}`,
+          resIdx + 1
+        );
+        Object.entries(item).forEach(([key, value]) => {
+          if (key === "iconURL") {
+            const $profileImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+            if ($profileImg?.length && value?.length) {
+              dataTemplateActual = $profileImg
+                .removeAttr("srcset")
+                .removeAttr("sizes")
+                .attr("src", value)
+                .parents(".gas-list-entry")
+                .prop("outerHTML");
+            }
+          } else if (key === "recentlyPlayed") {
+            if (!paramPlatformId && value?.platform?.length) {
+              // only GA leaderboard shows the platform tag
+              dataTemplateActual = showPlatform(
+                value?.platform,
+                dataTemplateActual
+              );
+            }
+            const $gameImg = $(
+              `.gas-list-entry-cover-game`,
+              dataTemplateActual
+            );
+            if ($gameImg?.length && value?.iconURL?.length) {
+              dataTemplateActual = $gameImg
+                .removeAttr("srcset")
+                .removeAttr("sizes")
+                .attr("src", value.iconURL)
+                .parents(".gas-list-entry")
+                .prop("outerHTML");
+            }
+          } else if (textKeysToReplace.includes(key)) {
+            dataTemplateActual = dataTemplateActual.replaceAll(
+              `{|${key}|}`,
+              value || ""
+            );
+          } else if (numKeysToReplace.includes(key)) {
+            dataTemplateActual = dataTemplateActual.replaceAll(
+              `{|${key}|}`,
+              Math.round(value || 0)
+            );
+          }
+        });
+        $list
+          .append(dataTemplateActual)
+          .children()
+          .last()
+          .removeClass(["bg-light", "bg-dark"])
+          .addClass(`bg-${resIdx % 2 > 0 ? "light" : "dark"}`);
+      });
+    } else {
+      $list.html($emptyList);
+      $emptyList.show();
+    }
+  });
+}
+
 window.onload = async () => {
   await auth0Bootstrap();
   if (userAuth0Data?.sub?.length) {
@@ -489,6 +594,7 @@ window.onload = async () => {
       numKeysToReplace: ["id", "score", "achieversCount", "gAPoints"],
       textKeysToReplace: ["name", "description", "updatedAt"],
     }),
+    await fetchListLeaderboards(),
     await listFetcher({
       listName: "guides",
       numKeysToReplace: ["id", "commentsCount", "viewsCount", "likesCount"],
