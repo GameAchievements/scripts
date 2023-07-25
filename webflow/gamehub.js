@@ -388,9 +388,9 @@ const setupReviewForm = () => {
   const formWrapperId = `${elemIdPrefix}-review-form`;
   const $submitBtn = $(`.submit-button`, formWrapperId);
   $submitBtn.attr("disabled", true);
-  const $titleField = $(`input[name=title]`, formWrapperId);
-  const $contentField = $(`input[name=content]`, formWrapperId);
-  const $requiredFields = $(`input[name][required]`, formWrapperId);
+  const $titleField = $(`[name=title]`, formWrapperId);
+  const $contentField = $(`[name=content]`, formWrapperId);
+  const $requiredFields = $(`[name][required]`, formWrapperId);
   const submitText = $submitBtn.text();
   const $errEl = $(".gas-form-error", formWrapperId);
   const $errorDiv = $("div", $errEl);
