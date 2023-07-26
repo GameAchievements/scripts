@@ -221,11 +221,37 @@ async function achieversFetcher({ listName, type, textKeysToReplace }) {
   });
 }
 
-window.onload = async () => {
+async function verifyAuthenticatedUserGuideData() {
+  if (!token) {
+    return;
+  }
+  const resFetch = await fetch(
+    `https://${apiDomain}/api/achievement/${achievementId}/guide-auth-user-data`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (resFetch.status !== 200) {
+    // auth user not found/issue, do not allow access to auth ops
+    $(`${elemIdPrefix}-btn-guide-edit,${elemIdPrefix}-btn-guide-create`).hide();
+    return;
+  }
+  const revData = await resFetch.json();
+  if (revData?.ownedGuideId > 0) {
+    $(`${elemIdPrefix}-btn-guide-create`).hide();
+    $(`${elemIdPrefix}-btn-guide-edit`)
+      .attr("href", `/guide-form?id=${revData.ownedGuideId}`)
+      .show();
+  } else {
+    $(`${elemIdPrefix}-btn-guide-edit`).hide();
+    $(`${elemIdPrefix}-btn-guide-create`).show();
+  }
+}
+
+$().ready(async () => {
   await auth0Bootstrap();
   if (userAuth0Data?.sub?.length) {
     token = await auth0Client.getTokenSilently();
   }
+  await verifyAuthenticatedUserGuideData();
   await fetchAchievement();
   await Promise.all([
     await listFetcher({
@@ -247,4 +273,4 @@ window.onload = async () => {
   $(".ga-loader-container").hide();
   $("#ga-sections-container").show();
   $("#gas-wf-tab-activator").click();
-};
+});

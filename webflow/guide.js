@@ -1,6 +1,7 @@
 const apiDomain = document.querySelector("meta[name=domain]")?.content;
 const urlParams = new URLSearchParams(window.location.search);
 const guideId = urlParams.get("id") || 1;
+let achievementId = 0;
 const elemIdPrefix = `#gas-guide`;
 
 let token;
@@ -104,6 +105,7 @@ async function fetchGuide() {
     document.title = `${resData.name?.length ? resData.name : resData.id} | ${
       document.title
     }`;
+    achievementId = resData.achievementId;
     guideResponseHandler(resData);
   }
 }
@@ -168,10 +170,14 @@ async function listFetcher({ listName, textKeysToReplace }) {
   });
 }
 
-function setupLike() {
+function setupLike(hasLike) {
   const $btnLike = $(`${elemIdPrefix}-btn-like`);
   const $btnDelLike = $(`${elemIdPrefix}-btn-like-del`);
-  $btnDelLike.hide();
+  if (hasLike) {
+    $btnLike.hide();
+  } else {
+    $btnDelLike.hide();
+  }
   const changeLikeStatus = async () => {
     $btnLike.attr("disabled", true);
     $btnDelLike.attr("disabled", true);
@@ -191,9 +197,13 @@ function setupLike() {
   $btnDelLike.on("click", changeLikeStatus);
 }
 
-const setupCommentForm = () => {
-  const formMessageDelay = 4000;
+const setupCommentForm = (hasComment) => {
   const formWrapperId = `${elemIdPrefix}-comment-form`;
+  if (hasComment) {
+    $(formWrapperId).parent().hide();
+    return;
+  }
+  const formMessageDelay = 4000;
   const $submitBtn = $(`.submit-button`, formWrapperId);
   $submitBtn.attr("disabled", true);
   const $contentField = $(`[name=comment]`, formWrapperId);
@@ -227,7 +237,7 @@ const setupCommentForm = () => {
     isUserInputActive = false;
     $(`input`, formWrapperId).attr("disabled", true);
     $submitBtn.text($submitBtn.data("wait"));
-    const resFecth = await fetch(
+    const resFetch = await fetch(
       `https://${apiDomain}/api/guide/${guideId}/comment`,
       {
         method: "POST",
@@ -239,8 +249,8 @@ const setupCommentForm = () => {
         body: JSON.stringify({ comment: $contentField.val() }),
       }
     );
-    const revData = await resFecth.json();
-    if (resFecth.status !== 201) {
+    const revData = await resFetch.json();
+    if (resFetch.status !== 201) {
       $errEl.show();
       $errorDiv.text(revData?.message);
       setTimeout(() => {
@@ -256,19 +266,43 @@ const setupCommentForm = () => {
   });
 };
 
+async function verifyAuthenticatedUserGuideData() {
+  if (!token || !achievementId) {
+    return;
+  }
+  const resFetch = await fetch(
+    `https://${apiDomain}/api/achievement/${achievementId}/guide-auth-user-data`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (resFetch.status !== 200) {
+    // auth user not found/issue, do not allow access to auth ops
+    $(`${elemIdPrefix}-nav-auth`).hide();
+    $(`${elemIdPrefix}-comment-form`).parent().hide();
+    return;
+  }
+  const revData = await resFetch.json();
+  const $editBtn = $(`${elemIdPrefix}-btn-edit`);
+  if (revData.ownedGuideId > 0) {
+    $editBtn.attr("href", `/guide-form?id=${revData.ownedGuideId}`).show();
+  } else {
+    $editBtn.hide();
+  }
+  setupLike(revData.hasLike);
+  setupCommentForm(revData.hasComment);
+}
+
 $().ready(async () => {
   await auth0Bootstrap();
   if (userAuth0Data?.sub?.length) {
     token = await auth0Client.getTokenSilently();
   }
   await fetchGuide();
-  setupLike();
+  await verifyAuthenticatedUserGuideData();
   await listFetcher({
     listName: "comments",
     numKeysToReplace: [],
     textKeysToReplace: ["profileId", "author", "comment", "date"],
   });
-  setupCommentForm();
   $(".ga-loader-container").hide();
   $("#ga-sections-container").show();
   $("#gas-wf-tab-activator").click();
