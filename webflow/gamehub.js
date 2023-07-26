@@ -60,7 +60,12 @@ function gamehubResponseHandler(res, elemId) {
       if ($tags?.length && value?.length) {
         dataTemplateActual = $tags
           .html(
-            value.map((tag) => `<div class="igdb-tag">${tag}</div>`).join("\n")
+            value
+              .map(
+                (tag) =>
+                  `<div class="igdb-tag" title="${tag}"><div class="gas-text-overflow">${tag}</div></div>`
+              )
+              .join("\n")
           )
           .parents(elemId)
           .prop("outerHTML");
