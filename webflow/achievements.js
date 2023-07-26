@@ -31,17 +31,24 @@ function achievementsResponseHandler(res, elemId) {
     res.forEach((item, resIdx) => {
       let dataTemplateActual = dataTemplate;
       Object.entries(item).forEach(([key, value]) => {
-        dataTemplateActual = $(`.gas-list-entry-cover-game`, dataTemplateActual)
-          .attr("src", item.gameIconURL)
-          .parents(".gas-list-entry")
-          .data("id", item.id)
-          .prop("outerHTML");
-        dataTemplateActual = $(`.gas-list-entry-cover`, dataTemplateActual)
-          .attr("src", item.iconURL)
-          .parents(".gas-list-entry")
-          .data("id", item.id)
-          .prop("outerHTML");
-
+        const $gameImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
+        if ($gameImg?.length && item.gameIconURL?.length) {
+          dataTemplateActual = $gameImg
+            .removeAttr("srcset")
+            .removeAttr("sizes")
+            .attr("src", item.gameIconURL)
+            .parents(".gas-list-entry")
+            .prop("outerHTML");
+        }
+        const $achievementImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+        if ($achievementImg?.length && item.iconURL?.length) {
+          dataTemplateActual = $achievementImg
+            .removeAttr("srcset")
+            .removeAttr("sizes")
+            .attr("src", item.iconURL)
+            .parents(".gas-list-entry")
+            .prop("outerHTML");
+        }
         if (keysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
@@ -115,11 +122,11 @@ async function fetchAchievements(elemId) {
     $(`${elemId} .gas-list-results-info,${elemId} .gas-list`).show();
   }, 600);
 }
-window.onload = async () => {
+$().ready(async () => {
   await auth0Bootstrap();
   const achievementsElemId = "#gas-list-achievements";
   $(`${achievementsElemId} .gas-filters-sw-li`).on("click", (ev) =>
     filterByLetter(achievementsElemId, ev)
   );
   await fetchAchievements(achievementsElemId);
-};
+});
