@@ -2,13 +2,15 @@
 const apiDomain = document.querySelector("meta[name=domain]")?.content;
 const urlParams = new URLSearchParams(window.location.search);
 const guideId = Number(urlParams.get("id")) || 0;
+const isEditing = guideId > 0;
 let achievementId = Number(urlParams.get("achievementId")) || 0;
 let guideFetchedData;
 const elemIdPrefix = `#gas-guide`;
 const elemId = `${elemIdPrefix}-form`;
+const formMessageDelay = 4000;
 
 // clone the copyable section into a template (section-2)
-const $sectionTemp = $(".gas-form-section", elemId).clone();
+const $sectionTemp = $(".gas-form-section", elemId).last().clone();
 const templatePrefix = "section-2";
 
 $(".ga-loader-container").show();
@@ -68,7 +70,7 @@ async function addSection() {
     .attr("id", tinyId)
     .attr("name", tinyId)
     .attr("data-name", tinyId);
-  $(".gas-form-section-del", $newSection).click(delSection);
+  $(".gas-form-section-del", $newSection).on("click", delSection);
   $(".gas-form-sections", elemId).append($newSection);
   tmceObj.selector = `#${tinyId}`;
   await tinymce.init(tmceObj);
@@ -82,7 +84,7 @@ async function setupForm() {
   // only activate tinyMCE after copying
   await tinymce.init(tmceObj);
 
-  if (guideId > 0 && guideFetchedData?.id === guideId) {
+  if (isEditing && guideFetchedData?.id === guideId) {
     $("[name=guide-title]", elemId).val(guideFetchedData.name);
     $("[name=guide-description]", elemId).val(guideFetchedData.description);
     guideFetchedData.sections.forEach(async (sec, secIdx) => {
@@ -94,11 +96,106 @@ async function setupForm() {
     });
   }
 
-  $(".gas-form-section-add", elemId).click(addSection);
-  $(".gas-form-section-del", elemId).click(delSection);
+  $(".gas-form-section-add", elemId).on("click", addSection);
+  $(".gas-form-section-del", elemId).on("click", delSection);
+  $(`${elemId}-btn-cancel`, elemId).on("click", (evt) => {
+    evt.preventDefault();
+    const $popupWrapper = $(`#gas-popup-leave-confirmation`);
+    $popupWrapper.show().css("opacity", 1);
+    $(`.gas-popup-btn-close`).one("click", (evt) => {
+      evt.preventDefault();
+      $popupWrapper.hide();
+    });
+    $(`.gas-popup-btn-leave`).one("click", (evt) => {
+      evt.preventDefault();
+      $popupWrapper.hide();
+      redirectAway();
+    });
+  });
 
-  $(".gas-form-cancel", elemId).click(function () {
-    $(`${elemIdPrefix}-popup-leave`).show();
+  const $submitBtn = $(`${elemId}-btn-submit`);
+  $submitBtn.attr("disabled", true);
+  const $requiredFields = $(`[name][required]`, elemId);
+  const submitText = $submitBtn.val();
+  const $errEl = $(".gas-form-error", elemId);
+  const $errorDiv = $("div", $errEl);
+  const txtError = $errEl.text();
+  const $successEl = $(".gas-form-success", elemId);
+  let requiredFilled = false;
+  const canSubmit = () => {
+    if (requiredFilled) {
+      $submitBtn.removeClass("disabled-button").attr("disabled", false);
+    }
+  };
+  $requiredFields.on("focusout keyup", function () {
+    $requiredFields.each(function () {
+      if (!$(this).val()?.length) {
+        requiredFilled = false;
+        $(this).prev("label").addClass("field-label-missing");
+        $submitBtn.addClass("disabled-button").attr("disabled", true);
+      } else {
+        requiredFilled = true;
+        $(this).prev("label").removeClass("field-label-missing");
+      }
+    });
+    canSubmit();
+  });
+
+  $submitBtn.on("click", async (e) => {
+    e.preventDefault();
+    // disable show popup on leave page (site-settings)
+    isUserInputActive = false;
+    $submitBtn.val($submitBtn.data("wait"));
+    let sections = [];
+    $(".gas-form-section", elemId).each(function () {
+      sections.push({
+        title: $("input[name$=-title]", this).val(),
+        content: tinyMCE
+          .get($(".gas-form-tinymce", this).attr("id"))
+          .getContent(),
+      });
+    });
+    const reqData = {
+      author: "GA user",
+      title: $("[name=guide-title]", elemId).val(),
+      description: $("[name=guide-description]", elemId).val(),
+      sections,
+    };
+    let method = "POST";
+    let guideURL = `https://${apiDomain}/api/guide`;
+    if (isEditing) {
+      guideURL += `/${guideId}`;
+      method = "PUT";
+      reqData.author = guideFetchedData.author;
+      reqData.profileId = guideFetchedData.profileId;
+    } else {
+      reqData.achievementId = achievementId;
+    }
+    const resFecth = await fetch(guideURL, {
+      method,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(reqData),
+    });
+    const revData = await resFecth.json();
+    if (![200, 201].includes(resFecth.status)) {
+      $errEl.show();
+      $errorDiv.text(revData?.message);
+      $submitBtn.val(submitText);
+      setTimeout(() => {
+        $errEl.hide();
+        $errorDiv.text(txtError);
+      }, formMessageDelay);
+      return;
+    }
+    $successEl.show();
+    $submitBtn.val(submitText);
+    setTimeout(() => {
+      $successEl.hide();
+    }, formMessageDelay);
   });
 }
 
@@ -177,7 +274,11 @@ async function fetchAchievement() {
 
 function redirectAway() {
   window.location.replace(
-    Number(guideId) || 0 ? `/guide?id=${guideId}` : "/guides"
+    isEditing
+      ? `/guide?id=${guideId}`
+      : achievementId > 0
+      ? `/achievement?id=${achievementId}`
+      : "/guides"
   );
 }
 
@@ -190,7 +291,7 @@ $().ready(async () => {
     redirectAway();
     return;
   }
-  if (guideId > 0) {
+  if (isEditing) {
     await fetchGuide();
     if (guideFetchedData?.achievementId > 0) {
       const resFetch = await fetch(

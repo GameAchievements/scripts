@@ -396,7 +396,7 @@ const setupReviewForm = () => {
   const $titleField = $(`[name=title]`, formWrapperId);
   const $contentField = $(`[name=content]`, formWrapperId);
   const $requiredFields = $(`[name][required]`, formWrapperId);
-  const submitText = $submitBtn.text();
+  const submitText = $submitBtn.val();
   const $errEl = $(".gas-form-error", formWrapperId);
   const $errorDiv = $("div", $errEl);
   const txtError = $errEl.text();
@@ -442,7 +442,7 @@ const setupReviewForm = () => {
     // disable show popup on leave page (site-settings)
     isUserInputActive = false;
     $(`input`, formWrapperId).attr("disabled", true);
-    $submitBtn.text($submitBtn.data("wait"));
+    $submitBtn.val($submitBtn.data("wait"));
     const reqData = {
       title: $titleField.val(),
       content: $contentField.val(),
@@ -468,7 +468,7 @@ const setupReviewForm = () => {
         $errEl.hide();
         $errorDiv.text(txtError);
         $(`input`, formWrapperId).attr("disabled", false);
-        $submitBtn.text(submitText);
+        $submitBtn.val(submitText);
       }, formMessageDelay);
       return;
     }
