@@ -586,7 +586,7 @@ async function fetchListLeaderboards() {
   });
 }
 
-window.onload = async () => {
+$().ready(async () => {
   await auth0Bootstrap();
   if (userAuth0Data?.sub?.length) {
     token = await auth0Client.getTokenSilently();
@@ -634,4 +634,4 @@ window.onload = async () => {
   $(".ga-loader-container").hide();
   $("#ga-sections-container").show();
   $("#gas-wf-tab-activator").click();
-};
+});

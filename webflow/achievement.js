@@ -222,6 +222,8 @@ async function achieversFetcher({ listName, type, textKeysToReplace }) {
 }
 
 async function verifyAuthenticatedUserGuideData() {
+  // hide edit button even with auth
+  $(`${elemIdPrefix}-btn-guide-edit`).hide();
   if (!token) {
     return;
   }
@@ -230,8 +232,6 @@ async function verifyAuthenticatedUserGuideData() {
     { headers: { Authorization: `Bearer ${token}` } }
   );
   if (resFetch.status !== 200) {
-    // auth user not found/issue, do not allow access to auth ops
-    $(`${elemIdPrefix}-btn-guide-edit,${elemIdPrefix}-btn-guide-create`).hide();
     return;
   }
   const revData = await resFetch.json();
@@ -240,9 +240,6 @@ async function verifyAuthenticatedUserGuideData() {
     $(`${elemIdPrefix}-btn-guide-edit`)
       .attr("href", `/guide-form?id=${revData.ownedGuideId}`)
       .show();
-  } else {
-    $(`${elemIdPrefix}-btn-guide-edit`).hide();
-    $(`${elemIdPrefix}-btn-guide-create`).show();
   }
 }
 

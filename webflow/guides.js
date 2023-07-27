@@ -25,7 +25,7 @@ function guidesResponseHandler(res, elemId) {
     let dataTemplateActual = dataTemplate;
     Object.entries(item).forEach(([key, value]) => {
       let $entryImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
-      if ($entryImg && item.gameIconURL?.length) {
+      if ($entryImg.length && item.gameIconURL?.length) {
         dataTemplateActual = $entryImg
           .removeAttr("srcset")
           .removeAttr("sizes")
@@ -34,7 +34,7 @@ function guidesResponseHandler(res, elemId) {
           .prop("outerHTML");
       }
       $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
-      if ($entryImg && item.iconURL?.length) {
+      if ($entryImg.length && item.iconURL?.length) {
         dataTemplateActual = $entryImg
           .removeAttr("srcset")
           .removeAttr("sizes")

@@ -126,7 +126,7 @@ function listResponseHandler({ listData, elemId, textKeysToReplace }) {
       let dataTemplateActual = dataTemplate;
       Object.entries(item).forEach(([key, value]) => {
         const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
-        if ($entryImg && item.imageUrl?.length) {
+        if ($entryImg.length && item.imageUrl?.length) {
           dataTemplateActual = $entryImg
             .removeAttr("srcset")
             .removeAttr("sizes")
@@ -271,7 +271,7 @@ async function verifyAuthenticatedUserGuideData() {
     return;
   }
   const resFetch = await fetch(
-    `https://${apiDomain}/api/achievement/${achievementId}/guide-auth-user-data`,
+    `https://${apiDomain}/api/achievement/${achievementId}/guide-auth-user-data?id=${guideId}`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
   if (resFetch.status !== 200) {
