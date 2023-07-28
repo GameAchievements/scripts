@@ -1,119 +1,134 @@
 const apiDomain = document.querySelector("meta[name=domain]")?.content;
+const elemIdPrefix = `#gas-home`;
 
-function gamesResponseHandler(res, elemId, limit = 0) {
+function listResponseHandler({
+  listData,
+  elemId,
+  numKeysToReplace,
+  textKeysToReplace,
+}) {
+  // console.info(`=== ${elemId} results ===`, listData);
+  let dataTemplate = $(elemId).prop("outerHTML");
   const $list = $(`${elemId} .gas-list`);
-  const dataTemplate = $list.children().eq(0).prop("outerHTML");
-  // cleanup all other content in the list
-  $list.html(dataTemplate);
-  $list.children().eq(0).hide();
-  console.info(`=== ${elemId} games ===`, res);
-  const keysToReplace = [
-    "id",
-    "name",
-    "description",
-    "achievements",
-    "lastPlayed",
-    "players",
-    "externalGameId",
-  ];
-  let itemsArray = limit ? res.slice(0, limit) : res;
-  itemsArray.forEach((item) => {
-    let dataTemplateActual = dataTemplate;
-    Object.entries(item).forEach(([key, value]) => {
-      dataTemplateActual = $(`.gas-list-entry-cover`, dataTemplateActual)
-        .css("background-image", `url(${item.imageURL})`)
-        .parents(".gas-list-entry")
-        .data("id", item.id)
-        .prop("outerHTML");
-      if (keysToReplace.includes(key)) {
-        dataTemplateActual = dataTemplateActual.replaceAll(`{|${key}|}`, value);
-      } else if (key === "lastPlayed") {
-        dataTemplateActual = dataTemplateActual.replaceAll(
-          `{|${key}|}`,
-          new Date(value).toLocaleString()
-        );
-      } else if (key === "platform") {
-        dataTemplateActual = showPlatform(value, dataTemplateActual);
-      }
+  const isGamesList = elemId.includes("list-games");
+  const $emptyList = $(`${elemId} .gas-list-empty`);
+  if (listData?.length) {
+    const $entryTemplate = $(".gas-list-entry", $list).first();
+    $entryTemplate.show();
+    dataTemplate = $entryTemplate.prop("outerHTML");
+    $entryTemplate.hide();
+    $list.html($entryTemplate);
+    listData.forEach((item, resIdx) => {
+      let dataTemplateActual = dataTemplate;
+      dataTemplateActual = dataTemplateActual.replaceAll(`{|idx|}`, resIdx + 1);
+      Object.entries(item).forEach(([key, value]) => {
+        const $gameImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
+        if ($gameImg?.length && item.gameIconURL?.length) {
+          dataTemplateActual = $gameImg
+            .removeAttr("srcset")
+            .removeAttr("sizes")
+            .attr("src", item.gameIconURL)
+            .parents(".gas-list-entry")
+            .prop("outerHTML");
+        }
+        const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+        if (
+          $entryImg?.length &&
+          (item.iconURL?.length || item.imageURL?.length)
+        ) {
+          dataTemplateActual = isGamesList
+            ? $entryImg
+                .css("background-image", `url(${item.imageURL})`)
+                .parents(".gas-list-entry")
+                .prop("outerHTML")
+            : $entryImg
+                .removeAttr("srcset")
+                .removeAttr("sizes")
+                .attr("src", item.iconURL || item.imageURL)
+                .parents(".gas-list-entry")
+                .prop("outerHTML");
+        }
+        if (textKeysToReplace.includes(key)) {
+          dataTemplateActual = dataTemplateActual.replaceAll(
+            `{|${key}|}`,
+            (key.endsWith("At") ? gaDate(value) : value) || ""
+          );
+        } else if (numKeysToReplace.includes(key)) {
+          dataTemplateActual = dataTemplateActual.replaceAll(
+            `{|${key}|}`,
+            Math.round(value || 0)
+          );
+        } else if (key === "lastPlayed") {
+          dataTemplateActual = dataTemplateActual.replaceAll(
+            `{|${key}|}`,
+            gaDate(value)
+          );
+        } else if (key === "importedFromPlatform" || key === "platform") {
+          dataTemplateActual = showPlatform(value, dataTemplateActual);
+        }
+      });
+      $list.append(dataTemplateActual);
     });
-    $list.append(dataTemplateActual);
-  });
+  } else {
+    $(elemId).html($emptyList);
+    $emptyList.show();
+  }
+  $list.css("display", "flex");
 }
+
 async function fetchGames(type) {
   const resFetch = await fetch(`https://${apiDomain}/api/game/list/${type}`);
   const resData = await resFetch.json();
-  const elemId = "#gas-list-" + type;
-  if (Array.isArray(resData) || resData.length > 0) {
-    gamesResponseHandler(resData, elemId, 4);
-  }
-  setTimeout(() => {
-    if (!Array.isArray(resData) || !resData.length) {
-      $(`${elemId} .gas-list-empty`).show();
-      return;
-    }
-    $(`${elemId} .gas-list`).css("display", "inherit");
-  }, 300);
-}
-function achievementsResponseHandler(res, elemId, limit = 0) {
-  const $list = $(`${elemId} .gas-list`);
-  const dataTemplate = $list.children().eq(0).prop("outerHTML");
-  // cleanup all other content in the list
-  $list.html(dataTemplate);
-  $list.children().eq(0).hide();
-  console.info(`=== ${elemId} games ===`, res);
-  const keysToReplace = ["id", "name", "updatedAt", "gameName", "unlockedAt"];
-  let itemsArray = limit ? res.slice(0, limit) : res;
-  itemsArray.forEach((item) => {
-    let dataTemplateActual = dataTemplate;
-    Object.entries(item).forEach(([key, value]) => {
-      dataTemplateActual = $(`.gas-list-entry-cover-game`, dataTemplateActual)
-        .attr("src", item.gameIconURL)
-        .parents(".gas-list-entry")
-        .data("id", item.id)
-        .prop("outerHTML");
-      dataTemplateActual = $(`.gas-list-entry-cover`, dataTemplateActual)
-        .attr("src", item.iconURL)
-        .parents(".gas-list-entry")
-        .data("id", item.id)
-        .prop("outerHTML");
-      if (keysToReplace.includes(key)) {
-        dataTemplateActual = dataTemplateActual.replaceAll(`{|${key}|}`, value);
-      } else if (key.endsWith("At")) {
-        dataTemplateActual = dataTemplateActual.replaceAll(
-          `{|${key}|}`,
-          new Date(value).toLocaleString()
-        );
-      } else if (key === "importedFromPlatform") {
-        dataTemplateActual = showPlatform(value, dataTemplateActual);
-      }
-    });
-    $list.append(dataTemplateActual);
+  const elemId = `${elemIdPrefix}-list-games-${type}`;
+  listResponseHandler({
+    listData: resData?.slice(0, 4),
+    elemId,
+    numKeysToReplace: ["id", "players", "achievements"],
+    textKeysToReplace: [
+      "id",
+      "name",
+      "description",
+      "lastPlayed",
+      "externalGameId",
+    ],
   });
+  $(`${elemId} .ga-loader-container`).hide();
 }
-async function fetchAchievements(type) {
+async function fetchGuides() {
   const resFetch = await fetch(
-    `https://${apiDomain}/api/achievement/list/${type}`
+    `https://${apiDomain}/api/guide/list?perPage=5&orderBy=createdAt:desc`
   );
   const resData = await resFetch.json();
-  const elemId = "#gas-list-" + type;
-  if (Array.isArray(resData) || resData.length > 0) {
-    achievementsResponseHandler(resData, elemId, 4);
-  }
-  setTimeout(() => {
-    if (!Array.isArray(resData) || !resData.length) {
-      $(`${elemId} .gas-list-empty`).show();
-      return;
-    }
-    $(`${elemId} .gas-list`).css("display", "inherit");
-  }, 300);
+  const elemId = `${elemIdPrefix}-list-guides`;
+  listResponseHandler({
+    listData: resData.results?.slice(0, 4),
+    elemId,
+    numKeysToReplace: ["id", "comments", "likes"],
+    textKeysToReplace: ["name", "author", "description"],
+  });
+  $(`${elemId} .ga-loader-container`).hide();
 }
-window.onload = async () => {
+async function fetchAchievements() {
+  const resFetch = await fetch(
+    `https://${apiDomain}/api/achievement/list/latest`
+  );
+  const resData = await resFetch.json();
+  const elemId = `${elemIdPrefix}-list-achievements-latest`;
+  listResponseHandler({
+    listData: resData,
+    elemId,
+    numKeysToReplace: ["id"],
+    textKeysToReplace: ["name", "updatedAt", "gameName", "unlockedAt"],
+  });
+  $(`${elemId} .ga-loader-container`).hide();
+}
+
+$().ready(async () => {
+  $(`.ga-loader-container`).show();
   await auth0Bootstrap();
   await Promise.all(
     ["recent", "top"].map(async (type) => await fetchGames(type))
   );
-  await fetchAchievements("latest");
-  setTimeout(() => {
-    $(".ga-loader-container").hide();
-  }, 600);
-};
+  await fetchGuides();
+  await fetchAchievements();
+});

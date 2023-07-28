@@ -89,7 +89,7 @@ function listResponseHandler({
       let dataTemplateActual = dataTemplate;
       Object.entries(item).forEach(([key, value]) => {
         const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
-        if ($entryImg && item.iconURL?.length) {
+        if ($entryImg?.length && item.iconURL?.length) {
           dataTemplateActual = $entryImg
             .removeAttr("srcset")
             .removeAttr("sizes")
@@ -161,7 +161,7 @@ function achieversHandler({
       let dataTemplateActual = dataTemplate;
       Object.entries(item).forEach(([key, value]) => {
         const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
-        if ($entryImg && item.iconURL?.length) {
+        if ($entryImg?.length && item.iconURL?.length) {
           dataTemplateActual = $entryImg
             .removeAttr("srcset")
             .removeAttr("sizes")
