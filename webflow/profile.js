@@ -5,7 +5,6 @@ const urlParams = new URLSearchParams(window.location.search);
 let profileId = urlParams.get("id");
 const elemIdPrefix = "#ga-profile";
 const fetchURLPrefix = `https://${apiDomain}/api/profile`;
-let token;
 const formMessageDelay = 4000;
 const platformNames = ["playstation", "xbox", "steam"];
 
@@ -223,20 +222,16 @@ function profileResponseHandler(res) {
 }
 
 const fetchGAUserData = async () => {
-  let resFetch;
+  let resData;
   if (profileId?.length) {
     const fetchURL = `${fetchURLPrefix}/id/${profileId}`;
-    resFetch = await fetch(fetchURL);
-  } else if (userAuth0Data?.sub?.length) {
-    resFetch = await fetch(fetchURLPrefix, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const resFetch = await fetch(fetchURL);
+    resData = await resFetch.json();
+  } else if (userProfileData) {
+    resData = userProfileData;
   } else {
     return false; // login
   }
-  const resData = await resFetch.json();
   if (Object.keys(resData).length > 0 && resData.id) {
     document.title = `${resData.name?.length ? resData.name : resData.id} | ${
       document.title
@@ -434,8 +429,6 @@ window.onload = async () => {
   await auth0Bootstrap();
   if (profileId?.length) {
     $("#user-settings, #ga-user-settings-tab").hide();
-  } else {
-    token = await auth0Client.getTokenSilently();
   }
   if (await fetchGAUserData()) {
     await Promise.all([

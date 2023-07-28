@@ -8,6 +8,8 @@ let guideFetchedData;
 const elemIdPrefix = `#gas-guide`;
 const elemId = `${elemIdPrefix}-form`;
 const formMessageDelay = 4000;
+const sectionsLimit = 4;
+let sectionsCount = 2; // initial
 
 // clone the copyable section into a template (section-2)
 const $sectionTemp = $(".gas-form-section", elemId).last().clone();
@@ -16,6 +18,46 @@ const templatePrefix = "section-2";
 $(".ga-loader-container").show();
 $("#ga-sections-container").hide();
 
+const highlightRequiredLabel = ($el, hasLen) => {
+  if (hasLen) {
+    $el.prev("label").removeClass("field-label-missing");
+    return true;
+  }
+  $el.prev("label").addClass("field-label-missing");
+  return false;
+};
+
+// cycle all fields and verify if they all have content
+const canSubmit = () => {
+  let allInputsFilled = false;
+  let allTextareasFilled = false;
+  for (const inp of $("input[name][required]", elemId)) {
+    allInputsFilled = highlightRequiredLabel($(inp), $(inp).val()?.length);
+    if (!allInputsFilled) {
+      break;
+    }
+  }
+  for (const txt of $(".gas-form-tinymce", elemId)) {
+    allTextareasFilled = highlightRequiredLabel(
+      $(txt),
+      tinyMCE.get($(txt).attr("id")).getContent()?.length
+    );
+    if (!allTextareasFilled) {
+      break;
+    }
+  }
+  if (allInputsFilled && allTextareasFilled) {
+    $(`${elemId}-btn-submit`)
+      .removeClass("disabled-button")
+      .attr("disabled", false);
+  } else {
+    $(`${elemId}-btn-submit`)
+      .addClass("disabled-button")
+      .attr("disabled", true);
+  }
+};
+
+let editorChangeHandlerId;
 const tmceObj = {
   selector: ".gas-form-tinymce",
   height: 200,
@@ -24,25 +66,23 @@ const tmceObj = {
   plugins: "link image lists",
   toolbar: "undo redo | bold italic underline | numlist bullist",
   content_style: "body { font-family:Gantari,sans-serif; font-size:1rem }",
+  setup: (editor) => {
+    editor.on("Paste Change input Undo Redo", (evt) => {
+      clearTimeout(editorChangeHandlerId);
+      editorChangeHandlerId = setTimeout(canSubmit, 100);
+    });
+  },
 };
 
-// https://stackoverflow.com/a/14023897/6225838
-//  // get the content of the active editor
-//  alert(tinyMCE.activeEditor.getContent());
-//  // get the content by id of a particular textarea
-//  alert(tinyMCE.get('section-1-content').getContent());
-
-const sectionsLimit = 4;
-let sectionsCount = 2; // initial
-
 function delSection() {
-  if (
-    confirm(
-      "Press OK to confirm you want to remove this section and its content"
-    )
-  ) {
-    $(this).parents(".gas-form-section").remove();
+  if (confirm("Do you want to remove this section?")) {
+    const $sec = $(this).parents(".gas-form-section");
+    tinyMCE.get($(".gas-form-tinymce", $sec).attr("id")).remove();
+    $sec.remove();
     sectionsCount--;
+    $(`.gas-form-section label[for$=-title]`, elemId).each((secIdx, el) =>
+      $(el).text(`${secIdx + 1}${$(el).text().slice(1)}`)
+    );
     if (sectionsCount <= sectionsLimit) {
       $(".gas-form-section-add", elemId).show();
     }
@@ -77,6 +117,7 @@ async function addSection() {
   if (sectionsCount > sectionsLimit) {
     $(".gas-form-section-add", elemId).hide();
   }
+  canSubmit();
 }
 
 async function setupForm() {
@@ -113,39 +154,22 @@ async function setupForm() {
     });
   });
 
-  const $submitBtn = $(`${elemId}-btn-submit`);
-  $submitBtn.attr("disabled", true);
-  const $requiredFields = $(`[name][required]`, elemId);
-  const submitText = $submitBtn.val();
+  $(`${elemId}-btn-submit`).attr("disabled", true);
+  const submitText = $(`${elemId}-btn-submit`).val();
   const $errEl = $(".gas-form-error", elemId);
   const $errorDiv = $("div", $errEl);
   const txtError = $errEl.text();
   const $successEl = $(".gas-form-success", elemId);
-  let requiredFilled = false;
-  const canSubmit = () => {
-    if (requiredFilled) {
-      $submitBtn.removeClass("disabled-button").attr("disabled", false);
-    }
-  };
-  $requiredFields.on("focusout keyup", function () {
-    $requiredFields.each(function () {
-      if (!$(this).val()?.length) {
-        requiredFilled = false;
-        $(this).prev("label").addClass("field-label-missing");
-        $submitBtn.addClass("disabled-button").attr("disabled", true);
-      } else {
-        requiredFilled = true;
-        $(this).prev("label").removeClass("field-label-missing");
-      }
-    });
-    canSubmit();
-  });
+  $(`input[name][required]`, elemId).on("focusout keyup", canSubmit);
 
-  $submitBtn.on("click", async (e) => {
+  $(`${elemId}-btn-submit`).on("click", async (e) => {
     e.preventDefault();
+    $(`${elemId}-btn-submit`)
+      .addClass("disabled-button")
+      .attr("disabled", true);
     // disable show popup on leave page (site-settings)
     isUserInputActive = false;
-    $submitBtn.val($submitBtn.data("wait"));
+    $(`${elemId}-btn-submit`).val($(`${elemId}-btn-submit`).data("wait"));
     let sections = [];
     $(".gas-form-section", elemId).each(function () {
       sections.push({
@@ -169,6 +193,20 @@ async function setupForm() {
       reqData.author = guideFetchedData.author;
       reqData.profileId = guideFetchedData.profileId;
     } else {
+      if (!userProfileData) {
+        $errEl.show();
+        $errorDiv.text(
+          "Issue on accessing your data for saving. Please try again later."
+        );
+        $(`${elemId}-btn-submit`).val(submitText);
+        setTimeout(() => {
+          $errEl.hide();
+          $errorDiv.text(txtError);
+        }, formMessageDelay);
+        return;
+      }
+      reqData.profileId = userProfileData.id;
+      reqData.author = userProfileData.name;
       reqData.achievementId = achievementId;
     }
     const resFecth = await fetch(guideURL, {
@@ -184,7 +222,10 @@ async function setupForm() {
     if (![200, 201].includes(resFecth.status)) {
       $errEl.show();
       $errorDiv.text(revData?.message);
-      $submitBtn.val(submitText);
+      $(`${elemId}-btn-submit`)
+        .val(submitText)
+        .removeClass("disabled-button")
+        .attr("disabled", false);
       setTimeout(() => {
         $errEl.hide();
         $errorDiv.text(txtError);
@@ -192,9 +233,10 @@ async function setupForm() {
       return;
     }
     $successEl.show();
-    $submitBtn.val(submitText);
+    $(`${elemId}-btn-submit`).val(submitText);
     setTimeout(() => {
       $successEl.hide();
+      redirectAway();
     }, formMessageDelay);
   });
 }
@@ -284,9 +326,7 @@ function redirectAway() {
 
 $().ready(async () => {
   await auth0Bootstrap();
-  if (userAuth0Data?.sub?.length) {
-    token = await auth0Client.getTokenSilently();
-  } else {
+  if (!token) {
     console.log("User not authenticated");
     redirectAway();
     return;

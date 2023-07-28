@@ -279,6 +279,18 @@
 <script>
   let auth0Client = null; // auth0 client initialized in configureClient()
   let userAuth0Data = null;
+  let token = null;
+  let userProfileData = null;
+
+  const fetchLoadProfileData = async () => {
+    const apiDomain = document.querySelector('meta[name=domain]')?.content;
+    const resFetch = await fetch(`https://${apiDomain}/api/profile/`, {
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", }
+    });
+    userProfileData = await resFetch.json();
+    $(".gas-profile-name").text(userProfileData.name);
+    $(".gas-profile-avatar").attr('src', userProfileData.imageURL);
+  }
 
   /**
    * Starts the authentication flow
@@ -343,33 +355,6 @@
     });
   };
 
-  const callApi = async () => {
-    try {
-      // Get the access token from the Auth0 client
-      const token = await auth0Client.getTokenSilently();
-
-      const apiDomain = document.querySelector('meta[name=domain]')?.content;
-      const response = await fetch(`https://${apiDomain}/api/authorized`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      const responseData = await response.json();
-      // Display the result in the output element
-      const responseElement = document.getElementById('api-call-result');
-      if (responseElement) {
-        responseElement.innerText = JSON.stringify(
-          { ...responseData, ...userAuth0Data },
-          {},
-          2
-        );
-      }
-    } catch (err) {
-      console.error('[auth0] calling API error', err);
-    }
-  };
-
   /**
    * Add click events
    */
@@ -389,10 +374,6 @@
 
     if (logoutBtn) {
       logoutBtn.addEventListener('click', logout);
-    }
-
-    if (apiBtn) {
-      apiBtn.addEventListener('click', callApi);
     }
   };
 
@@ -417,12 +398,15 @@
         userAuth0Data = await auth0Client.getUser();
 
         // sub is useful as id https://stackoverflow.com/a/43429956/6225838
-        $(".gas-profile-email").text(userAuth0Data.email);
+
         eachElement('.auth-invisible', (e) => e.classList.add('auth-hidden'));
         eachElement('.auth-visible', (e) => {
           e.classList.remove('auth-hidden');
           e.style.visibility = 'visible';
         });
+        // Get the access token from the Auth0 client
+        token = await auth0Client.getTokenSilently();
+        await fetchLoadProfileData();
       } else {
         eachElement('.auth-invisible', (e) => {
           e.classList.remove('auth-hidden');

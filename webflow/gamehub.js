@@ -4,7 +4,6 @@ const gameId = urlParams.get("id") || 1044;
 const elemIdPrefix = `#gas-gh`;
 const formMessageDelay = 4000;
 const platformsTabNames = ["all", "playstation", "xbox", "steam"];
-let token;
 $(".ga-loader-container").show();
 $("#ga-sections-container").hide();
 
@@ -588,9 +587,6 @@ async function fetchListLeaderboards() {
 
 $().ready(async () => {
   await auth0Bootstrap();
-  if (userAuth0Data?.sub?.length) {
-    token = await auth0Client.getTokenSilently();
-  }
   await fetchGamehub(["top", "about"]);
   setupReviewForm();
   await Promise.all([

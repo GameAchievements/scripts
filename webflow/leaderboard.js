@@ -2,7 +2,6 @@ const apiDomain = document.querySelector("meta[name=domain]")?.content;
 const featureName = "leaderboard";
 const elemId = `#gas-${featureName}`;
 const formMessageDelay = 4000;
-let token;
 $(".ga-loader-container").show();
 $("#ga-sections-container").hide();
 
@@ -99,9 +98,6 @@ function listResponseHandler({
 
 window.onload = async () => {
   await auth0Bootstrap();
-  if (userAuth0Data?.sub?.length) {
-    token = await auth0Client.getTokenSilently();
-  }
   const resList = await fetch(
     `https://${apiDomain}/api/${featureName}${
       paramPlatformId ? `?type=${paramPlatformId}` : ""

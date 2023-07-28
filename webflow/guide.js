@@ -4,7 +4,6 @@ const guideId = urlParams.get("id") || 1;
 let achievementId = 0;
 const elemIdPrefix = `#gas-guide`;
 
-let token;
 $(".ga-loader-container").show();
 $("#ga-sections-container").hide();
 
@@ -293,9 +292,6 @@ async function verifyAuthenticatedUserGuideData() {
 
 $().ready(async () => {
   await auth0Bootstrap();
-  if (userAuth0Data?.sub?.length) {
-    token = await auth0Client.getTokenSilently();
-  }
   await fetchGuide();
   await verifyAuthenticatedUserGuideData();
   await listFetcher({

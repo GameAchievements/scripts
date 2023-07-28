@@ -3,7 +3,6 @@ const urlParams = new URLSearchParams(window.location.search);
 const achievementId = urlParams.get("id") || 1044;
 const elemIdPrefix = `#gas-achievement`;
 const formMessageDelay = 4000;
-let token;
 $(".ga-loader-container").show();
 $("#ga-sections-container").hide();
 
@@ -245,9 +244,6 @@ async function verifyAuthenticatedUserGuideData() {
 
 $().ready(async () => {
   await auth0Bootstrap();
-  if (userAuth0Data?.sub?.length) {
-    token = await auth0Client.getTokenSilently();
-  }
   await verifyAuthenticatedUserGuideData();
   await fetchAchievement();
   await Promise.all([
