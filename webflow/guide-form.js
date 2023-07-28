@@ -20,6 +20,7 @@ $("#ga-sections-container").hide();
 
 const highlightRequiredLabel = ($el, hasLen) => {
   if (hasLen) {
+    isUserInputActive = true;
     $el.prev("label").removeClass("field-label-missing");
     return true;
   }
