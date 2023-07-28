@@ -3,7 +3,7 @@
 const apiDomain = document.querySelector("meta[name=domain]")?.content;
 const urlParams = new URLSearchParams(window.location.search);
 let profileId = urlParams.get("id");
-const elemIdPrefix = "#ga-profile";
+const elemIdPrefix = "#gas-profile";
 const fetchURLPrefix = `https://${apiDomain}/api/profile`;
 const formMessageDelay = 4000;
 const platformNames = ["playstation", "xbox", "steam"];
@@ -177,9 +177,8 @@ const profileAvatarUpdater = async (platformsLinked) => {
   });
 };
 function profileResponseHandler(res) {
-  const elemId = elemIdPrefix;
-  const $ghContainer = $(`${elemId}`);
-  let dataTemplateActual = $ghContainer.prop("outerHTML");
+  const elemId = `${elemIdPrefix}-details`;
+  let dataTemplateActual = $(`${elemId}`).prop("outerHTML");
   console.info(`=== ${elemId} ===`, res);
   const textKeysToReplace = [
     "name",
@@ -194,6 +193,13 @@ function profileResponseHandler(res) {
   Object.entries(res).forEach(([key, value]) => {
     if (textKeysToReplace.includes(key)) {
       dataTemplateActual = dataTemplateActual.replaceAll(`{|${key}|}`, value);
+    } else if (key === "ranking") {
+      Object.entries(value).forEach(([rankKey, rankVal]) => {
+        dataTemplateActual = dataTemplateActual.replaceAll(
+          `{|${rankKey}|}`,
+          rankVal
+        );
+      });
     } else if (key === "platforms") {
       value.forEach(({ platform, accountName }) => {
         dataTemplateActual = dataTemplateActual.replaceAll(
@@ -204,7 +210,7 @@ function profileResponseHandler(res) {
       });
     }
   });
-  $ghContainer.prop("outerHTML", dataTemplateActual);
+  $(`${elemId}`).prop("outerHTML", dataTemplateActual);
   // global (all sections) replacers
   if (userAuth0Data?.sub?.length) {
     profileAvatarUpdater(res.platforms);
