@@ -105,6 +105,7 @@ async function fetchGuide() {
       document.title
     }`;
     achievementId = resData.achievementId;
+    resData.achievementName = achievementNameSlicer(resData.achievementName);
     guideResponseHandler(resData);
   }
 }
@@ -136,7 +137,13 @@ function listResponseHandler({ listData, elemId, textKeysToReplace }) {
         if (textKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
-            (key.endsWith("At") ? gaDate(value) : value) || ""
+            value || ""
+          );
+        } else if (key === "date") {
+          const { date, time } = gaDateTime(value);
+          dataTemplateActual = dataTemplateActual.replaceAll(
+            `{|${key}|}`,
+            `${date} at ${time}`
           );
         }
       });
@@ -199,6 +206,7 @@ function setupLike(hasLike) {
 const setupCommentForm = (hasComment) => {
   const formWrapperId = `${elemIdPrefix}-comment-form`;
   if (hasComment) {
+    $(`${elemIdPrefix}-btn-add-comment`).hide();
     $(formWrapperId).parent().hide();
     return;
   }
@@ -297,7 +305,7 @@ $().ready(async () => {
   await listFetcher({
     listName: "comments",
     numKeysToReplace: [],
-    textKeysToReplace: ["profileId", "author", "comment", "date"],
+    textKeysToReplace: ["profileId", "author", "comment"],
   });
   $(".ga-loader-container").hide();
   $("#ga-sections-container").show();

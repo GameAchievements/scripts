@@ -143,13 +143,14 @@ async function setupForm() {
   $(`${elemId}-btn-cancel`, elemId).on("click", (evt) => {
     evt.preventDefault();
     const $popupWrapper = $(`#gas-popup-leave-confirmation`);
-    $popupWrapper.show().css("opacity", 1);
-    $(`.gas-popup-btn-close`).one("click", (evt) => {
+    $popupWrapper.css({ opacity: 1, display: "flex" });
+    $(`.gas-popup-btn-close`, $popupWrapper).one("click", (evt) => {
       evt.preventDefault();
       $popupWrapper.hide();
     });
-    $(`.gas-popup-btn-leave`).one("click", (evt) => {
+    $(`.gas-popup-btn-leave`, $popupWrapper).one("click", (evt) => {
       evt.preventDefault();
+      isUserInputActive = false;
       $popupWrapper.hide();
       redirectAway();
     });
@@ -269,7 +270,7 @@ function detailsResponseHandler(res, elemId = `${elemIdPrefix}-details`) {
     if (key === "achievementName") {
       dataTemplateActual = dataTemplateActual.replaceAll(
         `{|${key}|}`,
-        value.slice(0, value.indexOf(" | "))
+        achievementNameSlicer(value)
       );
     } else if (textKeysToReplace.includes(key)) {
       dataTemplateActual = dataTemplateActual.replaceAll(

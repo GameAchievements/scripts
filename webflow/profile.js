@@ -5,7 +5,7 @@ const urlParams = new URLSearchParams(window.location.search);
 let profileId = urlParams.get("id");
 const elemIdPrefix = "#gas-profile";
 const fetchURLPrefix = `https://${apiDomain}/api/profile`;
-const formMessageDelay = 4000;
+const formMessageDelay = 4e3;
 const platformNames = ["playstation", "xbox", "steam"];
 
 $(".ga-loader-container").show();
@@ -37,34 +37,39 @@ const unlinkPlatform = ({ platform, accountId, accountName }) => {
   $cardLinked.show();
   $(`.gas-unlink-pa-btn`, $cardLinked).click(async (e) => {
     e.preventDefault();
-
-    await fetch(`https://${apiDomain}/api/profile/unlink-pa`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        platform: platformNameIdMap(platformName),
-      }),
-    });
-    $cardLinked.children().hide();
-    $cardLinked
-      .append(
-        `<p id="ga-unlink-message" class="platform-heading">Unlinking your ${platformName} account…</p>`
+    if (
+      confirm(
+        `Your ${platform} account will no longer belong to your profile. Are you sure?`
       )
-      .css({
-        flexGrow: 1,
-        maxWidth: "25%",
-        justifyContent: "center",
+    ) {
+      await fetch(`https://${apiDomain}/api/profile/unlink-pa`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          platform: platformNameIdMap(platformName),
+        }),
       });
-    setTimeout(() => {
-      $cardLinked.hide();
-      $cardLinked.children().show();
-      $("#ga-unlink-message", $cardLinked).remove();
-      linkPlatform(platformName);
-    }, formMessageDelay);
+      $cardLinked.children().hide();
+      $cardLinked
+        .append(
+          `<p id="ga-unlink-message" class="platform-heading">Unlinking your ${platformName} account…</p>`
+        )
+        .css({
+          flexGrow: 1,
+          maxWidth: "25%",
+          justifyContent: "center",
+        });
+      setTimeout(() => {
+        $cardLinked.hide();
+        $cardLinked.children().show();
+        $("#ga-unlink-message", $cardLinked).remove();
+        linkPlatform(platformName);
+      }, formMessageDelay);
+    }
   });
 };
 
@@ -156,7 +161,7 @@ const profileAvatarUpdater = async (platformsLinked) => {
             .show();
           setTimeout(() => {
             $(`#ga-avatar-message`).removeClass("error-message").hide();
-          }, 4000);
+          }, formMessageDelay);
           return;
         }
         const resData = await resFetch.json();
@@ -171,7 +176,7 @@ const profileAvatarUpdater = async (platformsLinked) => {
             .show();
           setTimeout(() => {
             $(`#ga-avatar-message`).removeClass("success-message").hide();
-          }, 4000);
+          }, formMessageDelay);
         }
       });
   });
@@ -480,6 +485,21 @@ window.onload = async () => {
     ]);
     $(".ga-loader-container").hide();
     $("#ga-sections-container").show();
+    $(`${elemIdPrefix}-btn-delete`).on("click", () => {
+      if (
+        confirm(
+          "This will unlink all your platforms from your profile and remove your profile. Are you sure?"
+        )
+      ) {
+        logout();
+      }
+    });
+    if (window.location.hash?.length > 0) {
+      $([document.documentElement, document.body]).animate(
+        { scrollTop: $(location.hash).offset().top - 50 },
+        2e3
+      );
+    }
     $("#gas-wf-tab-activator").click();
     return;
   }

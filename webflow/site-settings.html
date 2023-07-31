@@ -24,7 +24,9 @@
   .gas-list-empty,
   .gas-platform-psn,
   .gas-platform-xbox,
-  .gas-platform-steam {
+  .gas-platform-steam,
+  .gas-role-premium,
+  .gas-role-regular {
     display: none;
   }
 
@@ -90,26 +92,73 @@
   }
 
   @keyframes rotate {
-    0% {transform: translate(-50%, -50%) rotateZ(0deg);}
-    100% {transform: translate(-50%, -50%) rotateZ(360deg);}
+    0% {
+      transform: translate(-50%, -50%) rotateZ(0deg);
+    }
+
+    100% {
+      transform: translate(-50%, -50%) rotateZ(360deg);
+    }
   }
+
   @keyframes rotateccw {
-    0% {transform: translate(-50%, -50%) rotate(0deg);}
-    100% {transform: translate(-50%, -50%) rotate(-360deg);}
+    0% {
+      transform: translate(-50%, -50%) rotate(0deg);
+    }
+
+    100% {
+      transform: translate(-50%, -50%) rotate(-360deg);
+    }
   }
+
   @keyframes spin {
+
     0%,
-    100% {box-shadow: 0.35em 0px 0 0px currentcolor;}
-    12% {box-shadow: 0.35em 0.35em 0 0 currentcolor;}
-    25% {box-shadow: 0 0.35em 0 0px currentcolor;}
-    37% {box-shadow: -0.35em 0.35em 0 0 currentcolor;}
-    50% {box-shadow: -0.35em 0 0 0 currentcolor;}
-    62% {box-shadow: -0.35em -0.35em 0 0 currentcolor;}
-    75% {box-shadow: 0px -0.35em 0 0 currentcolor;}
-    87% {box-shadow: 0.35em -0.35em 0 0 currentcolor;}
+    100% {
+      box-shadow: 0.35em 0px 0 0px currentcolor;
+    }
+
+    12% {
+      box-shadow: 0.35em 0.35em 0 0 currentcolor;
+    }
+
+    25% {
+      box-shadow: 0 0.35em 0 0px currentcolor;
+    }
+
+    37% {
+      box-shadow: -0.35em 0.35em 0 0 currentcolor;
+    }
+
+    50% {
+      box-shadow: -0.35em 0 0 0 currentcolor;
+    }
+
+    62% {
+      box-shadow: -0.35em -0.35em 0 0 currentcolor;
+    }
+
+    75% {
+      box-shadow: 0px -0.35em 0 0 currentcolor;
+    }
+
+    87% {
+      box-shadow: 0.35em -0.35em 0 0 currentcolor;
+    }
   }
-  .gas-rating-scale {display: flex; gap: 1.25rem; overflow-x: auto; margin: 0.35rem 0 0}
-  .gas-rating-scale li {position: relative; cursor: pointer;}
+
+  .gas-rating-scale {
+    display: flex;
+    gap: 1.25rem;
+    overflow-x: auto;
+    margin: 0.35rem 0 0
+  }
+
+  .gas-rating-scale li {
+    position: relative;
+    cursor: pointer;
+  }
+
   .gas-rating-scale p {
     position: absolute;
     left: 1.2rem;
@@ -120,9 +169,20 @@
     color: #0b1041;
     display: none;
   }
-  .gas-rating-scale li:first-of-type p {left: 1.3rem;}
-  .gas-rating-scale li:last-of-type p {left: 1rem;}
-  .gas-rating-scale svg {width: 3rem;fill: #5663ba;transition: fill 0.25s;}
+
+  .gas-rating-scale li:first-of-type p {
+    left: 1.3rem;
+  }
+
+  .gas-rating-scale li:last-of-type p {
+    left: 1rem;
+  }
+
+  .gas-rating-scale svg {
+    width: 3rem;
+    fill: #5663ba;
+    transition: fill 0.25s;
+  }
 </style>
 
 <!------------------------------------- Footer code ------------------------------------->
@@ -255,7 +315,6 @@
     if (isUserInputActive) {
       // Cancel the event as stated by the standard
       evt.preventDefault();
-      $('#gas-popup-leave-confirmation').show();
       // Chrome requires returnValue to be set
       return (evt.returnValue = "");
     }
@@ -272,6 +331,15 @@
       }
     }
   });
+  const achievementNameSlicer = (name) => {
+    // while achievements names have metadata (e.g. platform ids) for distinguishing purposes
+    // this helps to take out that data
+    if (!name) {
+      return 'N.A.';
+    }
+    const metaDivider = name.lastIndexOf(' | ');
+    return metaDivider > 0 ? name.slice(0, metaDivider) : name;
+  };
 </script>
 
 <!-- ~~~ users and auth0 helpers ~~~ -->
@@ -284,12 +352,52 @@
 
   const fetchLoadProfileData = async () => {
     const apiDomain = document.querySelector('meta[name=domain]')?.content;
-    const resFetch = await fetch(`https://${apiDomain}/api/profile/`, {
+    let resFetch = await fetch(`https://${apiDomain}/api/profile/`, {
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", }
     });
     userProfileData = await resFetch.json();
     $(".gas-profile-name").text(userProfileData.name);
-    $(".gas-profile-avatar").attr('src', userProfileData.imageURL);
+    if (userProfileData.imageURL?.length) {
+      $(".gas-profile-avatar").attr('src', userProfileData.imageURL);
+    }
+    const roleName = userProfileData.role.toLowerCase();
+    if (roleName === 'regular') {
+      const $premBtn = $('.gas-premium-btn');
+      const $premPop = $('#gas-popup-premium');
+      if (window.matchMedia('screen and (max-width: 479px)').matches) {
+        $premBtn.each(function () {
+          if ($(this).hasClass('gas-desktop-only')) {
+            $(this).hide();
+          }
+        });
+      }
+      $('.gas-popup-btn-close', $premPop).on('click', (evt) => {
+        evt.preventDefault();
+        $premPop.hide();
+      });
+      $premBtn.on('click', (evt) => {
+        evt.preventDefault();
+        $premPop.css({ opacity: 1, display: 'flex' });
+        $('.gas-popup-btn-confirm', $premPop).one('click', async (evt) => {
+          evt.preventDefault();
+          resFetch = await fetch(`https://${apiDomain}/api/payment/`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+          });
+          const payData = await resFetch.json();
+          if (payData?.paymentPageUrl?.length) {
+            window.location.replace(payData.paymentPageUrl);
+          } else {
+            alert("Payment failure, we apologize for the inconvenience: please try again later.");
+          }
+        });
+      });
+    }
+    $('.gas-role-' + roleName).show();
   }
 
   /**
@@ -355,26 +463,9 @@
     });
   };
 
-  /**
-   * Add click events
-   */
   const setButtonsTriggers = () => {
-    const loginBtn = document.getElementById('login-btn');
-    const signUpBtn = document.getElementById('signup-btn');
-    const logoutBtn = document.getElementById('logout-btn');
-    const apiBtn = document.getElementById('api-btn');
-
-    if (loginBtn) {
-      loginBtn.addEventListener('click', login);
-    }
-
-    if (signUpBtn) {
-      signUpBtn.addEventListener('click', login);
-    }
-
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', logout);
-    }
+    $('.gas-auth-btn-login, .gas-auth-btn-signup').on('click', (evt) => { evt.preventDefault(); login(); });
+    $('.gas-auth-btn-logout').on('click', (evt) => { evt.preventDefault(); logout(); });
   };
 
   /**
