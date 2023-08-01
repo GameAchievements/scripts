@@ -120,7 +120,7 @@ function listResponseHandler({
     $list.html($emptyList);
     $emptyList.show();
   }
-  $list.show();
+  $list.css("display", "flex");
 }
 
 async function listFetcher({ listName, numKeysToReplace, textKeysToReplace }) {

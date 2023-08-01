@@ -2,33 +2,38 @@ const apiDomain = document.querySelector("meta[name=domain]")?.content;
 
 let achievementsCount = 0;
 let filterTxt = "All";
+let $entryTemplate, $listHeader, $emptyList;
 
-function achievementsResponseHandler(res, elemId) {
+async function filterByLetter(elemId, event) {
+  $(".gas-filters-sw-li", $(elemId)).removeClass("active");
+  $(event.target).addClass("active");
+  $(".ga-loader-container", $(elemId)).show();
+  $(".gas-list,.gas-list-results-info", elemId).hide();
+  filterTxt = $(event.target).text();
+  await fetchAchievements(elemId);
+  $(".gas-list-results-info", elemId).show();
+  $(".ga-loader-container").hide();
+}
+
+function listResponseHandler({
+  listData,
+  elemId,
+  numKeysToReplace,
+  textKeysToReplace,
+}) {
+  console.info(`=== ${elemId} results ===`, listData);
+  let dataTemplate = $(elemId).prop("outerHTML");
   const $list = $(`${elemId} .gas-list`);
-  const $listHeader = $list.children().first();
-  const $entryTemplate = $(".gas-list-entry", $list).first();
-  $entryTemplate.show();
-  const dataTemplate = $entryTemplate.prop("outerHTML");
-  $list.html($listHeader).append($entryTemplate);
-  $entryTemplate.hide();
-  console.info(`=== ${elemId} results ===`, res);
-  const numKeysToReplace = [
-    "points",
-    "playersCount",
-    "achieversCount",
-    "completion",
-    "gameTotalAchievements",
-  ];
-  const keysToReplace = [
-    "id",
-    "name",
-    "gameName",
-    "description",
-    "updatedAt",
-    "platformOriginalAchievementId",
-  ];
-  if (Array.isArray(res)) {
-    res.forEach((item, resIdx) => {
+  if (listData.length > 0) {
+    if (!$entryTemplate) {
+      $emptyList = $(`.gas-list-empty`, $list);
+      $listHeader = $list.children().first();
+      $entryTemplate = $(".gas-list-entry", $list).first().clone();
+      $(".gas-list-entry", $list).first().remove();
+    }
+    dataTemplate = $entryTemplate.prop("outerHTML");
+    $list.html($listHeader);
+    listData.forEach((item, resIdx) => {
       let dataTemplateActual = dataTemplate;
       Object.entries(item).forEach(([key, value]) => {
         const $gameImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
@@ -40,20 +45,20 @@ function achievementsResponseHandler(res, elemId) {
             .parents(".gas-list-entry")
             .prop("outerHTML");
         }
-        const $achievementImg = $(`.gas-list-entry-cover`, dataTemplateActual);
-        if ($achievementImg?.length && item.iconURL?.length) {
-          dataTemplateActual = $achievementImg
+        const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+        const imageURL = item.iconURL || item.imageURL;
+        if ($entryImg?.length && imageURL?.length) {
+          dataTemplateActual = $entryImg
             .removeAttr("srcset")
             .removeAttr("sizes")
-            .attr("src", item.iconURL)
+            .attr("src", imageURL)
             .parents(".gas-list-entry")
             .prop("outerHTML");
         }
-        if (keysToReplace.includes(key)) {
+        if (textKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
-            (key.endsWith("At") ? new Date(value).toLocaleString() : value) ||
-              ""
+            (key.endsWith("At") ? gaDate(value) : value) || ""
           );
         } else if (numKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
@@ -86,41 +91,51 @@ function achievementsResponseHandler(res, elemId) {
         .removeClass(["bg-light", "bg-dark"])
         .addClass(`bg-${resIdx % 2 > 0 ? "light" : "dark"}`);
     });
+  } else {
+    $list.html($emptyList);
+    $emptyList.show();
   }
+  $list.css("display", "flex");
 }
-async function filterByLetter(elemId, event) {
-  $(".gas-filters-sw-li", $(elemId)).removeClass("active");
-  $(event.target).addClass("active");
-  $(".ga-loader-container", $(elemId)).show();
-  $(
-    ".gas-list-header,.gas-list-results-info,.gas-list-empty,.gas-list",
-    $(elemId)
-  ).hide();
-  filterTxt = $(event.target).text();
-  fetchAchievements(elemId);
-}
-async function fetchAchievements(elemId) {
+
+async function fetchAchievements(elemId, searchTerm = "") {
+  const paramsObj = {};
+  if (filterTxt !== "All") {
+    paramsObj.startsWith = filterTxt;
+  }
+  if (searchTerm.length) {
+    paramsObj.q = searchTerm;
+  }
   const resAchievements = await fetch(
-    `https://${apiDomain}/api/achievement/list` +
-      (filterTxt === "All" ? "" : "?startsWith=" + filterTxt)
+    `https://${apiDomain}/api/achievement/list${
+      Object.keys(paramsObj)?.length
+        ? `?${new URLSearchParams(paramsObj).toString()}`
+        : ""
+    }`
   );
-  const achievementsData = await resAchievements.json();
-  if (Array.isArray(achievementsData) || achievementsData.length > 0) {
-    achievementsCount = achievementsData.length;
-    achievementsResponseHandler(achievementsData, elemId);
-  }
-  setTimeout(() => {
-    $(`${elemId} .ga-loader-container`).hide();
-    $(`${elemId} .gas-list-header`).show();
-    if (!achievementsCount) {
-      $(`${elemId} .gas-list-empty`).show();
-      return;
-    }
-    $(`${elemId} .gas-list-results-info`).text(
-      achievementsCount + " result(s)"
-    );
-    $(`${elemId} .gas-list-results-info,${elemId} .gas-list`).show();
-  }, 600);
+  const fetchData = await resAchievements.json();
+  $(`${elemId} .gas-list-results-info`).text(
+    (fetchData?.length || 0) + " result(s)"
+  );
+  listResponseHandler({
+    listData: fetchData,
+    elemId,
+    numKeysToReplace: [
+      "points",
+      "playersCount",
+      "achieversCount",
+      "completion",
+      "gameTotalAchievements",
+    ],
+    textKeysToReplace: [
+      "id",
+      "name",
+      "gameName",
+      "description",
+      "updatedAt",
+      "platformOriginalAchievementId",
+    ],
+  });
 }
 $().ready(async () => {
   await auth0Bootstrap();
@@ -128,5 +143,7 @@ $().ready(async () => {
   $(`${achievementsElemId} .gas-filters-sw-li`).on("click", (ev) =>
     filterByLetter(achievementsElemId, ev)
   );
+  setupListSearch(achievementsElemId, fetchAchievements);
   await fetchAchievements(achievementsElemId);
+  $(".ga-loader-container").hide();
 });

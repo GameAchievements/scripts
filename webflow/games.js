@@ -1,38 +1,54 @@
 const apiDomain = document.querySelector("meta[name=domain]")?.content;
 
-let gamesCount = 0;
 let filterTxt = "All";
+let $entryTemplate, $listHeader, $emptyList;
 
-function gamesResponseHandler(res, elemId) {
+async function filterByLetter(elemId, event) {
+  $(".gas-filters-sw-li", $(elemId)).removeClass("active");
+  $(event.target).addClass("active");
+  $(".ga-loader-container", $(elemId)).show();
+  $(".gas-list,.gas-list-results-info", elemId).hide();
+  filterTxt = $(event.target).text();
+  await fetchGames(elemId);
+  $(".gas-list-results-info", elemId).show();
+  $(".ga-loader-container").hide();
+}
+
+function listResponseHandler({
+  listData,
+  elemId,
+  numKeysToReplace,
+  textKeysToReplace,
+}) {
+  console.info(`=== ${elemId} results ===`, listData);
+  let dataTemplate = $(elemId).prop("outerHTML");
   const $list = $(`${elemId} .gas-list`);
-  const $listHeader = $list.children().first();
-  const $entryTemplate = $(".gas-list-entry", $list).first();
-  $entryTemplate.show();
-  const dataTemplate = $entryTemplate.prop("outerHTML");
-  $list.html($listHeader).append($entryTemplate);
-  $entryTemplate.hide();
-  console.info(`=== ${elemId} results ===`, res);
-  const numKeysToReplace = ["completion", "achievementsCount"];
-  const keysToReplace = ["id", "name", "description", "updatedAt"];
-  if (Array.isArray(res)) {
-    res.forEach((item, resIdx) => {
+  if (listData.length > 0) {
+    if (!$entryTemplate) {
+      $emptyList = $(`.gas-list-empty`, $list);
+      $listHeader = $list.children().first();
+      $entryTemplate = $(".gas-list-entry", $list).first().clone();
+      $(".gas-list-entry", $list).first().remove();
+    }
+    dataTemplate = $entryTemplate.prop("outerHTML");
+    $list.html($listHeader);
+    listData.forEach((item, resIdx) => {
       let dataTemplateActual = dataTemplate;
       Object.entries(item).forEach(([key, value]) => {
-        const $imgEl = $(`.gas-list-entry-cover`, dataTemplateActual);
-        if ($imgEl.length) {
-          dataTemplateActual = $imgEl
+        const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+        const imageURL = item.iconURL || item.imageURL;
+        if ($entryImg?.length && imageURL?.length) {
+          dataTemplateActual = $entryImg
             .removeAttr("srcset")
             .removeAttr("sizes")
-            .attr("src", item.imageURL)
+            .attr("src", imageURL)
             .parents(".gas-list-entry")
-            .data("id", item.id)
             .prop("outerHTML");
         }
-        if (keysToReplace.includes(key)) {
+        if (textKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
-            (key.endsWith("At") ? new Date(value).toLocaleString() : value) ||
-              ""
+            (key.endsWith("At") ? gaDate(value) : value) || ""
           );
         } else if (numKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
@@ -50,45 +66,46 @@ function gamesResponseHandler(res, elemId) {
         .removeClass(["bg-light", "bg-dark"])
         .addClass(`bg-${resIdx % 2 > 0 ? "light" : "dark"}`);
     });
+  } else {
+    $list.html($emptyList);
+    $emptyList.show();
   }
+  $list.css("display", "flex");
 }
-async function filterByLetter(elemId, event) {
-  $(".gas-filters-sw-li", $(elemId)).removeClass("active");
-  $(event.target).addClass("active");
-  $(".ga-loader-container", $(elemId)).show();
-  $(
-    ".gas-list-header,.gas-list-results-info,.gas-list-empty,.gas-list",
-    $(elemId)
-  ).hide();
-  filterTxt = $(event.target).text();
-  fetchGames(elemId);
-}
-async function fetchGames(elemId) {
+
+async function fetchGames(elemId, searchTerm = "") {
+  const paramsObj = {};
+  if (filterTxt !== "All") {
+    paramsObj.startsWith = filterTxt;
+  }
+  if (searchTerm.length) {
+    paramsObj.q = searchTerm;
+  }
   const resGames = await fetch(
-    `https://${apiDomain}/api/game/list` +
-      (filterTxt === "All" ? "" : "?startsWith=" + filterTxt)
+    `https://${apiDomain}/api/game/list${
+      Object.keys(paramsObj)?.length
+        ? `?${new URLSearchParams(paramsObj).toString()}`
+        : ""
+    }`
   );
-  const gamesData = await resGames.json();
-  if (Array.isArray(gamesData) || gamesData.length > 0) {
-    gamesCount = gamesData.length;
-    gamesResponseHandler(gamesData, elemId);
-  }
-  setTimeout(() => {
-    $(`${elemId} .ga-loader-container`).hide();
-    $(`${elemId} .gas-list-header`).show();
-    if (!gamesCount) {
-      $(`${elemId} .gas-list-empty`).show();
-      return;
-    }
-    $(`${elemId} .gas-list-results-info`).text(gamesCount + " result(s)");
-    $(`${elemId} .gas-list-results-info,${elemId} .gas-list`).show();
-  }, 600);
+  const fetchData = await resGames.json();
+  $(`${elemId} .gas-list-results-info`).text(
+    (fetchData?.length || 0) + " result(s)"
+  );
+  listResponseHandler({
+    listData: fetchData,
+    elemId,
+    numKeysToReplace: ["completion", "achievementsCount"],
+    textKeysToReplace: ["id", "name", "description", "updatedAt"],
+  });
 }
-window.onload = async () => {
+$().ready(async () => {
   await auth0Bootstrap();
   const gamesElemId = "#gas-list-games";
   $(`${gamesElemId} .gas-filters-sw-li`).on("click", (ev) =>
     filterByLetter(gamesElemId, ev)
   );
+  setupListSearch(gamesElemId, fetchGames);
   await fetchGames(gamesElemId);
-};
+  $(".ga-loader-container").hide();
+});

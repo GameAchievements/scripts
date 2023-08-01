@@ -92,73 +92,26 @@
   }
 
   @keyframes rotate {
-    0% {
-      transform: translate(-50%, -50%) rotateZ(0deg);
-    }
-
-    100% {
-      transform: translate(-50%, -50%) rotateZ(360deg);
-    }
+    0% {transform: translate(-50%, -50%) rotateZ(0deg);}
+    100% {transform: translate(-50%, -50%) rotateZ(360deg);}
   }
-
   @keyframes rotateccw {
-    0% {
-      transform: translate(-50%, -50%) rotate(0deg);
-    }
-
-    100% {
-      transform: translate(-50%, -50%) rotate(-360deg);
-    }
+    0% {transform: translate(-50%, -50%) rotate(0deg);}
+    100% {transform: translate(-50%, -50%) rotate(-360deg);}
   }
-
   @keyframes spin {
-
     0%,
-    100% {
-      box-shadow: 0.35em 0px 0 0px currentcolor;
-    }
-
-    12% {
-      box-shadow: 0.35em 0.35em 0 0 currentcolor;
-    }
-
-    25% {
-      box-shadow: 0 0.35em 0 0px currentcolor;
-    }
-
-    37% {
-      box-shadow: -0.35em 0.35em 0 0 currentcolor;
-    }
-
-    50% {
-      box-shadow: -0.35em 0 0 0 currentcolor;
-    }
-
-    62% {
-      box-shadow: -0.35em -0.35em 0 0 currentcolor;
-    }
-
-    75% {
-      box-shadow: 0px -0.35em 0 0 currentcolor;
-    }
-
-    87% {
-      box-shadow: 0.35em -0.35em 0 0 currentcolor;
-    }
+    100% {box-shadow: 0.35em 0px 0 0px currentcolor;}
+    12% {box-shadow: 0.35em 0.35em 0 0 currentcolor;}
+    25% {box-shadow: 0 0.35em 0 0px currentcolor;}
+    37% {box-shadow: -0.35em 0.35em 0 0 currentcolor;}
+    50% {box-shadow: -0.35em 0 0 0 currentcolor;}
+    62% {box-shadow: -0.35em -0.35em 0 0 currentcolor;}
+    75% {box-shadow: 0px -0.35em 0 0 currentcolor;}
+    87% {box-shadow: 0.35em -0.35em 0 0 currentcolor;}
   }
-
-  .gas-rating-scale {
-    display: flex;
-    gap: 1.25rem;
-    overflow-x: auto;
-    margin: 0.35rem 0 0
-  }
-
-  .gas-rating-scale li {
-    position: relative;
-    cursor: pointer;
-  }
-
+  .gas-rating-scale {display: flex; gap: 1.25rem; overflow-x: auto; margin: 0.35rem 0 0}
+  .gas-rating-scale li {position: relative; cursor: pointer;}
   .gas-rating-scale p {
     position: absolute;
     left: 1.2rem;
@@ -169,23 +122,19 @@
     color: #0b1041;
     display: none;
   }
-
-  .gas-rating-scale li:first-of-type p {
-    left: 1.3rem;
-  }
-
-  .gas-rating-scale li:last-of-type p {
-    left: 1rem;
-  }
-
-  .gas-rating-scale svg {
-    width: 3rem;
-    fill: #5663ba;
-    transition: fill 0.25s;
-  }
+  .gas-rating-scale li:first-of-type p {left: 1.3rem;}
+  .gas-rating-scale li:last-of-type p {left: 1rem;}
+  .gas-rating-scale svg {width: 3rem;fill: #5663ba;transition: fill 0.25s;}
 </style>
 
 <!------------------------------------- Footer code ------------------------------------->
+<!-- ~~~ Global vars ~~~ -->
+<script>
+  let auth0Client = null; // auth0 client initialized in configureClient()
+  let userAuth0Data = null;
+  let token = null;
+  let userProfileData = null;
+</script>
 
 <!-- ~~~ Layout helpers ~~~ -->
 <script>
@@ -340,16 +289,24 @@
     const metaDivider = name.lastIndexOf(' | ');
     return metaDivider > 0 ? name.slice(0, metaDivider) : name;
   };
+  const setupListSearch = (elemId, fetchFn) => {
+    $(`${elemId} form.search`).on('submit', async function (evt) {
+      evt.preventDefault();
+      searchTerm = new URLSearchParams($(this).serialize()).get('query');
+      if (searchTerm?.length) {
+        $(".ga-loader-container", elemId).show();
+        $(".gas-list,.gas-list-results-info", elemId).hide();
+        await fetchFn(elemId, searchTerm);
+        $(".gas-list-results-info", elemId).show();
+        $(".ga-loader-container").hide();
+      }
+    });
+  };
 </script>
 
 <!-- ~~~ users and auth0 helpers ~~~ -->
 <script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
 <script>
-  let auth0Client = null; // auth0 client initialized in configureClient()
-  let userAuth0Data = null;
-  let token = null;
-  let userProfileData = null;
-
   const fetchLoadProfileData = async () => {
     const apiDomain = document.querySelector('meta[name=domain]')?.content;
     let resFetch = await fetch(`https://${apiDomain}/api/profile/`, {
