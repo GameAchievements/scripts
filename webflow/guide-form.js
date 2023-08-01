@@ -18,28 +18,41 @@ const templatePrefix = "section-2";
 $(".ga-loader-container").show();
 $("#ga-sections-container").hide();
 
-const highlightRequiredLabel = ($el, hasLen) => {
+const isRequiredFilled = ($el, hasLen) => {
   if (hasLen) {
     isUserInputActive = true;
-    $el.prev("label").removeClass("field-label-missing");
     return true;
   }
-  $el.prev("label").addClass("field-label-missing");
   return false;
 };
 
+const highlightRequiredLabel = ($el) => {
+  if (
+    ($el.hasClass("gas-form-tinymce")
+      ? tinyMCE.get($el.attr("id")).getContent()
+      : $el.val()
+    )?.length
+  ) {
+    return $el.prev("label").removeClass("field-label-missing");
+  }
+  $el.prev("label").addClass("field-label-missing");
+};
+
 // cycle all fields and verify if they all have content
-const canSubmit = () => {
+const canSubmit = ($elChanged) => {
   let allInputsFilled = false;
   let allTextareasFilled = false;
+  if ($elChanged?.length) {
+    highlightRequiredLabel($elChanged);
+  }
   for (const inp of $("input[name][required]", elemId)) {
-    allInputsFilled = highlightRequiredLabel($(inp), $(inp).val()?.length);
+    allInputsFilled = isRequiredFilled($(inp), $(inp).val()?.length);
     if (!allInputsFilled) {
       break;
     }
   }
   for (const txt of $(".gas-form-tinymce", elemId)) {
-    allTextareasFilled = highlightRequiredLabel(
+    allTextareasFilled = isRequiredFilled(
       $(txt),
       tinyMCE.get($(txt).attr("id")).getContent()?.length
     );
@@ -70,13 +83,17 @@ const tmceObj = {
   setup: (editor) => {
     editor.on("Paste Change input Undo Redo", (evt) => {
       clearTimeout(editorChangeHandlerId);
-      editorChangeHandlerId = setTimeout(canSubmit, 100);
+      editorChangeHandlerId = setTimeout(
+        () => canSubmit($(editor.targetElm)),
+        100
+      );
     });
   },
 };
 
 function delSection() {
   if (confirm("Do you want to remove this section?")) {
+    canSubmit();
     const $sec = $(this).parents(".gas-form-section");
     tinyMCE.get($(".gas-form-tinymce", $sec).attr("id")).remove();
     $sec.remove();
@@ -92,15 +109,17 @@ function delSection() {
 
 async function addSection() {
   sectionsCount++;
+  $(`${elemId}-btn-submit`).addClass("disabled-button").attr("disabled", true);
   const $newSection = $sectionTemp.clone().show();
   const curSecId = `section-${sectionsCount}`;
   $(`label[for=${templatePrefix}-title]`, $newSection)
     .text(`${sectionsCount} › section name*`)
     .attr("for", `${curSecId}-title`);
-  $(`[name=${templatePrefix}-title]`, $newSection).attr(
-    "name",
-    `${curSecId}-title`
-  );
+  $(`[name=${templatePrefix}-title]`, $newSection)
+    .attr("name", `${curSecId}-title`)
+    .on("focusout keyup", function () {
+      canSubmit($(this));
+    });
   $(`label[for=${templatePrefix}-content]`, $newSection).attr(
     "for",
     `${curSecId}-content`
@@ -118,7 +137,6 @@ async function addSection() {
   if (sectionsCount > sectionsLimit) {
     $(".gas-form-section-add", elemId).hide();
   }
-  canSubmit();
 }
 
 async function setupForm() {
@@ -162,7 +180,9 @@ async function setupForm() {
   const $errorDiv = $("div", $errEl);
   const txtError = $errEl.text();
   const $successEl = $(".gas-form-success", elemId);
-  $(`input[name][required]`, elemId).on("focusout keyup", canSubmit);
+  $(`input[name][required]`, elemId).on("focusout keyup", function () {
+    canSubmit($(this));
+  });
 
   $(`${elemId}-btn-submit`).on("click", async (e) => {
     e.preventDefault();
@@ -236,6 +256,9 @@ async function setupForm() {
     }
     $successEl.show();
     $(`${elemId}-btn-submit`).val(submitText);
+    setTimeout(() => {
+      $(`${elemId}-fields`).hide();
+    }, formMessageDelay / 4);
     setTimeout(() => {
       $successEl.hide();
       redirectAway();
