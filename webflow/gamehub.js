@@ -476,8 +476,7 @@ const setupReviewForm = () => {
   });
 };
 
-async function fetchListLeaderboards() {
-  const elemId = `${elemIdPrefix}-leaderboard`;
+async function fetchListLeaderboards(elemId, searchTerm = "") {
   let dataTemplate = $(elemId).prop("outerHTML");
   platformsTabNames.forEach(async (tabName) => {
     const $list = $(`${elemId} .gas-list-${tabName}`);
@@ -495,9 +494,18 @@ async function fetchListLeaderboards() {
       default:
         break;
     }
+    const paramsObj = { gameId };
+    if (paramPlatformId) {
+      paramsObj.type = paramPlatformId;
+    }
+    if (searchTerm.length) {
+      paramsObj.q = searchTerm;
+    }
     const resList = await fetch(
-      `https://${apiDomain}/api/leaderboard?gameId=${gameId}${
-        paramPlatformId ? `&type=${paramPlatformId}` : ""
+      `https://${apiDomain}/api/leaderboard${
+        Object.keys(paramsObj)?.length
+          ? `?${new URLSearchParams(paramsObj).toString()}`
+          : ""
       }`
     );
     const listData = await resList.json();
@@ -589,13 +597,14 @@ $().ready(async () => {
   await auth0Bootstrap();
   await fetchGamehub(["top", "about"]);
   setupReviewForm();
+  setupListSearch(`${elemIdPrefix}-leaderboard`, fetchListLeaderboards);
   await Promise.all([
     await listFetcher({
       listName: "achievements",
       numKeysToReplace: ["id", "score", "achieversCount", "gAPoints"],
       textKeysToReplace: ["name", "description", "updatedAt"],
     }),
-    await fetchListLeaderboards(),
+    await fetchListLeaderboards(`${elemIdPrefix}-leaderboard`),
     await listFetcher({
       listName: "guides",
       numKeysToReplace: ["id", "commentsCount", "viewsCount", "likesCount"],
