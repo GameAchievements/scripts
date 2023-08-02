@@ -1,5 +1,6 @@
 <!------------------------------------- Header code ------------------------------------->
 <meta name="domain" content="gameachievements.up.railway.app" />
+<meta name="adsense" content="" />
 <!-- for pages that should redirect to profile
   <meta name="loginRedirectPath" content="/profile" />
 -->
@@ -125,6 +126,8 @@
   .gas-rating-scale li:first-of-type p {left: 1.3rem;}
   .gas-rating-scale li:last-of-type p {left: 1rem;}
   .gas-rating-scale svg {width: 3rem;fill: #5663ba;transition: fill 0.25s;}
+
+  .adsbygoogle {display:flex;align-items:center;justify-content:center;height:100%}
 </style>
 
 <!------------------------------------- Footer code ------------------------------------->
@@ -445,6 +448,7 @@
    */
   const updateUI = async (isAuthenticated) => {
     try {
+      const $adsSections = $('.ads-section');
       if (isAuthenticated) {
         userAuth0Data = await auth0Client.getUser();
 
@@ -458,6 +462,9 @@
         // Get the access token from the Auth0 client
         token = await auth0Client.getTokenSilently();
         await fetchLoadProfileData();
+        if (userProfileData.adsOff) {
+          $adsSections.remove();
+        }
       } else {
         $('.gas-premium-btn').remove();
         $('#gas-popup-premium').remove();
@@ -466,6 +473,14 @@
           e.style.visibility = 'visible';
         });
         eachElement('.auth-visible', (e) => e.classList.add('auth-hidden'));
+      }
+      const adsenseClientId = document.querySelector('meta[name=adsense]')?.content;
+      if (adsenseClientId?.length) {
+        $('head').append(`<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}" crossorigin="anonymous"><\/script>`);
+        $adsSections.each((adIdx, adEl) => {
+          $(adEl).css('background', 'transparent').html(`<ins class="adsbygoogle" data-ad-client="${adsenseClientId}" data-ad-slot="1234567890"><\/ins>`)
+            .append("<script>(adsbygoogle = window.adsbygoogle || []).push({});<\/script>");
+        });
       }
     } catch (err) {
       console.log('[auth0] Error updating UI!', err);

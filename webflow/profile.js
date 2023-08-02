@@ -10,7 +10,7 @@ const platformNames = ["playstation", "xbox", "steam"];
 
 $(".ga-loader-container").show();
 $(
-  "#ga-sections-container,.gas-role-premium,.gas-role-regular,[id^=ga-pa-linked],[id^=ga-pa-to-link],[id^=ga-avatar-btn],#ga-avatar-message"
+  "#ga-sections-container,.gas-role-non-regular,.gas-role-regular,[id^=ga-pa-linked],[id^=ga-pa-to-link],[id^=ga-avatar-btn],#ga-avatar-message"
 ).hide();
 
 const platformNameIdMap = (platformName) => {
@@ -134,7 +134,7 @@ const linkPlatform = (platformName) => {
   });
 };
 
-const formsSetup = (platformsLinked = []) => {
+const setupLinkForms = (platformsLinked = []) => {
   platformsLinked.forEach(unlinkPlatform);
   platformsToLink.map(linkPlatform);
 };
@@ -181,6 +181,20 @@ const profileAvatarUpdater = async (platformsLinked) => {
       });
   });
 };
+
+const showFormMessage = ($msgEl, resMsg) => {
+  const $msgDiv = $("div", $msgEl);
+  const txtMsg = $msgDiv.text();
+  if (resMsg?.length) {
+    $msgDiv.text(resMsg);
+  }
+  $msgEl.show();
+  setTimeout(() => {
+    $msgEl.hide();
+    $msgDiv.text(txtMsg);
+  }, formMessageDelay);
+};
+
 function profileResponseHandler(res) {
   const elemId = `${elemIdPrefix}-details`;
   let dataTemplateActual = $(`${elemId}`).prop("outerHTML");
@@ -217,10 +231,11 @@ function profileResponseHandler(res) {
   });
   $(`${elemId}`).prop("outerHTML", dataTemplateActual);
   // global (all sections) replacers
-  if (userAuth0Data?.sub?.length) {
-    profileAvatarUpdater(res.platforms);
-    formsSetup(res.platforms);
+  if (!userAuth0Data?.sub?.length) {
+    return;
   }
+  profileAvatarUpdater(res.platforms);
+  setupLinkForms(res.platforms);
   if (res.imageURL?.length) {
     $(".gas-my-avatar")
       .removeAttr("srcset")
@@ -228,7 +243,45 @@ function profileResponseHandler(res) {
       .attr("src", res.imageURL);
   }
   if (res.role?.length) {
-    $(".gas-role-" + res.role.toLowerCase()).show();
+    const isRegularRole = res.role.toLowerCase() === "regular";
+    $(`.gas-role${isRegularRole ? "" : "-non"}-regular`).show();
+    if (!isRegularRole) {
+      const $toggleCheckbox = $(`#gas-ads-toggle`);
+      if (userProfileData.adsOff) {
+        $toggleCheckbox.prop("checked", true);
+      }
+      $toggleCheckbox.on("change", async (evt) => {
+        const fetchURL = `${fetchURLPrefix}/ads`;
+        const resFetch = await fetch(fetchURL, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        if (resFetch.status !== 201) {
+          // on error, reset to original state
+          $toggleCheckbox.prop("checked", userProfileData.adsOff);
+        }
+        resData = await resFetch.json();
+        if (
+          resFetch.status === 201 &&
+          resData?.message?.includes("deactivated")
+        ) {
+          $(".ads-section").hide();
+        } else {
+          $(".ads-section").show();
+        }
+        showFormMessage(
+          $(
+            `#gas-ads-form .gas-form-${
+              resFetch.status === 201 ? "success" : "error"
+            }`
+          ),
+          resData?.message
+        );
+      });
+    }
   }
 }
 
