@@ -1,6 +1,5 @@
 const apiDomain = document.querySelector("meta[name=domain]")?.content;
 const featureName = "leaderboard";
-const elemId = `#gas-${featureName}`;
 const formMessageDelay = 4000;
 $(".ga-loader-container").show();
 $("#ga-sections-container").hide();
@@ -96,15 +95,22 @@ function listResponseHandler({
   $list.show();
 }
 
-window.onload = async () => {
-  await auth0Bootstrap();
+async function fetchLeaderboard(elemId, searchTerm = "") {
+  const paramsObj = {};
+  if (paramPlatformId) {
+    paramsObj.type = paramPlatformId;
+  }
+  if (searchTerm.length) {
+    paramsObj.q = searchTerm;
+  }
   const resList = await fetch(
     `https://${apiDomain}/api/${featureName}${
-      paramPlatformId ? `?type=${paramPlatformId}` : ""
+      Object.keys(paramsObj)?.length
+        ? `?${new URLSearchParams(paramsObj).toString()}`
+        : ""
     }`
   );
   const listData = await resList.json();
-  const textKeysToReplace = ["profileId", "name"];
   const numKeysToReplace = ["totalAchievements", "gaPoints"];
   switch (paramPlatformId) {
     case 1:
@@ -122,8 +128,15 @@ window.onload = async () => {
     listResultsKey: "profiles",
     elemId,
     numKeysToReplace,
-    textKeysToReplace,
+    textKeysToReplace: ["profileId", "name"],
   });
+}
+
+$().ready(async () => {
+  await auth0Bootstrap();
+  const elemId = `#gas-${featureName}`;
+  setupListSearch(elemId, fetchLeaderboard);
+  await fetchLeaderboard(elemId);
   $(".ga-loader-container").hide();
   $("#ga-sections-container").show();
-};
+});

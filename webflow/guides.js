@@ -66,9 +66,18 @@ function listResponseHandler({
   $list.css("display", "flex");
 }
 
-async function fetchGuides() {
-  const elemId = "#gas-list-guides";
-  const resGuides = await fetch(`https://${apiDomain}/api/guide/list`);
+async function fetchGuides(elemId, searchTerm = "") {
+  const paramsObj = {};
+  if (searchTerm.length) {
+    paramsObj.q = searchTerm;
+  }
+  const resGuides = await fetch(
+    `https://${apiDomain}/api/guide/list${
+      Object.keys(paramsObj)?.length
+        ? `?${new URLSearchParams(paramsObj).toString()}`
+        : ""
+    }`
+  );
   const fetchData = await resGuides.json();
   $(`${elemId} .gas-list-results-info`).text(
     (fetchData?.count || 0) + " result(s)"
@@ -88,8 +97,11 @@ async function fetchGuides() {
     ],
   });
 }
-window.onload = async () => {
+
+$().ready(async () => {
   await auth0Bootstrap();
-  await fetchGuides();
+  const elemId = "#gas-list-guides";
+  setupListSearch(elemId, fetchGuides);
+  await fetchGuides(elemId);
   $(".ga-loader-container").hide();
-};
+});

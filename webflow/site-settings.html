@@ -318,9 +318,9 @@
       $(".gas-profile-avatar").attr('src', userProfileData.imageURL);
     }
     const roleName = userProfileData.role.toLowerCase();
+    const $premBtn = $('.gas-premium-btn');
+    const $premPop = $('#gas-popup-premium');
     if (roleName === 'regular') {
-      const $premBtn = $('.gas-premium-btn');
-      const $premPop = $('#gas-popup-premium');
       if (window.matchMedia('screen and (max-width: 479px)').matches) {
         $premBtn.each(function () {
           if ($(this).hasClass('gas-desktop-only')) {
@@ -353,6 +353,9 @@
           }
         });
       });
+    } else {
+      $premBtn.remove();
+      $premPop.remove();
     }
     $('.gas-role-' + roleName).show();
   }
@@ -456,6 +459,8 @@
         token = await auth0Client.getTokenSilently();
         await fetchLoadProfileData();
       } else {
+        $('.gas-premium-btn').remove();
+        $('#gas-popup-premium').remove();
         eachElement('.auth-invisible', (e) => {
           e.classList.remove('auth-hidden');
           e.style.visibility = 'visible';
