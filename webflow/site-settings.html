@@ -312,10 +312,18 @@
 <script>
   const fetchLoadProfileData = async () => {
     const apiDomain = document.querySelector('meta[name=domain]')?.content;
-    let resFetch = await fetch(`https://${apiDomain}/api/profile/`, {
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", }
-    });
-    userProfileData = await resFetch.json();
+
+    userProfileData = JSON.parse(sessionStorage.getItem('prof'));
+    if (!userProfileData) {
+      const resFetch = await fetch(`https://${apiDomain}/api/profile/`, {
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", }
+      });
+      userProfileData = await resFetch.json();
+      sessionStorage.setItem('prof', JSON.stringify(userProfileData));
+    }
+    if (userProfileData.adsOff) {
+      $('.ads-section').remove();
+    }
     $(".gas-profile-name").text(userProfileData.name);
     if (userProfileData.imageURL?.length) {
       $(".gas-profile-avatar").attr('src', userProfileData.imageURL);
@@ -340,7 +348,7 @@
         $premPop.css({ opacity: 1, display: 'flex' });
         $('.gas-popup-btn-confirm', $premPop).one('click', async (evt) => {
           evt.preventDefault();
-          resFetch = await fetch(`https://${apiDomain}/api/payment/`, {
+          const resFetch = await fetch(`https://${apiDomain}/api/payment/`, {
             method: "POST",
             headers: {
               Authorization: `Bearer ${token}`,
@@ -350,6 +358,7 @@
           });
           const payData = await resFetch.json();
           if (payData?.paymentPageUrl?.length) {
+            sessionStorage.removeItem('prof');
             window.location.replace(payData.paymentPageUrl);
           } else {
             alert("Payment failure, we apologize for the inconvenience: please try again later.");
@@ -394,6 +403,7 @@
   const logout = () => {
     try {
       console.log('[auth0] Logging out');
+      sessionStorage.removeItem('prof');
       auth0Client.logout({
         logoutParams: {
           returnTo: window.location.origin
@@ -448,7 +458,6 @@
    */
   const updateUI = async (isAuthenticated) => {
     try {
-      const $adsSections = $('.ads-section');
       if (isAuthenticated) {
         userAuth0Data = await auth0Client.getUser();
 
@@ -462,9 +471,6 @@
         // Get the access token from the Auth0 client
         token = await auth0Client.getTokenSilently();
         await fetchLoadProfileData();
-        if (userProfileData.adsOff) {
-          $adsSections.remove();
-        }
       } else {
         $('.gas-premium-btn').remove();
         $('#gas-popup-premium').remove();
@@ -477,7 +483,7 @@
       const adsenseClientId = document.querySelector('meta[name=adsense]')?.content;
       if (adsenseClientId?.length) {
         $('head').append(`<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}" crossorigin="anonymous"><\/script>`);
-        $adsSections.each((adIdx, adEl) => {
+          $('.ads-section').each((adIdx, adEl) => {
           $(adEl).css('background', 'transparent').html(`<ins class="adsbygoogle" data-ad-client="${adsenseClientId}" data-ad-slot="1234567890"><\/ins>`)
             .append("<script>(adsbygoogle = window.adsbygoogle || []).push({});<\/script>");
         });

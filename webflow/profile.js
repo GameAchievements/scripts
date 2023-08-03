@@ -264,13 +264,14 @@ function profileResponseHandler(res) {
           $toggleCheckbox.prop("checked", userProfileData.adsOff);
         }
         resData = await resFetch.json();
-        if (
-          resFetch.status === 201 &&
-          resData?.message?.includes("deactivated")
-        ) {
-          $(".ads-section").hide();
-        } else {
-          $(".ads-section").show();
+        if (resFetch.status === 201) {
+          userProfileData.adsOff = !userProfileData.adsOff;
+          sessionStorage.setItem("prof", JSON.stringify(userProfileData));
+          if (resData?.message?.includes("deactivated")) {
+            $(".ads-section").hide();
+          } else {
+            $(".ads-section").show();
+          }
         }
         showFormMessage(
           $(
@@ -489,7 +490,7 @@ async function listFetcher({
   $emptyList.show();
 }
 
-window.onload = async () => {
+$().ready(async () => {
   await auth0Bootstrap();
   if (profileId?.length) {
     $("#user-settings, #ga-user-settings-tab").hide();
@@ -561,4 +562,4 @@ window.onload = async () => {
     return;
   }
   window.location.replace("/");
-};
+});
