@@ -58,6 +58,9 @@ async function fetchAchievement() {
   const resFetch = await fetch(
     `https://${apiDomain}/api/achievement/${achievementId}`
   );
+  if (resFetch.status !== 200) {
+    return;
+  }
   const resData = await resFetch.json();
   if (Object.keys(resData).length > 0 && resData.id) {
     document.title = `${resData.name?.length ? resData.name : resData.id} | ${
@@ -65,6 +68,7 @@ async function fetchAchievement() {
     }`;
     achievementResponseHandler(resData);
   }
+  return resData;
 }
 
 function listResponseHandler({
@@ -245,25 +249,28 @@ async function verifyAuthenticatedUserGuideData() {
 $().ready(async () => {
   await auth0Bootstrap();
   await verifyAuthenticatedUserGuideData();
-  await fetchAchievement();
-  await Promise.all([
-    await listFetcher({
-      listName: "guides",
-      numKeysToReplace: ["id", "commentsCount", "viewsCount", "likesCount"],
-      textKeysToReplace: ["profileId", "name", "description", "author"],
-    }),
-    await achieversFetcher({
-      listName: "achievers",
-      type: "first",
-      textKeysToReplace: ["name", "profileId"],
-    }),
-    await achieversFetcher({
-      listName: "achievers",
-      type: "last",
-      textKeysToReplace: ["name", "profileId"],
-    }),
-  ]);
-  $(".ga-loader-container").hide();
-  $("#ga-sections-container").show();
-  $("#gas-wf-tab-activator").click();
+  if (await fetchAchievement()) {
+    await Promise.all([
+      await listFetcher({
+        listName: "guides",
+        numKeysToReplace: ["id", "commentsCount", "viewsCount", "likesCount"],
+        textKeysToReplace: ["profileId", "name", "description", "author"],
+      }),
+      await achieversFetcher({
+        listName: "achievers",
+        type: "first",
+        textKeysToReplace: ["name", "profileId"],
+      }),
+      await achieversFetcher({
+        listName: "achievers",
+        type: "last",
+        textKeysToReplace: ["name", "profileId"],
+      }),
+    ]);
+    $(".ga-loader-container").hide();
+    $("#ga-sections-container").show();
+    $("#gas-wf-tab-activator").click();
+    return;
+  }
+  window.location.replace("/achievements");
 });

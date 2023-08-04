@@ -99,6 +99,9 @@ function guideResponseHandler(res) {
 
 async function fetchGuide() {
   const resFetch = await fetch(`https://${apiDomain}/api/guide/${guideId}`);
+  if (resFetch.status !== 200) {
+    return;
+  }
   const resData = await resFetch.json();
   if (Object.keys(resData).length > 0 && resData.id) {
     document.title = `${resData.name?.length ? resData.name : resData.id} | ${
@@ -300,14 +303,17 @@ async function verifyAuthenticatedUserGuideData() {
 
 $().ready(async () => {
   await auth0Bootstrap();
-  await fetchGuide();
-  await verifyAuthenticatedUserGuideData();
-  await listFetcher({
-    listName: "comments",
-    numKeysToReplace: [],
-    textKeysToReplace: ["profileId", "author", "comment"],
-  });
-  $(".ga-loader-container").hide();
-  $("#ga-sections-container").show();
-  $("#gas-wf-tab-activator").click();
+  if (await fetchGuide()) {
+    await verifyAuthenticatedUserGuideData();
+    await listFetcher({
+      listName: "comments",
+      numKeysToReplace: [],
+      textKeysToReplace: ["profileId", "author", "comment"],
+    });
+    $(".ga-loader-container").hide();
+    $("#ga-sections-container").show();
+    $("#gas-wf-tab-activator").click();
+    return;
+  }
+  window.location.replace("/guides");
 });

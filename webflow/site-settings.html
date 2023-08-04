@@ -185,6 +185,18 @@
     }
     return dataTemplateActual;
   }
+  
+  const platformNameIdMap = (platformName) => {
+    switch (platformName) {
+      case "playstation":
+        return 1;
+      case "xbox":
+        return 2;
+      case "steam":
+      default:
+        return 3;
+    }
+  };
 
   const rarityClassCalc = (percent) => {
     if (percent < 25) {
@@ -304,6 +316,22 @@
         $(".ga-loader-container").hide();
       }
     });
+  };
+  const scrollToURLHash = () => {
+    if (window.location.hash?.length > 0) {
+      $([document.documentElement, document.body]).animate(
+        { scrollTop: $(window.location.hash).offset().top - 50 },
+        2e3
+      );
+    }
+  };
+  const displayMessage = ($msgEl, msgText, type = "success", posAction = () => {}) => {
+    $msgEl.addClass(`${type}-message`).css("display", "flex");
+    $("div:first-child", $msgEl).text(msgText);
+    setTimeout(() => {
+      $msgEl.removeClass(`${type}-message`).hide();
+      posAction();
+    }, formMessageDelay);
   };
 </script>
 
@@ -534,6 +562,9 @@
       try {
         const result = await auth0Client.handleRedirectCallback();
 
+        // https://auth0.com/docs/quickstart/spa/vanillajs
+        // Use replaceState to redirect the user away and remove the querystring parameters
+        // window.history.replaceState({}, document.title, "/");
         if (result.appState && result.appState.targetUrl) {
           window.location.replace(result.appState.targetUrl);
         } else {

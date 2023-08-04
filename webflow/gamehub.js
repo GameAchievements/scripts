@@ -75,6 +75,9 @@ function gamehubResponseHandler(res, elemId) {
 }
 async function fetchGamehub(elemIdsSuffixes) {
   const resFetch = await fetch(`https://${apiDomain}/api/game/${gameId}`);
+  if (resFetch.status !== 200) {
+    return;
+  }
   const resData = await resFetch.json();
   if (Object.keys(resData).length > 0 && resData.id) {
     document.title = `${resData.name?.length ? resData.name : resData.id} | ${
@@ -84,6 +87,7 @@ async function fetchGamehub(elemIdsSuffixes) {
       gamehubResponseHandler(resData, `${elemIdPrefix}-${elemIdSuf}`);
     });
   }
+  return resData;
 }
 
 function listResponseHandler({
@@ -595,48 +599,56 @@ async function fetchListLeaderboards(elemId, searchTerm = "") {
 
 $().ready(async () => {
   await auth0Bootstrap();
-  await fetchGamehub(["top", "about"]);
-  setupReviewForm();
-  setupListSearch(`${elemIdPrefix}-leaderboard`, fetchListLeaderboards);
-  await Promise.all([
-    await listFetcher({
-      listName: "achievements",
-      numKeysToReplace: ["id", "score", "achieversCount", "gAPoints"],
-      textKeysToReplace: ["name", "description", "updatedAt"],
-    }),
-    await fetchListLeaderboards(`${elemIdPrefix}-leaderboard`),
-    await listFetcher({
-      listName: "guides",
-      numKeysToReplace: ["id", "commentsCount", "viewsCount", "likesCount"],
-      textKeysToReplace: [
-        "profileId",
-        "name",
-        "description",
-        "author",
-        "updatedAt",
-      ],
-    }),
-    await listFetcher({
-      listName: "reviews",
-      numKeysToReplace: ["id", "likesCount"],
-      textKeysToReplace: [
-        "profileId",
-        "name",
-        "content",
-        "author",
-        "classification",
-        "updatedAt",
-      ],
-      tabs: ["all", "positive", "mixed", "negative"],
-      tabMatcher: "classification",
-    }),
-    await achieversFetcher({
-      listName: "achievers",
-      numKeysToReplace: ["id", "achievementId"],
-      textKeysToReplace: ["profileId", "achievementName", "playerName", "name"],
-    }),
-  ]);
-  $(".ga-loader-container").hide();
-  $("#ga-sections-container").show();
-  $("#gas-wf-tab-activator").click();
+  if (await fetchGamehub(["top", "about"])) {
+    setupReviewForm();
+    setupListSearch(`${elemIdPrefix}-leaderboard`, fetchListLeaderboards);
+    await Promise.all([
+      await listFetcher({
+        listName: "achievements",
+        numKeysToReplace: ["id", "score", "achieversCount", "gAPoints"],
+        textKeysToReplace: ["name", "description", "updatedAt"],
+      }),
+      await fetchListLeaderboards(`${elemIdPrefix}-leaderboard`),
+      await listFetcher({
+        listName: "guides",
+        numKeysToReplace: ["id", "commentsCount", "viewsCount", "likesCount"],
+        textKeysToReplace: [
+          "profileId",
+          "name",
+          "description",
+          "author",
+          "updatedAt",
+        ],
+      }),
+      await listFetcher({
+        listName: "reviews",
+        numKeysToReplace: ["id", "likesCount"],
+        textKeysToReplace: [
+          "profileId",
+          "name",
+          "content",
+          "author",
+          "classification",
+          "updatedAt",
+        ],
+        tabs: ["all", "positive", "mixed", "negative"],
+        tabMatcher: "classification",
+      }),
+      await achieversFetcher({
+        listName: "achievers",
+        numKeysToReplace: ["id", "achievementId"],
+        textKeysToReplace: [
+          "profileId",
+          "achievementName",
+          "playerName",
+          "name",
+        ],
+      }),
+    ]);
+    $(".ga-loader-container").hide();
+    $("#ga-sections-container").show();
+    $("#gas-wf-tab-activator").click();
+    return;
+  }
+  window.location.replace("/games");
 });
