@@ -318,9 +318,9 @@
     });
   };
   const scrollToURLHash = () => {
-    if (window.location.hash?.length > 0) {
+    if (location.hash?.length > 0) {
       $([document.documentElement, document.body]).animate(
-        { scrollTop: $(window.location.hash).offset().top - 50 },
+        { scrollTop: $(location.hash).offset().top - 50 },
         2e3
       );
     }
@@ -360,7 +360,7 @@
     const $premBtn = $('.gas-premium-btn');
     const $premPop = $('#gas-popup-premium');
     if (roleName === 'regular') {
-      if (window.matchMedia('screen and (max-width: 479px)').matches) {
+      if (matchMedia('screen and (max-width: 479px)').matches) {
         $premBtn.each(function () {
           if ($(this).hasClass('gas-desktop-only')) {
             $(this).hide();
@@ -387,7 +387,7 @@
           const payData = await resFetch.json();
           if (payData?.paymentPageUrl?.length) {
             sessionStorage.removeItem('prof');
-            window.location.replace(payData.paymentPageUrl);
+            location.replace(payData.paymentPageUrl);
           } else {
             alert("Payment failure, we apologize for the inconvenience: please try again later.");
           }
@@ -405,19 +405,10 @@
    */
   const login = async () => {
     try {
-      const targetUrl = document.querySelector(
-        'meta[name=loginRedirectPath]'
-      )?.content;
-      console.log(`[auth0] On "${targetUrl}" path`);
       const options = {
-        authorizationParams: {
-          redirect_uri: window.location.origin
-        }
+        authorizationParams: { redirect_uri: location.origin },
+        appState: { targetUrl: location.pathname + location.search }
       };
-
-      if (targetUrl) {
-        options.appState = { targetUrl };
-      }
 
       await auth0Client.loginWithRedirect(options);
     } catch (err) {
@@ -434,7 +425,7 @@
       sessionStorage.removeItem('prof');
       auth0Client.logout({
         logoutParams: {
-          returnTo: window.location.origin
+          returnTo: location.origin
         }
       });
     } catch (err) {
@@ -522,7 +513,7 @@
     }
   };
 
-  const auth0Bootstrap = async (replaceURL = false) => {
+  const auth0Bootstrap = async () => {
     try {
       await configureClient();
     } catch (err) {
@@ -532,51 +523,36 @@
     setButtonsTriggers();
 
     const isAuthenticated = await auth0Client.isAuthenticated();
-
     if (isAuthenticated) {
       console.log(
-        '[auth0] User is authenticated on ' + window.location.pathname
+        '[auth0] User is authenticated on ' + location.pathname
       );
-      if (replaceURL) {
-        // "query parameters must be removed from the URL so that if the user refreshes the page,
-        //  the app does not try to parse the state and code parameters again.
-        //  This is achieved with the window.history.replaceState method"
-        //  https://auth0.com/docs/quickstart/spa/vanillajs
-        window.history.replaceState(
-          {},
-          document.title,
-          window.location.pathname
-        );
-      }
       return await updateUI(isAuthenticated);
     }
 
-    console.log('[auth0] User not authenticated');
-
-    const query = window.location.search;
-    const shouldParseResult =
-      query.includes('code=') && query.includes('state=');
-
+    // when user returns from auth, he gets a URL with code and state
+    // after reloading this allow to persist the logged-in state
+    // isAuthenticated on reload will be true after these params show up
+    const urlParams = new URLSearchParams(location.search);
+    const shouldParseResult = Boolean(urlParams.get('code')?.length) && Boolean(urlParams.get('state')?.length);
     if (shouldParseResult) {
       console.log('[auth0] Parsing redirect');
       try {
         const result = await auth0Client.handleRedirectCallback();
 
-        // https://auth0.com/docs/quickstart/spa/vanillajs
-        // Use replaceState to redirect the user away and remove the querystring parameters
+        // "query parameters must be removed from the URL so that if the user refreshes the page,
+        //  the app does not try to parse the state and code parameters again.
+        //  This is achieved with the window.history.replaceState method"
+        //  https://auth0.com/docs/quickstart/spa/vanillajs
+        location.replace(result?.appState?.targetUrl || location.pathname);
+        // for not reloading: Use replaceState to redirect the user away and remove the querystring parameters
         // window.history.replaceState({}, document.title, "/");
-        if (result.appState && result.appState.targetUrl) {
-          window.location.replace(result.appState.targetUrl);
-        } else {
-          window.location.reload();
-        }
 
         console.log('[auth0] Logged in!');
       } catch (err) {
         console.log('[auth0] Error parsing redirect:', err);
       }
     }
-
     updateUI(isAuthenticated);
     return userAuth0Data;
   };

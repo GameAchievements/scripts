@@ -111,6 +111,7 @@ async function fetchGuide() {
     resData.achievementName = achievementNameSlicer(resData.achievementName);
     guideResponseHandler(resData);
   }
+  return resData;
 }
 
 function listResponseHandler({ listData, elemId, textKeysToReplace }) {
