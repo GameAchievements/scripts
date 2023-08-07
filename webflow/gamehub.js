@@ -401,8 +401,16 @@ async function achieversFetcher({
   });
 }
 
-const setupReviewForm = () => {
+const setupReviewForm = async () => {
   const formWrapperId = `${elemIdPrefix}-review-form`;
+  const resReview = await fetch(
+    `https://${apiDomain}/api/game/${gameId}/review`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (resReview.status === 200) {
+    $(formWrapperId).remove();
+    return;
+  }
   const $submitBtn = $(`.submit-button`, formWrapperId);
   $submitBtn.attr("disabled", true);
   const $titleField = $(`[name=title]`, formWrapperId);

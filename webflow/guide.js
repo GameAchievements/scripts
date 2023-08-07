@@ -2,6 +2,7 @@ const apiDomain = document.querySelector("meta[name=domain]")?.content;
 const urlParams = new URLSearchParams(window.location.search);
 const guideId = urlParams.get("id") || 1;
 let achievementId = 0;
+let hasLike;
 const elemIdPrefix = `#gas-guide`;
 
 $(".ga-loader-container").show();
@@ -180,7 +181,8 @@ async function listFetcher({ listName, textKeysToReplace }) {
   });
 }
 
-function setupLike(hasLike) {
+function setupLike(hasLikeFromFetch) {
+  hasLike = hasLikeFromFetch;
   const $btnLike = $(`${elemIdPrefix}-btn-like`);
   const $btnDelLike = $(`${elemIdPrefix}-btn-like-del`);
   if (hasLike) {
@@ -195,6 +197,10 @@ function setupLike(hasLike) {
       `https://${apiDomain}/api/guide/${guideId}/upvote`,
       { method: "POST", headers: { Authorization: `Bearer ${token}` } }
     );
+    const $likesCount = $(`${elemIdPrefix}-upvotes-count`);
+    const countChange = hasLike ? -1 : 1;
+    hasLike = !hasLike;
+    $likesCount.text(Number($likesCount.text() || 0) + countChange);
     if (resFetch.status === 204) {
       $btnLike.attr("disabled", false).show();
       $btnDelLike.hide();
