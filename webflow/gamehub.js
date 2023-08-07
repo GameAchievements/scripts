@@ -153,7 +153,12 @@ function listResponseHandler({
               .parents(".gas-list-entry")
               .prop("outerHTML");
           }
-          if (textKeysToReplace.includes(key)) {
+          if (elemId.endsWith("achievements") && key === "name") {
+            dataTemplateActual = dataTemplateActual.replaceAll(
+              `{|name|}`,
+              achievementNameSlicer(value) || "N.A."
+            );
+          } else if (textKeysToReplace.includes(key)) {
             dataTemplateActual = dataTemplateActual.replaceAll(
               `{|${key}|}`,
               (key.endsWith("At") ? gaDate(value) : value) || ""

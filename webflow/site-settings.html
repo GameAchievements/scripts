@@ -553,14 +553,8 @@
         // "query parameters must be removed from the URL so that if the user refreshes the page,
         //  the app does not try to parse the state and code parameters again.
         //  https://auth0.com/docs/quickstart/spa/vanillajs
-        if (isSafari) {          
-          //  This is achieved with the window.history.replaceState method"
-          window.history.replaceState({}, document.title, result?.appState?.targetUrl || location.pathname);
-          isAuthenticated = true; // TODO: refresh token works for the callback_uri only
-        } else {
-          // without refresh tokens (non-SPA strategy)
-          location.replace(result?.appState?.targetUrl || location.pathname);
-        }
+        window.history.replaceState({}, document.title, result?.appState?.targetUrl || location.pathname);
+        isAuthenticated = true;
 
         console.log('[auth0] Logged in!');
       } catch (err) {

@@ -24,13 +24,13 @@ function listResponseHandler({
   console.info(`=== ${elemId} results ===`, listData);
   let dataTemplate = $(elemId).prop("outerHTML");
   const $list = $(`${elemId} .gas-list`);
+  if (!$entryTemplate) {
+    $emptyList = $(`.gas-list-empty`, $list);
+    $listHeader = $list.children().first();
+    $entryTemplate = $(".gas-list-entry", $list).first().clone();
+    $(".gas-list-entry", $list).first().remove();
+  }
   if (listData.length > 0) {
-    if (!$entryTemplate) {
-      $emptyList = $(`.gas-list-empty`, $list);
-      $listHeader = $list.children().first();
-      $entryTemplate = $(".gas-list-entry", $list).first().clone();
-      $(".gas-list-entry", $list).first().remove();
-    }
     dataTemplate = $entryTemplate.prop("outerHTML");
     $list.html($listHeader);
     listData.forEach((item, resIdx) => {
