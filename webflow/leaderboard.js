@@ -22,7 +22,6 @@ switch (window.location.pathname) {
 
 function listResponseHandler({
   listData,
-  listResultsKey,
   elemId,
   numKeysToReplace,
   textKeysToReplace,
@@ -31,14 +30,14 @@ function listResponseHandler({
   let dataTemplate = $(elemId).prop("outerHTML");
   const $list = $(`${elemId} .gas-list`);
   const $emptyList = $(`.gas-list-empty`, $list);
-  if (listData.count > 0 && listData[listResultsKey]?.length) {
+  if (listData?.length) {
     const $listHeader = $list.children().first();
     const $entryTemplate = $(".gas-list-entry", $list).first();
     $entryTemplate.show();
     dataTemplate = $entryTemplate.prop("outerHTML");
     $list.html($listHeader).append($entryTemplate);
     $entryTemplate.hide();
-    listData[listResultsKey].forEach((item, resIdx) => {
+    listData.forEach((item, resIdx) => {
       let dataTemplateActual = dataTemplate;
       dataTemplateActual = dataTemplateActual.replaceAll(`{|idx|}`, resIdx + 1);
       Object.entries(item).forEach(([key, value]) => {
@@ -110,7 +109,7 @@ async function fetchLeaderboard(elemId, searchTerm = "") {
         : ""
     }`
   );
-  const listData = await resList.json();
+  const resData = await resList.json();
   const numKeysToReplace = ["totalAchievements", "gaPoints"];
   switch (paramPlatformId) {
     case 1:
@@ -124,8 +123,7 @@ async function fetchLeaderboard(elemId, searchTerm = "") {
       break;
   }
   listResponseHandler({
-    listData,
-    listResultsKey: "profiles",
+    listData: resData.results,
     elemId,
     numKeysToReplace,
     textKeysToReplace: ["profileId", "name"],

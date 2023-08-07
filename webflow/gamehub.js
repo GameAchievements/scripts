@@ -536,14 +536,14 @@ async function fetchListLeaderboards(elemId, searchTerm = "") {
         break;
     }
     const $emptyList = $(`.gas-list-empty`, $list);
-    if (listData.count > 0 && listData.profiles?.length) {
+    if (listData.count > 0 && listData.results?.length) {
       const $listHeader = $list.children().first();
       const $entryTemplate = $(".gas-list-entry", $list).first();
       $entryTemplate.show();
       dataTemplate = $entryTemplate.prop("outerHTML");
       $list.html($listHeader).append($entryTemplate);
       $entryTemplate.hide();
-      listData.profiles.forEach((item, resIdx) => {
+      listData.results.forEach((item, resIdx) => {
         let dataTemplateActual = dataTemplate;
         dataTemplateActual = dataTemplateActual.replaceAll(
           `{|idx|}`,
