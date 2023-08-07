@@ -11,14 +11,13 @@ function gamehubResponseHandler(res, elemId) {
   const $ghContainer = $(`${elemId}`);
   let dataTemplateActual = $ghContainer.prop("outerHTML");
   console.info(`=== ${elemId} ===`, res);
-  const textKeysToReplace = [
-    "name",
-    "igdbId",
-    "description",
+  const textKeysToReplace = ["name", "igdbId", "description", "releaseDate"];
+  const numKeysToReplace = [
+    "ownersCount",
     "achievementsCount",
-    "releaseDate",
+    "recentGamersCount",
+    "completion",
   ];
-  const numKeysToReplace = ["ownersCount", "recentGamersCount", "completion"];
   const keysWithArrays = ["genres", "modes", "publishers", "developers"];
   if (elemId.endsWith("top") && (res.coverURL || res.imageURL)?.length) {
     dataTemplateActual = $ghContainer
@@ -91,7 +90,9 @@ async function fetchGamehub() {
         gamehubResponseHandler(resData, `${elemIdPrefix}-${elemIdSuf}`);
       });
     } else {
-      $(`${elemIdPrefix}-about, ${elemIdPrefix}-igdb-id`).remove();
+      $(
+        `${elemIdPrefix}-about,${elemIdPrefix}-igdb-id,[href="${elemIdPrefix}-about"]`
+      ).remove();
       gamehubResponseHandler(resData, `${elemIdPrefix}-top`);
     }
   }
