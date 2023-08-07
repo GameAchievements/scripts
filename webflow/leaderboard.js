@@ -1,6 +1,7 @@
 const apiDomain = document.querySelector("meta[name=domain]")?.content;
 const featureName = "leaderboard";
 const formMessageDelay = 4000;
+let $entryTemplate, $listHeader, $emptyList;
 $(".ga-loader-container").show();
 $("#ga-sections-container").hide();
 
@@ -29,14 +30,15 @@ function listResponseHandler({
   console.info(`=== ${elemId} results ===`, listData);
   let dataTemplate = $(elemId).prop("outerHTML");
   const $list = $(`${elemId} .gas-list`);
-  const $emptyList = $(`.gas-list-empty`, $list);
   if (listData?.length) {
-    const $listHeader = $list.children().first();
-    const $entryTemplate = $(".gas-list-entry", $list).first();
-    $entryTemplate.show();
+    if (!$entryTemplate) {
+      $emptyList = $(`.gas-list-empty`, $list);
+      $listHeader = $list.children().first();
+      $entryTemplate = $(".gas-list-entry", $list).first().clone();
+      $(".gas-list-entry", $list).first().remove();
+    }
     dataTemplate = $entryTemplate.prop("outerHTML");
-    $list.html($listHeader).append($entryTemplate);
-    $entryTemplate.hide();
+    $list.html($listHeader);
     listData.forEach((item, resIdx) => {
       let dataTemplateActual = dataTemplate;
       dataTemplateActual = dataTemplateActual.replaceAll(`{|idx|}`, resIdx + 1);
@@ -91,7 +93,7 @@ function listResponseHandler({
     $list.html($emptyList);
     $emptyList.show();
   }
-  $list.show();
+  $list.css("display", "flex");
 }
 
 async function fetchLeaderboard(elemId, searchTerm = "") {
