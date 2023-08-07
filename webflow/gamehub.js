@@ -15,14 +15,12 @@ function gamehubResponseHandler(res, elemId) {
     "name",
     "igdbId",
     "description",
-    "ownersCount",
-    "recentGamersCount",
-    "completion",
     "achievementsCount",
+    "releaseDate",
   ];
-  const dateKeysToReplace = ["releaseDate"];
+  const numKeysToReplace = ["ownersCount", "recentGamersCount", "completion"];
   const keysWithArrays = ["genres", "modes", "publishers", "developers"];
-  if (elemId.endsWith("top")) {
+  if (elemId.endsWith("top") && (res.coverURL || res.imageURL)?.length) {
     dataTemplateActual = $ghContainer
       .css(
         "background-image",
@@ -33,20 +31,25 @@ function gamehubResponseHandler(res, elemId) {
       .prop("outerHTML");
   }
   $(".gas-img", dataTemplateActual).each((idx, elm) => {
-    dataTemplateActual = $(elm)
-      .removeAttr("srcset")
-      .removeAttr("sizes")
-      .attr("src", res.imageURL)
-      .parents(elemId)
-      .prop("outerHTML");
+    if (res.imageURL?.length) {
+      dataTemplateActual = $(elm)
+        .removeAttr("srcset")
+        .removeAttr("sizes")
+        .attr("src", res.imageURL)
+        .parents(elemId)
+        .prop("outerHTML");
+    }
   });
   Object.entries(res).forEach(([key, value]) => {
     if (textKeysToReplace.includes(key)) {
-      dataTemplateActual = dataTemplateActual.replaceAll(`{|${key}|}`, value);
-    } else if (dateKeysToReplace.includes(key)) {
       dataTemplateActual = dataTemplateActual.replaceAll(
         `{|${key}|}`,
-        gaDate(value)
+        value?.length ? (key.endsWith("Date") ? gaDate(value) : value) : "N.A."
+      );
+    } else if (numKeysToReplace.includes(key)) {
+      dataTemplateActual = dataTemplateActual.replaceAll(
+        `{|${key}|}`,
+        Math.round(value || 0)
       );
     } else if (key === "platforms" && elemId.endsWith("about")) {
       dataTemplateActual = showPlatform(
@@ -73,7 +76,7 @@ function gamehubResponseHandler(res, elemId) {
   });
   $ghContainer.prop("outerHTML", dataTemplateActual);
 }
-async function fetchGamehub(elemIdsSuffixes) {
+async function fetchGamehub() {
   const resFetch = await fetch(`https://${apiDomain}/api/game/${gameId}`);
   if (resFetch.status !== 200) {
     return;
@@ -83,9 +86,14 @@ async function fetchGamehub(elemIdsSuffixes) {
     document.title = `${resData.name?.length ? resData.name : resData.id} | ${
       document.title
     }`;
-    elemIdsSuffixes.forEach((elemIdSuf) => {
-      gamehubResponseHandler(resData, `${elemIdPrefix}-${elemIdSuf}`);
-    });
+    if (resData.igdbId?.length) {
+      ["top", "about"].forEach((elemIdSuf) => {
+        gamehubResponseHandler(resData, `${elemIdPrefix}-${elemIdSuf}`);
+      });
+    } else {
+      $(`${elemIdPrefix}-about, ${elemIdPrefix}-igdb-id`).remove();
+      gamehubResponseHandler(resData, `${elemIdPrefix}-top`);
+    }
   }
   return resData;
 }
@@ -599,7 +607,7 @@ async function fetchListLeaderboards(elemId, searchTerm = "") {
 
 $().ready(async () => {
   await auth0Bootstrap();
-  if (await fetchGamehub(["top", "about"])) {
+  if (await fetchGamehub()) {
     setupReviewForm();
     setupListSearch(`${elemIdPrefix}-leaderboard`, fetchListLeaderboards);
     await Promise.all([

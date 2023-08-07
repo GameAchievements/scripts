@@ -137,6 +137,10 @@
   let userAuth0Data = null;
   let token = null;
   let userProfileData = null;
+  const isSafari = navigator.vendor && navigator.vendor.indexOf('Apple') > -1 &&
+               navigator.userAgent &&
+               navigator.userAgent.indexOf('CriOS') == -1 &&
+               navigator.userAgent.indexOf('FxiOS') == -1;
 </script>
 
 <!-- ~~~ Layout helpers ~~~ -->
@@ -445,14 +449,20 @@
       console.log('[auth0] config is invalid');
       return;
     }
-
-    auth0Client = await auth0.createAuth0Client({
+    const clientOptions = {
       domain: config.domain,
       clientId: config.clientId,
       authorizationParams: {
         audience: config.audience
       }
-    });
+    }
+    if (isSafari) {
+      // https://auth0.com/docs/troubleshoot/authentication-issues/renew-tokens-when-using-safari
+      clientOptions.useRefreshTokens = true;
+      // TODO: redirect_uri is not in the list of allowed callback URLs — requires a different strategy with refresh tokens active
+      // clientOptions.redirect_uri = location.origin + location.pathname + location.search;
+    }
+    auth0Client = await auth0.createAuth0Client(clientOptions);
   };
 
   const setButtonsTriggers = () => {
@@ -522,7 +532,7 @@
     }
     setButtonsTriggers();
 
-    const isAuthenticated = await auth0Client.isAuthenticated();
+    let isAuthenticated = await auth0Client.isAuthenticated();
     if (isAuthenticated) {
       console.log(
         '[auth0] User is authenticated on ' + location.pathname
@@ -542,11 +552,15 @@
 
         // "query parameters must be removed from the URL so that if the user refreshes the page,
         //  the app does not try to parse the state and code parameters again.
-        //  This is achieved with the window.history.replaceState method"
         //  https://auth0.com/docs/quickstart/spa/vanillajs
-        location.replace(result?.appState?.targetUrl || location.pathname);
-        // for not reloading: Use replaceState to redirect the user away and remove the querystring parameters
-        // window.history.replaceState({}, document.title, "/");
+        if (isSafari) {          
+          //  This is achieved with the window.history.replaceState method"
+          window.history.replaceState({}, document.title, result?.appState?.targetUrl || location.pathname);
+          isAuthenticated = true; // TODO: refresh token works for the callback_uri only
+        } else {
+          // without refresh tokens (non-SPA strategy)
+          location.replace(result?.appState?.targetUrl || location.pathname);
+        }
 
         console.log('[auth0] Logged in!');
       } catch (err) {
