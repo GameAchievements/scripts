@@ -258,8 +258,9 @@ async function setupForm() {
     $(`${elemId}-btn-submit`).val(submitText);
     setTimeout(() => {
       $(`${elemId}-fields`).hide();
-    }, formMessageDelay / 4);
+    }, formMessageDelay / 5);
     setTimeout(() => {
+      isUserInputActive = false;
       $successEl.hide();
       redirectAway();
     }, formMessageDelay);

@@ -1,5 +1,5 @@
 const apiDomain = document.querySelector("meta[name=domain]")?.content;
-const urlParams = new URLSearchParams(window.location.search);
+const urlParams = new URLSearchParams(location.search);
 const guideId = urlParams.get("id") || 1;
 let achievementId = 0;
 let hasLike;
@@ -280,6 +280,9 @@ const setupCommentForm = (hasComment) => {
     }
     $(`form`, formWrapperId).hide();
     $successEl.attr("title", revData?.message).show();
+    setTimeout(() => {
+      location.reload();
+    }, formMessageDelay);
   });
 };
 
@@ -322,5 +325,5 @@ $().ready(async () => {
     $("#gas-wf-tab-activator").click();
     return;
   }
-  window.location.replace("/guides");
+  location.replace("/guides");
 });

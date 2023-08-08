@@ -1,5 +1,5 @@
 const apiDomain = document.querySelector("meta[name=domain]")?.content;
-const urlParams = new URLSearchParams(window.location.search);
+const urlParams = new URLSearchParams(location.search);
 const gameId = urlParams.get("id") || 1044;
 const elemIdPrefix = `#gas-gh`;
 const formMessageDelay = 4000;
@@ -499,6 +499,9 @@ const setupReviewForm = async () => {
     }
     $(`form`, formWrapperId).hide();
     $successEl.attr("title", revData?.message).show();
+    setTimeout(() => {
+      location.reload();
+    }, formMessageDelay);
   });
 };
 
@@ -672,5 +675,5 @@ $().ready(async () => {
     $("#gas-wf-tab-activator").click();
     return;
   }
-  window.location.replace("/games");
+  location.replace("/games");
 });

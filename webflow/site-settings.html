@@ -1,9 +1,6 @@
 <!------------------------------------- Header code ------------------------------------->
 <meta name="domain" content="gameachievements.up.railway.app" />
 <meta name="adsense" content="" />
-<!-- for pages that should redirect to profile
-  <meta name="loginRedirectPath" content="/profile" />
--->
 
 <style>
   .auth-visible,
@@ -15,12 +12,6 @@
     display: none !important;
   }
 
-  .ga-list-header,
-  .ga-list,
-  .ga-list-empty,
-  .ga-logo-playstation,
-  .ga-logo-xbox,
-  .ga-logo-steam,
   .gas-list,
   .gas-list-empty,
   .gas-platform-psn,
@@ -41,24 +32,11 @@
     white-space: nowrap;
   }
 
-  .gas-text-2-lines,
-  .ga-list-entry-description {
+  .gas-text-2-lines {
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-  }
-
-  .ga-tags-entry {
-    background: #fff;
-    border-radius: 3px;
-    color: #000;
-    font-size: 7px;
-    font-weight: 700;
-    height: min-content;
-    line-height: normal;
-    min-width: 50px;
-    padding: 2px;
   }
 
   /* from https://cssloaders.github.io */
@@ -360,7 +338,7 @@
     if (userProfileData.imageURL?.length) {
       $(".gas-profile-avatar").attr('src', userProfileData.imageURL);
     }
-    const roleName = userProfileData.role.toLowerCase();
+    const roleName = userProfileData.role?.toLowerCase();
     const $premBtn = $('.gas-premium-btn');
     const $premPop = $('#gas-popup-premium');
     if (roleName === 'regular') {

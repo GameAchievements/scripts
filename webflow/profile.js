@@ -1,7 +1,5 @@
-// for header settings: <meta name="loginRedirectPath" content="/profile" />
-
 const apiDomain = document.querySelector("meta[name=domain]")?.content;
-const urlParams = new URLSearchParams(window.location.search);
+const urlParams = new URLSearchParams(location.search);
 let profileId = urlParams.get("id");
 const elemIdPrefix = "#gas-profile";
 const fetchURLPrefix = `https://${apiDomain}/api/profile`;
@@ -60,7 +58,7 @@ const unlinkPlatform = ({ platform, accountId, accountName }) => {
         $("#ga-unlink-message", $cardLinked).remove();
         linkPlatform(platformName);
         sessionStorage.removeItem("prof");
-        window.location.reload();
+        location.reload();
       }, formMessageDelay);
     }
   });
@@ -124,7 +122,7 @@ const linkPlatform = (platformName) => {
         accountName: paData?.platformAccount?.playerName,
       });
       sessionStorage.removeItem("prof");
-      window.location.reload();
+      location.reload();
     }, formMessageDelay);
   });
 };
@@ -568,5 +566,5 @@ $().ready(async () => {
     login();
     return;
   }
-  window.location.replace(noProfileRedirectURL);
+  location.replace(noProfileRedirectURL);
 });
