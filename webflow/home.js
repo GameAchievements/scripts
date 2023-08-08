@@ -10,7 +10,6 @@ function listResponseHandler({
   // console.info(`=== ${elemId} results ===`, listData);
   let dataTemplate = $(elemId).prop("outerHTML");
   const $list = $(`${elemId} .gas-list`);
-  const isGamesList = elemId.includes("list-games");
   const $emptyList = $(`${elemId} .gas-list-empty`);
   if (listData?.length) {
     const $entryTemplate = $(".gas-list-entry", $list).first();
@@ -36,7 +35,7 @@ function listResponseHandler({
           $entryImg?.length &&
           (item.iconURL?.length || item.imageURL?.length)
         ) {
-          dataTemplateActual = isGamesList
+          dataTemplateActual = elemId.includes("list-games")
             ? $entryImg
                 .css("background-image", `url(${item.imageURL})`)
                 .parents(".gas-list-entry")
@@ -104,7 +103,7 @@ async function fetchGuides() {
     listData: resData.results?.slice(0, 4),
     elemId,
     numKeysToReplace: ["id", "comments", "likes"],
-    textKeysToReplace: ["name", "author", "description"],
+    textKeysToReplace: ["name", "author", "description", "profileId"],
   });
   $(`${elemId} .ga-loader-container`).hide();
 }
