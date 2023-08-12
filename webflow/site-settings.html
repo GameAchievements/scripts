@@ -1,7 +1,8 @@
 <!------------------------------------- Header code ------------------------------------->
 <meta name="domain" content="gameachievements.up.railway.app" />
 <meta name="adsense" content="" />
-
+<script src="https://cdn.ingest-lr.com/LogRocket.min.js" crossorigin="anonymous"></script>
+<script>window.LogRocket && window.LogRocket.init('tdpmns/dev-gameachievements');</script>
 <style>
   body {background-color:#030922}
   .auth-visible,
@@ -479,6 +480,14 @@
         // Get the access token from the Auth0 client
         token = await auth0Client.getTokenSilently();
         await fetchLoadProfileData();
+        
+        if (userProfileData?.id) {
+          LogRocket.identify(userProfileData.id, {
+            name: userProfileData.name,
+            email: userAuth0Data.email,
+            subscriptionType: userProfileData.role
+          });
+        }
       } else {
         $('.gas-premium-btn').remove();
         $('#gas-popup-premium').remove();
