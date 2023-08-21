@@ -38,6 +38,8 @@ function listResponseHandler({
       Object.entries(item).forEach(([key, value]) => {
         const $gameImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
         if ($gameImg?.length && item.gameIconURL?.length) {
+          // TODO: why is WF adding gas-list-entry-cover to this element?
+          $gameImg.removeClass("gas-list-entry-cover");
           dataTemplateActual = $gameImg
             .removeAttr("srcset")
             .removeAttr("sizes")
@@ -121,6 +123,8 @@ async function fetchAchievements(elemId, searchTerm = "") {
     listData: fetchData,
     elemId,
     numKeysToReplace: [
+      "id",
+      "gameId",
       "points",
       "playersCount",
       "achieversCount",
@@ -128,7 +132,6 @@ async function fetchAchievements(elemId, searchTerm = "") {
       "gameTotalAchievements",
     ],
     textKeysToReplace: [
-      "id",
       "name",
       "gameName",
       "description",
