@@ -128,6 +128,19 @@ const linkPlatform = (platformName) => {
 };
 
 const setupLinkForms = (platformsLinked = []) => {
+  $(`${elemIdPrefix}-pa-code-copied-msg`).hide();
+  if (userProfileData.platformVerifierCode?.length) {
+    $(`${elemIdPrefix}-pa-code`).text(userProfileData.platformVerifierCode);
+    $(`${elemIdPrefix}-pa-code-btn`).on("click", async () => {
+      await navigator.clipboard.writeText(userProfileData.platformVerifierCode);
+      $(`${elemIdPrefix}-pa-code-copied-msg`).show();
+      setTimeout(() => {
+        $(`${elemIdPrefix}-pa-code-copied-msg`).hide();
+      }, formMessageDelay);
+    });
+  } else {
+    $(`${elemIdPrefix}-pa-code-btn`).hide();
+  }
   platformsLinked.forEach(unlinkPlatform);
   platformsToLink.map(linkPlatform);
 };
