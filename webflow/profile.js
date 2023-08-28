@@ -99,7 +99,8 @@ const linkPlatform = (platformName) => {
     const paData = await resFecth.json();
     if (resFecth.status !== 201) {
       const $errEl = $(".gas-link-pa-error", $toLinkCard);
-      $errEl.attr("title", paData?.message).css("display", "flex");
+      $errEl.css("display", "flex");
+      console.error(paData?.message);
       setTimeout(() => {
         $errEl.hide();
         $(`input`, $toLinkCard).attr("disabled", false);
