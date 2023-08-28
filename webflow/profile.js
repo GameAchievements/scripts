@@ -69,6 +69,7 @@ const linkPlatform = (platformName) => {
   $toLinkCard.show();
   const $linkField = $(`input[name=external]`, $toLinkCard);
   const $submitBtn = $(`input[type=submit]`, $toLinkCard);
+  const $cardForm = $(`.gas-link-pa-form`, $toLinkCard);
   $submitBtn.click(async (e) => {
     e.preventDefault();
     if (!$linkField.val()?.length) {
@@ -81,8 +82,6 @@ const linkPlatform = (platformName) => {
       return;
     }
     $(`input`, $toLinkCard).attr("disabled", true);
-    const submitText = $submitBtn.text();
-    $submitBtn.text($submitBtn.data("wait"));
     const reqData = {
       platform: platformNameIdMap(platformName),
       external: $linkField.val(),
@@ -100,23 +99,21 @@ const linkPlatform = (platformName) => {
     if (resFecth.status !== 201) {
       const $errEl = $(".gas-link-pa-error", $toLinkCard);
       $errEl.css("display", "flex");
+      $cardForm.hide();
       console.error(paData?.message);
       setTimeout(() => {
         $errEl.hide();
         $(`input`, $toLinkCard).attr("disabled", false);
-        $submitBtn.text(submitText);
+        $cardForm.css("display", "flex");
       }, formMessageDelay);
       return;
     }
-    $(`input`, $toLinkCard).hide();
+    $cardForm.hide();
     $(".gas-link-pa-success", $toLinkCard)
       .attr("title", paData?.message)
       .css("display", "flex");
     setTimeout(() => {
       $toLinkCard.hide();
-      $(`input`, $toLinkCard).attr("disabled", false).show();
-      $submitBtn.text(submitText);
-      $(".gas-link-pa-success", $toLinkCard).hide();
       unlinkPlatform({
         platform: platformName,
         accountId: paData?.platformAccount?.playerId,
