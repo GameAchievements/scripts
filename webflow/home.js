@@ -7,15 +7,15 @@ function listResponseHandler({
   numKeysToReplace,
   textKeysToReplace,
 }) {
-  // console.info(`=== ${elemId} results ===`, listData);
+  console.info(`=== ${elemId} results ===`, listData);
   let dataTemplate = $(elemId).prop("outerHTML");
   const $list = $(`${elemId} .gas-list`);
   const $emptyList = $(`${elemId} .gas-list-empty`);
-  if (listData?.length) {
-    const $entryTemplate = $(".gas-list-entry", $list).first();
-    $entryTemplate.show();
-    dataTemplate = $entryTemplate.prop("outerHTML");
-    $entryTemplate.hide();
+  const $entryTemplate = $(".gas-list-entry", $list).first();
+  $entryTemplate.show();
+  dataTemplate = $entryTemplate.prop("outerHTML");
+  $entryTemplate.hide();
+  if (listData?.length && dataTemplate?.length) {
     $list.html($entryTemplate);
     listData.forEach((item, resIdx) => {
       let dataTemplateActual = dataTemplate;
@@ -69,6 +69,9 @@ function listResponseHandler({
       $list.append(dataTemplateActual);
     });
   } else {
+    if (listData?.length && !dataTemplate?.length) {
+      console.error(`${elemId} template issue (missing a '.gas-' class?)`);
+    }
     $(elemId).html($emptyList);
     $emptyList.show();
   }

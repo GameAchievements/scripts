@@ -7,7 +7,7 @@
 const axios = require("axios");
 
 exports.onExecutePostLogin = async (event, api) => {
-  const { name, email, nickname, user_id } = event.user;
+  const { name, email, nickname, user_id, username } = event.user;
 
   if (!user_id.includes("discord") && !user_id.includes("google")) {
     return;
@@ -22,7 +22,7 @@ exports.onExecutePostLogin = async (event, api) => {
     },
     data: {
       email,
-      name: name || nickname,
+      name: nickname || username || name,
       auth0Id: user_id,
     },
   });
