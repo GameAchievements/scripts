@@ -9,7 +9,8 @@
 const axios = require("axios");
 
 exports.onExecutePostUserRegistration = async (event, api) => {
-  const { email, name, username, nickname, user_id } = event.user;
+  const { email, name, username, nickname, user_id, user_metadata } =
+    event.user;
   return await axios({
     method: "post",
     url: "https://gameachievements.up.railway.app/api/user",
@@ -19,7 +20,7 @@ exports.onExecutePostUserRegistration = async (event, api) => {
     },
     data: {
       email,
-      name: name || username || nickname,
+      name: user_metadata?.ga_name || nickname || username || name,
       auth0Id: user_id,
     },
   });
