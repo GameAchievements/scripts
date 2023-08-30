@@ -18,7 +18,13 @@ function gamehubResponseHandler(res, elemId) {
     "recentGamersCount",
     "completion",
   ];
-  const keysWithArrays = ["genres", "modes", "publishers", "developers"];
+  const keysWithArrays = [
+    "genres",
+    "modes",
+    "publishers",
+    "developers",
+    "consoles",
+  ];
   if (elemId.endsWith("top") && (res.coverURL || res.imageURL)?.length) {
     dataTemplateActual = $ghContainer
       .css(
@@ -64,7 +70,9 @@ function gamehubResponseHandler(res, elemId) {
             value
               .map(
                 (tag) =>
-                  `<div class="igdb-tag" title="${tag}"><div class="gas-text-overflow">${tag}</div></div>`
+                  `<div class="${
+                    key === "consoles" ? "gh-console" : "igdb"
+                  }-tag" title="${tag}"><div class="gas-text-overflow">${tag}</div></div>`
               )
               .join("\n")
           )

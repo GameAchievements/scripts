@@ -57,6 +57,21 @@ function listResponseHandler({
           );
         } else if (key === "importedFromPlatform") {
           dataTemplateActual = showPlatform(value, dataTemplateActual);
+        } else if (key === "consoles") {
+          const $tags = $(`.gas-tags-${key}`, dataTemplateActual);
+          if ($tags?.length && value?.length && !value.includes("PC")) {
+            dataTemplateActual = $tags
+              .html(
+                value
+                  .map(
+                    (tag) =>
+                      `<div class="console-tag" title="${tag}"><div class="gas-text-overflow">${tag}</div></div>`
+                  )
+                  .join("\n")
+              )
+              .parents(".gas-list-entry")
+              .prop("outerHTML");
+          }
         }
       });
       $list

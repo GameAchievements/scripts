@@ -117,10 +117,16 @@ async function fetchAchievements() {
   const resData = await resFetch.json();
   const elemId = `${elemIdPrefix}-list-achievements-latest`;
   listResponseHandler({
-    listData: resData,
+    listData: resData.slice(0, 4),
     elemId,
     numKeysToReplace: ["id"],
-    textKeysToReplace: ["name", "updatedAt", "gameName", "unlockedAt"],
+    textKeysToReplace: [
+      "name",
+      "description",
+      "updatedAt",
+      "gameName",
+      "unlockedAt",
+    ],
   });
   $(`${elemId} .ga-loader-container`).hide();
 }
