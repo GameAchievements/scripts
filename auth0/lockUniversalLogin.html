@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Auth0 sign in</title>
+  <title>Authentication</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css?family=Gantari:300,regular,600,700%7CGantari:300,regular,600,700%7CGantari:300,regular,600,700%7CMaterial+Icons+Round:regular"
@@ -78,16 +78,18 @@
     lock.show();
   </script>
   <style>
+    .auth0-lock.auth0-lock.auth0-lock-opened .auth0-lock-header-bg .auth0-lock-header-bg-blur,
+    .auth0-lock.auth0-lock .auth0-lock-name,
+    .auth0-lock.auth0-lock .auth0-lock-terms {
+      display: none;
+    }
+
     .auth0-lock.auth0-lock .auth0-lock-overlay {
       background: #191f59;
     }
 
     .auth0-lock.auth0-lock {
       font-family: Gantari, sans-serif;
-    }
-
-    .auth0-lock.auth0-lock .auth0-lock-terms {
-      display: none;
     }
 
     .auth0-lock-social-button[data-provider^=oauth2] .auth0-lock-social-button-icon {
