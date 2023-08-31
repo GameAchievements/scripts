@@ -347,14 +347,17 @@ function listResponseHandler({
       ).forEach((item, resIdx) => {
         let dataTemplateActual = dataTemplate;
         Object.entries(item).forEach(([key, value]) => {
-          const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
-          if ($entryImg?.length && item.iconURL?.length) {
-            dataTemplateActual = $entryImg
-              .removeAttr("srcset")
-              .removeAttr("sizes")
-              .attr("src", item.iconURL)
-              .parents(".gas-list-entry")
-              .prop("outerHTML");
+          const imageURL = item.imageURL || item.iconURL;
+          if (imageURL?.length && !isSteamImage(imageURL)) {
+            const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+            if ($entryImg?.length) {
+              dataTemplateActual = $entryImg
+                .removeAttr("srcset")
+                .removeAttr("sizes")
+                .attr("src", imageURL)
+                .parents(".gas-list-entry")
+                .prop("outerHTML");
+            }
           }
           if (textKeysToReplace.includes(key)) {
             dataTemplateActual = dataTemplateActual.replaceAll(
