@@ -20,28 +20,32 @@ function listResponseHandler({
       let dataTemplateActual = dataTemplate;
       dataTemplateActual = dataTemplateActual.replaceAll(`{|idx|}`, resIdx + 1);
       Object.entries(item).forEach(([key, value]) => {
-        let $entryImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
-        if ($entryImg.length && item.gameIconURL?.length) {
-          const imgCaption = `For achievement: ${achievementNameSlicer(
-            item.achievementName
-          )}`;
-          dataTemplateActual = $entryImg
-            .removeAttr("srcset")
-            .removeAttr("sizes")
-            .attr("src", item.gameIconURL)
-            .attr("alt", imgCaption)
-            .attr("title", imgCaption)
-            .parents(".gas-list-entry")
-            .prop("outerHTML");
+        if (item.gameIconURL?.length && !isSteamImage(item.gameIconURL)) {
+          let $entryImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
+          if ($entryImg.length) {
+            const imgCaption = `For achievement: ${achievementNameSlicer(
+              item.achievementName
+            )}`;
+            dataTemplateActual = $entryImg
+              .removeAttr("srcset")
+              .removeAttr("sizes")
+              .attr("src", item.gameIconURL)
+              .attr("alt", imgCaption)
+              .attr("title", imgCaption)
+              .parents(".gas-list-entry")
+              .prop("outerHTML");
+          }
         }
-        $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
-        if ($entryImg.length && item.iconURL?.length) {
-          dataTemplateActual = $entryImg
-            .removeAttr("srcset")
-            .removeAttr("sizes")
-            .attr("src", item.iconURL)
-            .parents(".gas-list-entry")
-            .prop("outerHTML");
+        if (item.iconURL?.length && !isSteamImage(item.iconURL)) {
+          $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+          if ($entryImg.length && item.iconURL?.length) {
+            dataTemplateActual = $entryImg
+              .removeAttr("srcset")
+              .removeAttr("sizes")
+              .attr("src", item.iconURL)
+              .parents(".gas-list-entry")
+              .prop("outerHTML");
+          }
         }
         if (textKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(

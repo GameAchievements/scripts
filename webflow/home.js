@@ -21,31 +21,36 @@ function listResponseHandler({
       let dataTemplateActual = dataTemplate;
       dataTemplateActual = dataTemplateActual.replaceAll(`{|idx|}`, resIdx + 1);
       Object.entries(item).forEach(([key, value]) => {
-        const $gameImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
-        if ($gameImg?.length && item.gameIconURL?.length) {
-          dataTemplateActual = $gameImg
-            .removeAttr("srcset")
-            .removeAttr("sizes")
-            .attr("src", item.gameIconURL)
-            .parents(".gas-list-entry")
-            .prop("outerHTML");
+        if (item.gameIconURL?.length && !isSteamImage(item.gameIconURL)) {
+          const $gameImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
+          if ($gameImg?.length) {
+            dataTemplateActual = $gameImg
+              .removeAttr("srcset")
+              .removeAttr("sizes")
+              .attr("src", item.gameIconURL)
+              .parents(".gas-list-entry")
+              .prop("outerHTML");
+          }
         }
-        const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
         if (
-          $entryImg?.length &&
-          (item.iconURL?.length || item.imageURL?.length)
+          (item.iconURL?.length || item.imageURL?.length) &&
+          !isSteamImage(item.imageURL) &&
+          !isSteamImage(item.iconURL)
         ) {
-          dataTemplateActual = elemId.includes("list-games")
-            ? $entryImg
-                .css("background-image", `url(${item.imageURL})`)
-                .parents(".gas-list-entry")
-                .prop("outerHTML")
-            : $entryImg
-                .removeAttr("srcset")
-                .removeAttr("sizes")
-                .attr("src", item.iconURL || item.imageURL)
-                .parents(".gas-list-entry")
-                .prop("outerHTML");
+          const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+          if ($entryImg?.length) {
+            dataTemplateActual = elemId.includes("list-games")
+              ? $entryImg
+                  .css("background-image", `url(${item.imageURL})`)
+                  .parents(".gas-list-entry")
+                  .prop("outerHTML")
+              : $entryImg
+                  .removeAttr("srcset")
+                  .removeAttr("sizes")
+                  .attr("src", item.iconURL || item.imageURL)
+                  .parents(".gas-list-entry")
+                  .prop("outerHTML");
+          }
         }
         if (textKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(

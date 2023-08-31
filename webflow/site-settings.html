@@ -324,6 +324,7 @@
       posAction();
     }, formMessageDelay);
   };
+  const isSteamImage = (imgURL) => imgURL?.includes("steamstatic") || imgURL?.includes("steampowered");
 </script>
 
 <!-- ~~~ users and auth0 helpers ~~~ -->

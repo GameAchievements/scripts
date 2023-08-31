@@ -35,15 +35,17 @@ function listResponseHandler({
     listData.forEach((item, resIdx) => {
       let dataTemplateActual = dataTemplate;
       Object.entries(item).forEach(([key, value]) => {
-        const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
         const imageURL = item.iconURL || item.imageURL;
-        if ($entryImg?.length && imageURL?.length) {
-          dataTemplateActual = $entryImg
-            .removeAttr("srcset")
-            .removeAttr("sizes")
-            .attr("src", imageURL)
-            .parents(".gas-list-entry")
-            .prop("outerHTML");
+        if (imageURL?.length && !isSteamImage(imageURL)) {
+          const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+          if ($entryImg?.length) {
+            dataTemplateActual = $entryImg
+              .removeAttr("srcset")
+              .removeAttr("sizes")
+              .attr("src", imageURL)
+              .parents(".gas-list-entry")
+              .prop("outerHTML");
+          }
         }
         if (textKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
@@ -57,9 +59,13 @@ function listResponseHandler({
           );
         } else if (key === "importedFromPlatform") {
           dataTemplateActual = showPlatform(value, dataTemplateActual);
-        } else if (key === "consoles") {
+        } else if (
+          key === "consoles" &&
+          value?.length &&
+          !value.includes("PC")
+        ) {
           const $tags = $(`.gas-tags-${key}`, dataTemplateActual);
-          if ($tags?.length && value?.length && !value.includes("PC")) {
+          if ($tags?.length) {
             dataTemplateActual = $tags
               .html(
                 value
