@@ -70,14 +70,16 @@ const linkPlatform = (platformName) => {
   const $linkField = $(`input[name=external]`, $toLinkCard);
   const $submitBtn = $(`input[type=submit]`, $toLinkCard);
   const $cardForm = $(`.gas-link-pa-form`, $toLinkCard);
+  const $errEl = $(".gas-link-pa-error", $toLinkCard);
   $submitBtn.click(async (e) => {
     e.preventDefault();
     if (!$linkField.val()?.length) {
-      $(".gas-link-pa-error", $toLinkCard)
-        .attr("title", "Please fill-in the input field with an id")
-        .show();
+      $cardForm.hide();
+      $errEl.css("display", "flex");
+      console.error("Please fill-in the input field with an id");
       setTimeout(() => {
-        $(".gas-link-pa-error", $toLinkCard).hide();
+        $errEl.hide();
+        $cardForm.css("display", "flex");
       }, formMessageDelay);
       return;
     }
@@ -97,7 +99,6 @@ const linkPlatform = (platformName) => {
     });
     const paData = await resFecth.json();
     if (resFecth.status !== 201) {
-      const $errEl = $(".gas-link-pa-error", $toLinkCard);
       $errEl.css("display", "flex");
       $cardForm.hide();
       console.error(paData?.message);
