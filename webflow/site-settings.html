@@ -1,6 +1,8 @@
 <!------------------------------------- Header code ------------------------------------->
 <meta name="domain" content="gameachievements.up.railway.app" />
 <meta name="adsense" content="" />
+<meta name="adsense-unit" content="" />
+
 <script src="https://cdn.ingest-lr.com/LogRocket.min.js" crossorigin="anonymous"></script>
 <script>window.LogRocket && window.LogRocket.init('tdpmns/dev-gameachievements');</script>
 <style>
@@ -114,7 +116,7 @@
   .gas-rating-scale li:last-of-type p {left: 1rem;}
   .gas-rating-scale svg {width: 3rem;fill: #5663ba;transition: fill 0.25s;}
 
-  .adsbygoogle {display:flex;align-items:center;justify-content:center;height:100%}
+  .adsbygoogle {align-items:center;justify-content:center;height:100%;min-width: 300px;min-height: 50px;}
 </style>
 
 <!------------------------------------- Footer code ------------------------------------->
@@ -325,6 +327,7 @@
     }, formMessageDelay);
   };
   const isSteamImage = (imgURL) => imgURL?.includes("steamstatic") || imgURL?.includes("steampowered");
+  const isXboxEdsImage = (imgURL) => imgURL?.includes("images-eds.xboxlive.com");
 </script>
 
 <!-- ~~~ users and auth0 helpers ~~~ -->
@@ -506,12 +509,13 @@
         eachElement('.auth-visible', (e) => e.classList.add('auth-hidden'));
       }
       const adsenseClientId = document.querySelector('meta[name=adsense]')?.content;
-      if (adsenseClientId?.length) {
+      const adsenseUnitId = document.querySelector('meta[name=adsense-unit]')?.content;
+      if (adsenseClientId?.length && adsenseUnitId?.length) {
         $('head').append(`<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}" crossorigin="anonymous"><\/script>`);
-          $('.ads-section').each((adIdx, adEl) => {
-          $(adEl).css('background', 'transparent').html(`<ins class="adsbygoogle" data-ad-client="${adsenseClientId}" data-ad-slot="1234567890"><\/ins>`)
-            .append("<script>(adsbygoogle = window.adsbygoogle || []).push({});<\/script>");
+        $('.ads-section').each((adIdx, adEl) => {
+          $(adEl).css('background', 'transparent').html(`<ins style="display:flex" class="adsbygoogle" data-ad-client="${adsenseClientId}" data-ad-slot="${adsenseUnitId}" data-ad-format="auto" data-full-width-responsive="true"><\/ins>`);
         });
+        $().ready(() => { (adsbygoogle = window.adsbygoogle || []).push({}) });
       }
     } catch (err) {
       console.log('[auth0] Error updating UI!', err);

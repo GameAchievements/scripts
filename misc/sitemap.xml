@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>
+      https://gameachievements.net/
+    </loc>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gameachievements.net/"/>
+  </url>
+  <url>
+    <loc>
+      https://gameachievements.net/news
+    </loc>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gameachievements.net/news"/>
+  </url>
+  <url>
+    <loc>
+      https://gameachievements.net/all-news
+    </loc>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gameachievements.net/all-news"/>
+  </url>
+  <url>
+    <loc>
+      https://gameachievements.net/games
+    </loc>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gameachievements.net/games"/>
+  </url>
+  <url>
+    <loc>
+      https://gameachievements.net/achievements
+    </loc>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gameachievements.net/achievements"/>
+  </url>
+  <url>
+    <loc>
+      https://gameachievements.net/guides
+    </loc>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gameachievements.net/guides"/>
+  </url>
+  <url>
+    <loc>
+      https://gameachievements.net/ga-leaderboard
+    </loc>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gameachievements.net/ga-leaderboard"/>
+  </url>
+  <url>
+    <loc>
+      https://gameachievements.net/playstation-leaderboard
+    </loc>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gameachievements.net/playstation-leaderboard"/>
+  </url>
+  <url>
+    <loc>
+      https://gameachievements.net/xbox-leaderboard
+    </loc>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gameachievements.net/xbox-leaderboard"/>
+  </url>
+  <url>
+    <loc>
+      https://gameachievements.net/steam-leaderboard
+    </loc>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gameachievements.net/steam-leaderboard"/>
+  </url>
+  <url>
+    <loc>
+      https://gameachievements.net/ga-reviews
+    </loc>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gameachievements.net/ga-reviews"/>
+  </url>
+  <url>
+    <loc>
+      https://gameachievements.net/terms-of-use
+    </loc>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gameachievements.net/terms-of-use"/>
+  </url>
+  <url>
+    <loc>
+      https://gameachievements.net/privacy-policy
+    </loc>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gameachievements.net/privacy-policy"/>
+  </url>
+  <url>
+    <loc>
+      https://gameachievements.net/about-us
+    </loc>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gameachievements.net/about-us"/>
+  </url>
+  <url>
+    <loc>
+      https://gameachievements.net/linking-unlinking-platform-accounts
+    </loc>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://gameachievements.net/linking-unlinking-platform-accounts"/>
+  </url>
+</urlset>

@@ -34,6 +34,7 @@ function listResponseHandler({
         }
         if (
           (item.iconURL?.length || item.imageURL?.length) &&
+          !isXboxEdsImage(item.imageURL) &&
           !isSteamImage(item.imageURL) &&
           !isSteamImage(item.iconURL)
         ) {
