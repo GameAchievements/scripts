@@ -2,7 +2,10 @@
 <meta name="domain" content="gameachievements.up.railway.app" />
 <meta name="adsense" content="" />
 <meta name="adsense-unit" content="" />
-
+<!-- for adsense approval, this script needs to be uncommented here, it should be replaced by script below after approval
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5846875199312899"
+  crossorigin="anonymous"></script>
+-->
 <script src="https://cdn.ingest-lr.com/LogRocket.min.js" crossorigin="anonymous"></script>
 <script>window.LogRocket && window.LogRocket.init('tdpmns/dev-gameachievements');</script>
 <style>
@@ -318,7 +321,7 @@
       );
     }
   };
-  const displayMessage = ($msgEl, msgText, type = "success", posAction = () => {}) => {
+  const displayMessage = ($msgEl, msgText, type = "success", posAction = () => { }) => {
     $msgEl.addClass(`${type}-message`).css("display", "flex");
     $("div:first-child", $msgEl).text(msgText);
     setTimeout(() => {
@@ -491,7 +494,7 @@
         // Get the access token from the Auth0 client
         token = await auth0Client.getTokenSilently();
         await fetchLoadProfileData();
-        
+
         if (userProfileData?.id) {
           LogRocket.identify(userProfileData.id, {
             name: userProfileData.name,
@@ -508,15 +511,17 @@
         });
         eachElement('.auth-visible', (e) => e.classList.add('auth-hidden'));
       }
-      const adsenseClientId = document.querySelector('meta[name=adsense]')?.content;
-      const adsenseUnitId = document.querySelector('meta[name=adsense-unit]')?.content;
-      if (adsenseClientId?.length && adsenseUnitId?.length) {
-        $('head').append(`<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}" crossorigin="anonymous"><\/script>`);
-        $('.ads-section').each((adIdx, adEl) => {
-          $(adEl).css('background', 'transparent').html(`<ins style="display:flex" class="adsbygoogle" data-ad-client="${adsenseClientId}" data-ad-slot="${adsenseUnitId}" data-ad-format="auto" data-full-width-responsive="true"><\/ins>`);
-        });
-        $().ready(() => { (adsbygoogle = window.adsbygoogle || []).push({}) });
-      }
+      $('.ads-section').remove();
+      // TODO: replace above line with below before resubmitting Adsense review request
+      // const adsenseClientId = document.querySelector('meta[name=adsense]')?.content;
+      // const adsenseUnitId = document.querySelector('meta[name=adsense-unit]')?.content;
+      // if (adsenseClientId?.length && adsenseUnitId?.length) {
+      //   // TODO: $('head').append(`<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}" crossorigin="anonymous"><\/script>`);
+      //   $('.ads-section').each((adIdx, adEl) => {
+      //     $(adEl).css('background', 'transparent').html(`<ins style="display:flex" class="adsbygoogle" data-ad-client="${adsenseClientId}" data-ad-slot="${adsenseUnitId}" data-ad-format="auto" data-full-width-responsive="true"><\/ins>`);
+      //   });
+      //   $().ready(() => { (adsbygoogle = window.adsbygoogle || []).push({}) });
+      // }
     } catch (err) {
       console.log('[auth0] Error updating UI!', err);
       return;

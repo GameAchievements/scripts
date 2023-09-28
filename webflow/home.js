@@ -86,10 +86,14 @@ function listResponseHandler({
 
 async function fetchGames(type) {
   const resFetch = await fetch(`https://${apiDomain}/api/game/list/${type}`);
-  const resData = await resFetch.json();
+  let listData = [];
+  if (resFetch.ok) {
+    const resData = await resFetch.json();
+    listData = resData?.slice(0, 4);
+  }
   const elemId = `${elemIdPrefix}-list-games-${type}`;
   listResponseHandler({
-    listData: resData?.slice(0, 4),
+    listData,
     elemId,
     numKeysToReplace: ["id", "players", "achievements"],
     textKeysToReplace: [
@@ -106,10 +110,14 @@ async function fetchGuides() {
   const resFetch = await fetch(
     `https://${apiDomain}/api/guide/list?perPage=5&orderBy=createdAt:desc`
   );
-  const resData = await resFetch.json();
+  let listData = [];
+  if (resFetch.ok) {
+    const resData = await resFetch.json();
+    listData = resData.results?.slice(0, 4);
+  }
   const elemId = `${elemIdPrefix}-list-guides`;
   listResponseHandler({
-    listData: resData.results?.slice(0, 4),
+    listData,
     elemId,
     numKeysToReplace: ["id", "comments", "likes"],
     textKeysToReplace: ["name", "author", "description", "profileId"],
@@ -120,10 +128,14 @@ async function fetchAchievements() {
   const resFetch = await fetch(
     `https://${apiDomain}/api/achievement/list/latest`
   );
-  const resData = await resFetch.json();
+  let listData = [];
+  if (resFetch.ok) {
+    const resData = await resFetch.json();
+    listData = resData.slice(0, 4);
+  }
   const elemId = `${elemIdPrefix}-list-achievements-latest`;
   listResponseHandler({
-    listData: resData.slice(0, 4),
+    listData,
     elemId,
     numKeysToReplace: ["id"],
     textKeysToReplace: [
