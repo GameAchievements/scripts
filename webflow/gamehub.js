@@ -414,6 +414,27 @@ async function achieversFetcher({
   });
 }
 
+const setupGAReview = (gamehubData) => {
+  if (!gamehubData?.gaReviewURL?.length) {
+    // without URL, do not display official review
+    return;
+  }
+  const gaReviewSectionId = `${elemIdPrefix}-official-review`;
+  $(`${gaReviewSectionId}`).css("display", "flex");
+  $(`${gaReviewSectionId}-placeholder`).hide();
+  $(`${gaReviewSectionId}-url`).attr("href", gamehubData.gaReviewURL);
+  if (gamehubData?.gaReviewSummary?.length) {
+    $(`${gaReviewSectionId}-summary`).text(gamehubData.gaReviewSummary);
+  }
+  if (gamehubData?.gaReviewScore) {
+    const roundedRate = Math.round(gamehubData.gaReviewScore);
+    $(`${gaReviewSectionId}-rate-text`).text(roundedRate);
+    $(`${gaReviewSectionId}-rate`).replaceWith(ratingSVG(roundedRate));
+  } else {
+    $(`${gaReviewSectionId}-rate`).parent().remove();
+  }
+};
+
 const setupReviewForm = async () => {
   const formWrapperId = `${elemIdPrefix}-review-form`;
   const resReview = await fetch(
@@ -632,7 +653,9 @@ async function fetchListLeaderboards(elemId, searchTerm = "") {
 
 $().ready(async () => {
   await auth0Bootstrap();
-  if (await fetchGamehub()) {
+  const gamehubData = await fetchGamehub();
+  if (gamehubData) {
+    setupGAReview(gamehubData);
     setupReviewForm();
     setupListSearch(`${elemIdPrefix}-leaderboard`, fetchListLeaderboards);
     await Promise.all([
