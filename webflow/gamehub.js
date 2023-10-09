@@ -415,6 +415,8 @@ async function achieversFetcher({
 }
 
 const setupGAReview = (gamehubData) => {
+  $(`${elemIdPrefix}-top-ga-score`).prepend(ratingSVG(0));
+  $(`${elemIdPrefix}-top-ga-score-text`).text("-");
   if (!gamehubData?.gaReviewURL?.length) {
     // without URL, do not display official review
     return;
@@ -428,10 +430,13 @@ const setupGAReview = (gamehubData) => {
   }
   if (gamehubData?.gaReviewScore) {
     const roundedRate = Math.round(gamehubData.gaReviewScore);
-    $(`${gaReviewSectionId}-rate-text`).text(roundedRate);
-    $(`${gaReviewSectionId}-rate`).replaceWith(ratingSVG(roundedRate));
+    const rateEl = ratingSVG(roundedRate);
+    $(`${gaReviewSectionId}-score-text`).text(roundedRate);
+    $(`${gaReviewSectionId}-score-bg`).replaceWith(rateEl);
+    $(`${elemIdPrefix}-top-ga-score .bg-review-score`).replaceWith(rateEl);
+    $(`${elemIdPrefix}-top-ga-score-text`).text(roundedRate);
   } else {
-    $(`${gaReviewSectionId}-rate`).parent().remove();
+    $(`${gaReviewSectionId}-score`).parent().remove();
   }
 };
 
