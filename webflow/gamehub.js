@@ -1,14 +1,17 @@
 const apiDomain = document.querySelector("meta[name=domain]")?.content;
 const urlParams = new URLSearchParams(location.search);
 const gameId = urlParams.get("id") || 1044;
+const gamehubURL = `https://${apiDomain}/api/game/${gameId}`;
 const elemIdPrefix = `#gas-gh`;
+const versionsDropdownId = `${elemIdPrefix}-versions-dropdown`;
 const formMessageDelay = 4000;
 const platformsTabNames = ["all", "playstation", "xbox", "steam"];
+let gamehubData;
 $(".ga-loader-container").show();
 $("#ga-sections-container").hide();
 
 function gamehubResponseHandler(res, elemId) {
-  const $ghContainer = $(`${elemId}`);
+  const $ghContainer = $(elemId);
   let dataTemplateActual = $ghContainer.prop("outerHTML");
   console.info(`=== ${elemId} ===`, res);
   const textKeysToReplace = ["name", "igdbId", "description", "releaseDate"];
@@ -37,12 +40,7 @@ function gamehubResponseHandler(res, elemId) {
   }
   $(".gas-img", dataTemplateActual).each((idx, elm) => {
     if (res.imageURL?.length) {
-      dataTemplateActual = $(elm)
-        .removeAttr("srcset")
-        .removeAttr("sizes")
-        .attr("src", res.imageURL)
-        .parents(elemId)
-        .prop("outerHTML");
+      dataTemplateActual = showImageFromSrc($(elm), res.imageURL, elemId);
     }
   });
   Object.entries(res).forEach(([key, value]) => {
@@ -84,12 +82,21 @@ function gamehubResponseHandler(res, elemId) {
   $ghContainer.prop("outerHTML", dataTemplateActual);
 }
 async function fetchGamehub() {
-  const resFetch = await fetch(`https://${apiDomain}/api/game/${gameId}`);
-  if (resFetch.status !== 200) {
+  const resFetch = await fetch(gamehubURL);
+  if (!resFetch.ok) {
+    location.replace("/games");
     return;
   }
   const resData = await resFetch.json();
   if (Object.keys(resData).length > 0 && resData.id) {
+    if (
+      resData.versionDetails &&
+      resData.versionDetails.defaultVersion !== Number(gameId)
+    ) {
+      // redirect to the default game version
+      location.replace(`/game?id=${resData.versionDetails.defaultVersion}`);
+      return;
+    }
     document.title = `${resData.name?.length ? resData.name : resData.id} | ${
       document.title
     }`;
@@ -151,15 +158,12 @@ function listResponseHandler({
       (tabName === "all"
         ? listData
         : listData.filter((item) => item[tabMatcher]?.toLowerCase() === tabName)
-      ).forEach((item, resIdx) => {
+      ).forEach((item, itemIdx) => {
         let dataTemplateActual = dataTemplate;
         Object.entries(item).forEach(([key, value]) => {
           const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
           if ($entryImg && item.iconURL?.length) {
-            dataTemplateActual = $entryImg
-              .attr("src", item.iconURL)
-              .parents(".gas-list-entry")
-              .prop("outerHTML");
+            dataTemplateActual = showImageFromSrc($entryImg, item.iconURL);
           }
           if (elemId.endsWith("achievements") && key === "name") {
             dataTemplateActual = dataTemplateActual.replaceAll(
@@ -194,26 +198,10 @@ function listResponseHandler({
           } else if (key === "platform") {
             dataTemplateActual = showPlatform(value, dataTemplateActual);
           } else if (key === "rarity") {
-            const classValue = rarityClassCalc(value);
-            dataTemplateActual = dataTemplateActual.replaceAll(
-              `{|${key}|}`,
-              classValue.replace("-", " ")
-            );
-            dataTemplateActual = $(`.gas-rarity-tag`, dataTemplateActual)
-              .removeClass("gas-rarity-tag")
-              .addClass(`gas-rarity-tag-${classValue}`)
-              .children(".p1")
-              .addClass(classValue)
-              .parents(".gas-list-entry")
-              .prop("outerHTML");
+            dataTemplateActual = showRarityTag(value, dataTemplateActual);
           }
         });
-        $list
-          .append(dataTemplateActual)
-          .children()
-          .last()
-          .removeClass(["bg-light", "bg-dark"])
-          .addClass(`bg-${resIdx % 2 > 0 ? "light" : "dark"}`);
+        listTemplateAppend($list, dataTemplateActual, itemIdx);
       });
     } else {
       $list.html($emptyList);
@@ -270,9 +258,7 @@ async function listFetcher({
   tabMatcher,
 }) {
   const elemId = `${elemIdPrefix}-${listName}`;
-  const resList = await fetch(
-    `https://${apiDomain}/api/game/${gameId}/${listName}`
-  );
+  const resList = await fetch(`${gamehubURL}/${listName}`);
   const listData = await resList.json();
   if (Array.isArray(listData) || listData.length > 0) {
     let tabCounts;
@@ -350,11 +336,7 @@ function achieversHandler({
         Object.entries(item).forEach(([key, value]) => {
           const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
           if ($entryImg && item.iconURL?.length) {
-            dataTemplateActual = $entryImg
-              .attr("src", item.avatar)
-              .parents(".gas-list-entry")
-              .data("id", item.id)
-              .prop("outerHTML");
+            dataTemplateActual = showImageFromSrc($entryImg, item.avatar);
           }
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|idx|}`,
@@ -382,12 +364,7 @@ function achieversHandler({
             );
           }
         });
-        $list
-          .append(dataTemplateActual)
-          .children()
-          .last()
-          .removeClass(["bg-light", "bg-dark"])
-          .addClass(`bg-${itemIdx % 2 > 0 ? "light" : "dark"}`);
+        listTemplateAppend($list, dataTemplateActual, itemIdx);
       });
     } else {
       $list.append($emptyList);
@@ -402,9 +379,7 @@ async function achieversFetcher({
   textKeysToReplace,
 }) {
   const elemId = `${elemIdPrefix}-${listName}`;
-  const resLists = await fetch(
-    `https://${apiDomain}/api/game/${gameId}/${listName}`
-  );
+  const resLists = await fetch(`${gamehubURL}/${listName}`);
   const listsData = await resLists.json();
   achieversHandler({
     listsData,
@@ -414,7 +389,159 @@ async function achieversFetcher({
   });
 }
 
-const setupGAReview = (gamehubData) => {
+async function versionAchievementsFetcher(versionGameId) {
+  const elemId = `${elemIdPrefix}-versions-tab`;
+  const $loader = $(`${elemId} .ga-loader-container`);
+  const $list = $(`${elemId} .gas-list`);
+  const $emptyList = $(`${elemId} .gas-list-empty`);
+  $emptyList.hide();
+  $list.hide();
+  $loader.show();
+  const resLists = await fetch(
+    `https://${apiDomain}/api/game/${versionGameId}/achievements`
+  );
+  const listData = await resLists.json();
+  console.info(`=== ${elemId} results ===`, listData);
+  const numKeysToReplace = ["id", "score", "achieversCount", "gAPoints"];
+  const textKeysToReplace = ["name", "description", "updatedAt"];
+  const $listHeader = $list.children().first();
+  const $entryTemplate = $(".gas-list-entry", $list).first();
+  $entryTemplate.show();
+  dataTemplate = $entryTemplate.prop("outerHTML");
+  $list.html($listHeader).append($entryTemplate);
+  if (listData.length > 0) {
+    $entryTemplate.hide();
+    listData.forEach((item, itemIdx) => {
+      let dataTemplateActual = dataTemplate;
+      Object.entries(item).forEach(([key, value]) => {
+        const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+        if ($entryImg && item.iconURL?.length) {
+          dataTemplateActual = showImageFromSrc($entryImg, item.iconURL);
+        }
+        if (key === "name") {
+          dataTemplateActual = dataTemplateActual.replaceAll(
+            `{|name|}`,
+            achievementNameSlicer(value) || "N.A."
+          );
+        } else if (textKeysToReplace.includes(key)) {
+          dataTemplateActual = dataTemplateActual.replaceAll(
+            `{|${key}|}`,
+            (key.endsWith("At") ? gaDate(value) : value) || ""
+          );
+        } else if (numKeysToReplace.includes(key)) {
+          dataTemplateActual = dataTemplateActual.replaceAll(
+            `{|${key}|}`,
+            Math.round(value || 0)
+          );
+        } else if (key === "platform") {
+          dataTemplateActual = showPlatform(value, dataTemplateActual);
+        } else if (key === "rarity") {
+          dataTemplateActual = showRarityTag(value, dataTemplateActual);
+        }
+      });
+      listTemplateAppend($list, dataTemplateActual, itemIdx);
+    });
+    $loader.hide();
+    $list.css({ display: "flex", "flex-direction": "column" });
+    $emptyList.hide();
+  } else {
+    $loader.hide();
+    $list.hide();
+    $emptyList.show();
+  }
+}
+
+async function versionSelectOption(e) {
+  const $optSelected = $(e.target);
+  $(`${versionsDropdownId}-options,${versionsDropdownId}-toggle`).removeClass(
+    "w--open"
+  );
+  const selectedGameId = $optSelected.data("version-id");
+  $(`${versionsDropdownId}-text-selected`).text(
+    `${$optSelected.text()} | ${selectedGameId}`
+  );
+  versionAchievementsFetcher(Number(selectedGameId));
+}
+
+async function versionsFetcher() {
+  if (!gamehubData.versionDetails) {
+    return;
+  }
+  const listName = "versions";
+  const elemId = `${elemIdPrefix}-${listName}`;
+  const resLists = await fetch(`${gamehubURL}/${listName}`);
+  const listData = await resLists.json();
+  const numKeysToReplace = ["achievementsCount"];
+  const textKeysToReplace = ["gameId", "externalGameId", "name", "region"];
+  console.info(`=== ${elemId} results ===`, listData);
+  let dataTemplate = $(elemId).prop("outerHTML");
+  const $list = $(`${elemId} .gas-list`);
+  if (listData.length) {
+    const $listHeader = $list.children().first();
+    const $entryTemplate = $(".gas-list-entry", $list).first();
+    $entryTemplate.show();
+    dataTemplate = $entryTemplate.prop("outerHTML");
+    $list.html($listHeader).append($entryTemplate);
+    $entryTemplate.hide();
+
+    // versions switching
+    const versionOptClass = "gas-version-option";
+    const $selectOptTemplate = $(`${versionsDropdownId}-options`)
+      .children()
+      .first();
+    $selectOptTemplate.addClass(versionOptClass);
+
+    listData.forEach((item, itemIdx) => {
+      const $versionOpt = $selectOptTemplate.clone();
+      $versionOpt
+        .data("version-id", item.gameId)
+        .data("version-external-id", item.externalGameId)
+        .text(
+          item.name || // if custom name is not available, concatenate console, region and id
+            `${item.consoles[0]} ${item.region ? `— ${item.region} ` : ""}(${
+              item.externalGameId
+            })`
+        );
+      $(`${versionsDropdownId}-options`).append($versionOpt);
+      let dataTemplateActual = dataTemplate;
+      Object.entries(item).forEach(([key, value]) => {
+        if (textKeysToReplace.includes(key)) {
+          dataTemplateActual = dataTemplateActual.replaceAll(
+            `{|${key}|}`,
+            value || "?"
+          );
+        } else if (numKeysToReplace.includes(key)) {
+          dataTemplateActual = dataTemplateActual.replaceAll(
+            `{|${key}|}`,
+            Math.round(value || 0)
+          );
+        } else if (key === "platform") {
+          dataTemplateActual = showPlatform(value, dataTemplateActual);
+        } else if (key === "consoles") {
+          dataTemplateActual = $(".gas-console-tags", dataTemplateActual)
+            .html(
+              value.map((csl) => {
+                const csli = csl.toLowerCase();
+                return `<div class="console-${
+                  csli.startsWith("ps") ? "playstation" : csli.slice(0, 4)
+                }">${csl}</div>`;
+              })
+            )
+            .parents(".gas-list-entry")
+            .prop("outerHTML");
+        }
+      });
+      listTemplateAppend($list, dataTemplateActual, itemIdx);
+    });
+    $selectOptTemplate.remove();
+    $(`.${versionOptClass}`).on("click", versionSelectOption);
+  }
+  $list.css("display", "flex");
+  $(`${elemId}-tab .gas-list-empty`).show();
+  $(`${elemId},${elemId}-tab-btn`).css("display", "flex");
+}
+
+const setupGAReview = () => {
   $(`${elemIdPrefix}-top-ga-score`).prepend(ratingSVG(0));
   $(`${elemIdPrefix}-top-ga-score-text`).text("-");
   if (!gamehubData?.gaReviewURL?.length) {
@@ -422,7 +549,7 @@ const setupGAReview = (gamehubData) => {
     return;
   }
   const gaReviewSectionId = `${elemIdPrefix}-official-review`;
-  $(`${gaReviewSectionId}`).css("display", "flex");
+  $(gaReviewSectionId).css("display", "flex");
   $(`${gaReviewSectionId}-placeholder`).hide();
   $(`${gaReviewSectionId}-url`).attr("href", gamehubData.gaReviewURL);
   if (gamehubData?.gaReviewSummary?.length) {
@@ -442,10 +569,9 @@ const setupGAReview = (gamehubData) => {
 
 const setupReviewForm = async () => {
   const formWrapperId = `${elemIdPrefix}-review-form`;
-  const resReview = await fetch(
-    `https://${apiDomain}/api/game/${gameId}/review`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
+  const resReview = await fetch(`${gamehubURL}/review`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   if (resReview.status === 200) {
     $(formWrapperId).remove();
     return;
@@ -507,18 +633,15 @@ const setupReviewForm = async () => {
       content: $contentField.val(),
       rating,
     };
-    const resFecth = await fetch(
-      `https://${apiDomain}/api/game/${gameId}/review`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(reqData),
-      }
-    );
+    const resFecth = await fetch(`${gamehubURL}/review`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(reqData),
+    });
     const revData = await resFecth.json();
     if (resFecth.status !== 201) {
       $errEl.show();
@@ -539,7 +662,7 @@ const setupReviewForm = async () => {
   });
 };
 
-async function fetchListLeaderboards(elemId, searchTerm = "") {
+async function leaderboardsFetcher(elemId, searchTerm = "") {
   let dataTemplate = $(elemId).prop("outerHTML");
   platformsTabNames.forEach(async (tabName) => {
     const $list = $(`${elemId} .gas-list-${tabName}`);
@@ -593,22 +716,17 @@ async function fetchListLeaderboards(elemId, searchTerm = "") {
       dataTemplate = $entryTemplate.prop("outerHTML");
       $list.html($listHeader).append($entryTemplate);
       $entryTemplate.hide();
-      listData.results.forEach((item, resIdx) => {
+      listData.results.forEach((item, itemIdx) => {
         let dataTemplateActual = dataTemplate;
         dataTemplateActual = dataTemplateActual.replaceAll(
           `{|idx|}`,
-          resIdx + 1
+          itemIdx + 1
         );
         Object.entries(item).forEach(([key, value]) => {
           if (key === "iconURL") {
             const $profileImg = $(`.gas-list-entry-cover`, dataTemplateActual);
             if ($profileImg?.length && value?.length) {
-              dataTemplateActual = $profileImg
-                .removeAttr("srcset")
-                .removeAttr("sizes")
-                .attr("src", value)
-                .parents(".gas-list-entry")
-                .prop("outerHTML");
+              dataTemplateActual = showImageFromSrc($profileImg, value);
             }
           } else if (key === "recentlyPlayed") {
             if (!paramPlatformId && value?.platform?.length) {
@@ -623,12 +741,7 @@ async function fetchListLeaderboards(elemId, searchTerm = "") {
               dataTemplateActual
             );
             if ($gameImg?.length && value?.iconURL?.length) {
-              dataTemplateActual = $gameImg
-                .removeAttr("srcset")
-                .removeAttr("sizes")
-                .attr("src", value.iconURL)
-                .parents(".gas-list-entry")
-                .prop("outerHTML");
+              dataTemplateActual = showImageFromSrc($gameImg, value.iconURL);
             }
           } else if (textKeysToReplace.includes(key)) {
             dataTemplateActual = dataTemplateActual.replaceAll(
@@ -642,12 +755,7 @@ async function fetchListLeaderboards(elemId, searchTerm = "") {
             );
           }
         });
-        $list
-          .append(dataTemplateActual)
-          .children()
-          .last()
-          .removeClass(["bg-light", "bg-dark"])
-          .addClass(`bg-${resIdx % 2 > 0 ? "light" : "dark"}`);
+        listTemplateAppend($list, dataTemplateActual, itemIdx);
       });
     } else {
       $list.html($emptyList);
@@ -658,18 +766,19 @@ async function fetchListLeaderboards(elemId, searchTerm = "") {
 
 $().ready(async () => {
   await auth0Bootstrap();
-  const gamehubData = await fetchGamehub();
+  gamehubData = await fetchGamehub();
   if (gamehubData) {
-    setupGAReview(gamehubData);
+    setupGAReview();
     setupReviewForm();
-    setupListSearch(`${elemIdPrefix}-leaderboard`, fetchListLeaderboards);
+    setupListSearch(`${elemIdPrefix}-leaderboard`, leaderboardsFetcher);
     await Promise.all([
+      await versionsFetcher(),
       await listFetcher({
         listName: "achievements",
         numKeysToReplace: ["id", "score", "achieversCount", "gAPoints"],
         textKeysToReplace: ["name", "description", "updatedAt"],
       }),
-      await fetchListLeaderboards(`${elemIdPrefix}-leaderboard`),
+      await leaderboardsFetcher(`${elemIdPrefix}-leaderboard`),
       await listFetcher({
         listName: "guides",
         numKeysToReplace: ["id", "commentsCount", "viewsCount", "likesCount"],
@@ -711,5 +820,4 @@ $().ready(async () => {
     $("#gas-wf-tab-activator").click();
     return;
   }
-  location.replace("/games");
 });
