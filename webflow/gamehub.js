@@ -26,7 +26,7 @@ function gamehubResponseHandler(res, elemId) {
     "modes",
     "publishers",
     "developers",
-    "consoles",
+    // "consoles",
   ];
   if (elemId.endsWith("top") && (res.coverURL || res.imageURL)?.length) {
     dataTemplateActual = $ghContainer
@@ -69,7 +69,8 @@ function gamehubResponseHandler(res, elemId) {
               .map(
                 (tag) =>
                   `<div class="${
-                    key === "consoles" ? "gh-console" : "igdb"
+                    "igdb"
+                    // key === "consoles" ? "gh-console" : "igdb"
                   }-tag" title="${tag}"><div class="gas-text-overflow">${tag}</div></div>`
               )
               .join("\n")
@@ -457,9 +458,7 @@ async function versionSelectOption(e) {
     "w--open"
   );
   const selectedGameId = $optSelected.data("version-id");
-  $(`${versionsDropdownId}-text-selected`).text(
-    `${$optSelected.text()} | ${selectedGameId}`
-  );
+  $(`${versionsDropdownId}-text-selected`).text($optSelected.text());
   versionAchievementsFetcher(Number(selectedGameId));
 }
 
@@ -472,7 +471,7 @@ async function versionsFetcher() {
   const resLists = await fetch(`${gamehubURL}/${listName}`);
   const listData = await resLists.json();
   const numKeysToReplace = ["achievementsCount"];
-  const textKeysToReplace = ["gameId", "externalGameId", "name", "region"];
+  const textKeysToReplace = ["gameId", "externalGameId", "region"];
   console.info(`=== ${elemId} results ===`, listData);
   let dataTemplate = $(elemId).prop("outerHTML");
   const $list = $(`${elemId} .gas-list`);
@@ -493,14 +492,14 @@ async function versionsFetcher() {
 
     listData.forEach((item, itemIdx) => {
       const $versionOpt = $selectOptTemplate.clone();
+      const versionOptionSuffix =
+        item.consoles[0] + (item.region ? `— ${item.region} ` : "");
       $versionOpt
         .data("version-id", item.gameId)
         .data("version-external-id", item.externalGameId)
+        // append console & region to identify version option
         .text(
-          item.name || // if custom name is not available, concatenate console, region and id
-            `${item.consoles[0]} ${item.region ? `— ${item.region} ` : ""}(${
-              item.externalGameId
-            })`
+          (item.name?.length ? `${item.name} | ` : "") + versionOptionSuffix
         );
       $(`${versionsDropdownId}-options`).append($versionOpt);
       let dataTemplateActual = dataTemplate;
@@ -514,6 +513,12 @@ async function versionsFetcher() {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
             Math.round(value || 0)
+          );
+        } else if (key === "name") {
+          dataTemplateActual = dataTemplateActual.replaceAll(
+            `{|${key}|}`,
+            // when the name is empty, identify by console & region
+            item.name?.length ? item.name : versionOptionSuffix
           );
         } else if (key === "platform") {
           dataTemplateActual = showPlatform(value, dataTemplateActual);
