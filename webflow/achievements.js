@@ -40,27 +40,20 @@ function listResponseHandler({
         if ($gameImg?.length && item.gameIconURL?.length) {
           // TODO: why is WF adding gas-list-entry-cover to this element?
           $gameImg.removeClass("gas-list-entry-cover");
-          dataTemplateActual = $gameImg
-            .removeAttr("srcset")
-            .removeAttr("sizes")
-            .attr("src", item.gameIconURL)
-            .parents(".gas-list-entry")
-            .prop("outerHTML");
+          dataTemplateActual =
+            showImageFromSrc($gameImg, item.gameIconURL) || dataTemplateActual;
         }
         const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
         const imageURL = item.iconURL || item.imageURL;
         if ($entryImg?.length && imageURL?.length) {
-          dataTemplateActual = $entryImg
-            .removeAttr("srcset")
-            .removeAttr("sizes")
-            .attr("src", imageURL)
-            .parents(".gas-list-entry")
-            .prop("outerHTML");
+          dataTemplateActual =
+            showImageFromSrc($entryImg, imageURL) || dataTemplateActual;
         }
         if (textKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
-            (key.endsWith("At") ? gaDate(value) : value) || ""
+            (key.endsWith("At") ? gaDate(value) : cleanupDoubleQuotes(value)) ||
+              ""
           );
         } else if (numKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(

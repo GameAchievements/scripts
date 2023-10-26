@@ -72,12 +72,8 @@ function guideResponseHandler(res) {
   }
   const $authorImg = $(`.gas-author-cover`, dataTemplateActual);
   if ($authorImg?.length && res.avatar?.length) {
-    dataTemplateActual = $authorImg
-      .removeAttr("srcset")
-      .removeAttr("sizes")
-      .attr("src", res.avatar)
-      .parents(elemId)
-      .prop("outerHTML");
+    dataTemplateActual =
+      showImageFromSrc($authorImg, res.avatar, elemId) || dataTemplateActual;
   }
   Object.entries(res).forEach(([key, value]) => {
     if (textKeysToReplace.includes(key)) {
@@ -132,12 +128,8 @@ function listResponseHandler({ listData, elemId, textKeysToReplace }) {
       Object.entries(item).forEach(([key, value]) => {
         const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
         if ($entryImg.length && item.imageUrl?.length) {
-          dataTemplateActual = $entryImg
-            .removeAttr("srcset")
-            .removeAttr("sizes")
-            .attr("src", item.imageUrl)
-            .parents(".gas-list-entry")
-            .prop("outerHTML");
+          dataTemplateActual =
+            showImageFromSrc($entryImg, item.imageURL) || dataTemplateActual;
         }
         if (textKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(

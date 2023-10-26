@@ -26,31 +26,26 @@ function listResponseHandler({
             const imgCaption = `For achievement: ${achievementNameSlicer(
               item.achievementName
             )}`;
-            dataTemplateActual = $entryImg
-              .removeAttr("srcset")
-              .removeAttr("sizes")
-              .attr("src", item.gameIconURL)
-              .attr("alt", imgCaption)
-              .attr("title", imgCaption)
-              .parents(".gas-list-entry")
-              .prop("outerHTML");
+
+            dataTemplateActual =
+              showImageFromSrc(
+                $entryImg.attr("alt", imgCaption).attr("title", imgCaption),
+                item.gameIconURL
+              ) || dataTemplateActual;
           }
         }
         if (item.iconURL?.length && !isSteamImage(item.iconURL)) {
           $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
           if ($entryImg.length && item.iconURL?.length) {
-            dataTemplateActual = $entryImg
-              .removeAttr("srcset")
-              .removeAttr("sizes")
-              .attr("src", item.iconURL)
-              .parents(".gas-list-entry")
-              .prop("outerHTML");
+            dataTemplateActual =
+              showImageFromSrc($entryImg, item.iconURL) || dataTemplateActual;
           }
         }
         if (textKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
-            (key.endsWith("At") ? gaDate(value) : value) || ""
+            (key.endsWith("At") ? gaDate(value) : cleanupDoubleQuotes(value)) ||
+              ""
           );
         } else if (numKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(

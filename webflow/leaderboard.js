@@ -46,12 +46,8 @@ function listResponseHandler({
         if (key === "iconURL") {
           const $profileImg = $(`.gas-list-entry-cover`, dataTemplateActual);
           if ($profileImg?.length && value?.length) {
-            dataTemplateActual = $profileImg
-              .removeAttr("srcset")
-              .removeAttr("sizes")
-              .attr("src", value)
-              .parents(".gas-list-entry")
-              .prop("outerHTML");
+            dataTemplateActual =
+              showImageFromSrc($profileImg, value) || dataTemplateActual;
           }
         } else if (key === "recentlyPlayed") {
           if (!paramPlatformId && value?.platform?.length) {
@@ -63,12 +59,8 @@ function listResponseHandler({
           }
           const $gameImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
           if ($gameImg?.length && value?.iconURL?.length) {
-            dataTemplateActual = $gameImg
-              .removeAttr("srcset")
-              .removeAttr("sizes")
-              .attr("src", value.iconURL)
-              .parents(".gas-list-entry")
-              .prop("outerHTML");
+            dataTemplateActual =
+              showImageFromSrc($gameImg, value.iconURL) || dataTemplateActual;
           }
         } else if (textKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(

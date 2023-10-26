@@ -24,12 +24,9 @@ function listResponseHandler({
         if (item.gameIconURL?.length && !isSteamImage(item.gameIconURL)) {
           const $gameImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
           if ($gameImg?.length) {
-            dataTemplateActual = $gameImg
-              .removeAttr("srcset")
-              .removeAttr("sizes")
-              .attr("src", item.gameIconURL)
-              .parents(".gas-list-entry")
-              .prop("outerHTML");
+            dataTemplateActual =
+              showImageFromSrc($gameImg, item.gameIconURL) ||
+              dataTemplateActual;
           }
         }
         if (
@@ -45,18 +42,15 @@ function listResponseHandler({
                   .css("background-image", `url(${item.imageURL})`)
                   .parents(".gas-list-entry")
                   .prop("outerHTML")
-              : $entryImg
-                  .removeAttr("srcset")
-                  .removeAttr("sizes")
-                  .attr("src", item.iconURL || item.imageURL)
-                  .parents(".gas-list-entry")
-                  .prop("outerHTML");
+              : showImageFromSrc($entryImg, item.iconURL || item.imageURL) ||
+                dataTemplateActual;
           }
         }
         if (textKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
-            (key.endsWith("At") ? gaDate(value) : value) || ""
+            (key.endsWith("At") ? gaDate(value) : cleanupDoubleQuotes(value)) ||
+              ""
           );
         } else if (numKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(

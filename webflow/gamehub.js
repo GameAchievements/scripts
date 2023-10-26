@@ -40,7 +40,8 @@ function gamehubResponseHandler(res, elemId) {
   }
   $(".gas-img", dataTemplateActual).each((idx, elm) => {
     if (res.imageURL?.length) {
-      dataTemplateActual = showImageFromSrc($(elm), res.imageURL, elemId);
+      dataTemplateActual =
+        showImageFromSrc($(elm), res.imageURL, elemId) || dataTemplateActual;
     }
   });
   Object.entries(res).forEach(([key, value]) => {
@@ -164,7 +165,8 @@ function listResponseHandler({
         Object.entries(item).forEach(([key, value]) => {
           const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
           if ($entryImg && item.iconURL?.length) {
-            dataTemplateActual = showImageFromSrc($entryImg, item.iconURL);
+            dataTemplateActual =
+              showImageFromSrc($entryImg, item.iconURL) || dataTemplateActual;
           }
           if (elemId.endsWith("achievements") && key === "name") {
             dataTemplateActual = dataTemplateActual.replaceAll(
@@ -337,7 +339,8 @@ function achieversHandler({
         Object.entries(item).forEach(([key, value]) => {
           const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
           if ($entryImg && item.iconURL?.length) {
-            dataTemplateActual = showImageFromSrc($entryImg, item.avatar);
+            dataTemplateActual =
+              showImageFromSrc($entryImg, item.avatar) || dataTemplateActual;
           }
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|idx|}`,
@@ -419,7 +422,8 @@ async function versionAchievementsFetcher(versionGameId, platformId) {
       Object.entries(item).forEach(([key, value]) => {
         const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
         if ($entryImg && item.iconURL?.length) {
-          dataTemplateActual = showImageFromSrc($entryImg, item.iconURL);
+          dataTemplateActual =
+            showImageFromSrc($entryImg, item.iconURL) || dataTemplateActual;
         }
         if (key === "name") {
           dataTemplateActual = dataTemplateActual.replaceAll(
@@ -737,7 +741,8 @@ async function leaderboardsFetcher(elemId, searchTerm = "") {
           if (key === "iconURL") {
             const $profileImg = $(`.gas-list-entry-cover`, dataTemplateActual);
             if ($profileImg?.length && value?.length) {
-              dataTemplateActual = showImageFromSrc($profileImg, value);
+              dataTemplateActual =
+                showImageFromSrc($profileImg, value) || dataTemplateActual;
             }
           } else if (key === "recentlyPlayed") {
             if (!paramPlatformId && value?.platform?.length) {
@@ -752,7 +757,8 @@ async function leaderboardsFetcher(elemId, searchTerm = "") {
               dataTemplateActual
             );
             if ($gameImg?.length && value?.iconURL?.length) {
-              dataTemplateActual = showImageFromSrc($gameImg, value.iconURL);
+              dataTemplateActual =
+                showImageFromSrc($gameImg, value.iconURL) || dataTemplateActual;
             }
           } else if (textKeysToReplace.includes(key)) {
             dataTemplateActual = dataTemplateActual.replaceAll(

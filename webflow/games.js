@@ -39,18 +39,15 @@ function listResponseHandler({
         if (imageURL?.length && !isSteamImage(imageURL)) {
           const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
           if ($entryImg?.length) {
-            dataTemplateActual = $entryImg
-              .removeAttr("srcset")
-              .removeAttr("sizes")
-              .attr("src", imageURL)
-              .parents(".gas-list-entry")
-              .prop("outerHTML");
+            dataTemplateActual =
+              showImageFromSrc($entryImg, imageURL) || dataTemplateActual;
           }
         }
         if (textKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
-            (key.endsWith("At") ? gaDate(value) : value) || ""
+            (key.endsWith("At") ? gaDate(value) : cleanupDoubleQuotes(value)) ||
+              ""
           );
         } else if (numKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(

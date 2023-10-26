@@ -94,17 +94,13 @@ function listResponseHandler({
       Object.entries(item).forEach(([key, value]) => {
         const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
         if ($entryImg?.length && item.iconURL?.length) {
-          dataTemplateActual = $entryImg
-            .removeAttr("srcset")
-            .removeAttr("sizes")
-            .attr("src", item.iconURL)
-            .parents(".gas-list-entry")
-            .prop("outerHTML");
+          dataTemplateActual =
+            showImageFromSrc($entryImg, imageURL) || dataTemplateActual;
         }
         if (textKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
-            value || ""
+            cleanupDoubleQuotes(value) || ""
           );
         } else if (numKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
@@ -166,12 +162,8 @@ function achieversHandler({
       Object.entries(item).forEach(([key, value]) => {
         const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
         if ($entryImg?.length && item.iconURL?.length) {
-          dataTemplateActual = $entryImg
-            .removeAttr("srcset")
-            .removeAttr("sizes")
-            .attr("src", item.iconURL)
-            .parents(".gas-list-entry")
-            .prop("outerHTML");
+          dataTemplateActual =
+            showImageFromSrc($entryImg, item.iconURL) || dataTemplateActual;
         }
         dataTemplateActual = dataTemplateActual.replaceAll(
           `{|idx|}`,

@@ -358,18 +358,20 @@
     return dataTemplateActual;
   }
 
+  // NOTE: if the parent element is corrupted (not found), undefined is returned
   const showImageFromSrc = (
     $img,
     url,
     parentSelector = ".gas-list-entry"
-  ) => {
-    return $img
-      .removeAttr("srcset")
-      .removeAttr("sizes")
-      .attr("src", url)
-      .parents(parentSelector)
-      .prop("outerHTML");
-  }
+  ) => $img
+    .removeAttr("srcset")
+    .removeAttr("sizes")
+    .attr("src", url)
+    .parents(parentSelector)
+    .prop("outerHTML");
+
+  // replaces standard double quotes by curvy ou single quotes to avoid elements attributes closing — since param can be a number (id), return it
+  const cleanupDoubleQuotes = (content) => content?.length ? content.replace(/"(\w)/g, "“$1").replace(/(\w)"/g, "$1”").replaceAll('"', "'") : content;
   
   const listTemplateAppend = (
     $list,
