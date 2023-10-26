@@ -95,7 +95,7 @@ function listResponseHandler({
         const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
         if ($entryImg?.length && item.iconURL?.length) {
           dataTemplateActual =
-            showImageFromSrc($entryImg, imageURL) || dataTemplateActual;
+            showImageFromSrc($entryImg, item.iconURL) || dataTemplateActual;
         }
         if (textKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
