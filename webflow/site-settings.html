@@ -156,7 +156,7 @@
     const time = dateObj.toLocaleTimeString().toLowerCase();
     return { date, time }
   }
-  
+
   const platformNameIdMap = (platformName) => {
     switch (platformName) {
       case "playstation":
@@ -372,7 +372,7 @@
 
   // replaces standard double quotes by curvy ou single quotes to avoid elements attributes closing — since param can be a number (id), return it
   const cleanupDoubleQuotes = (content) => content?.length ? content.replace(/"(\w)/g, "“$1").replace(/(\w)"/g, "$1”").replaceAll('"', "'") : content;
-  
+
   const listTemplateAppend = (
     $list,
     dataTemplateActual,
@@ -396,7 +396,8 @@
     userProfileData = JSON.parse(sessionStorage.getItem('prof'));
     if (!userProfileData) {
       const resFetch = await fetch(`https://${apiDomain}/api/profile/`, {
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", }
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", },
+        credentials: 'include'
       });
       userProfileData = await resFetch.json();
       sessionStorage.setItem('prof', JSON.stringify(userProfileData));
@@ -471,8 +472,13 @@
   /**
    * Executes the logout flow
    */
-  const logout = () => {
+  const logout = async () => {
     try {
+      await fetch(`https://${apiDomain}/api/logout`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include'
+      });
       console.log('[auth0] Logging out');
       sessionStorage.removeItem('prof');
       auth0Client.logout({
