@@ -1,4 +1,5 @@
 const apiDomain = document.querySelector("meta[name=domain]")?.content;
+const forumDomain = document.querySelector("meta[name=forum-domain]")?.content;
 const urlParams = new URLSearchParams(location.search);
 const gameId = urlParams.get("id") || 1044;
 const gamehubURL = `https://${apiDomain}/api/game/${gameId}`;
