@@ -1,4 +1,5 @@
 const apiDomain = document.querySelector("meta[name=domain]")?.content;
+const forumDomain = document.querySelector("meta[name=forum-domain]")?.content;
 const elemIdPrefix = `#gas-home`;
 
 function listResponseHandler({
@@ -100,6 +101,7 @@ async function fetchGames(type) {
   });
   $(`${elemId} .ga-loader-container`).hide();
 }
+
 async function fetchGuides() {
   const resFetch = await fetch(
     `https://${apiDomain}/api/guide/list?perPage=5&orderBy=createdAt:desc`
@@ -118,6 +120,7 @@ async function fetchGuides() {
   });
   $(`${elemId} .ga-loader-container`).hide();
 }
+
 async function fetchAchievements() {
   const resFetch = await fetch(
     `https://${apiDomain}/api/achievement/list/latest`
@@ -143,6 +146,39 @@ async function fetchAchievements() {
   $(`${elemId} .ga-loader-container`).hide();
 }
 
+async function fetchLatestThreads() {
+  const resFetch = await fetch(
+    `https://${forumDomain}/api/recent`
+  );
+  let listData = [];
+  if (resFetch.ok) {
+    const resData = (await resFetch.json()).topics;
+    listData = resData.slice(0, 4);
+  }
+  listData = listData.map(e => ({
+    id: e.cid,
+    title: e.title,
+    topic_id: e.tid,
+    author_name: e.user.username,
+    imageURL: (e.user.picture?.toLowerCase().includes('http') ?
+      new DOMParser().parseFromString(e.user.picture, "text/html").documentElement.textContent :
+      'https://uploads-ssl.webflow.com/6455fdc10a7247f51c568c32/64b50ee999d75d5f75a28b08_user%20avatar%20default.svg'),
+    category_name: e.category.name,
+    category_id: e.category.cid,
+    views: e.viewcount,
+    upvotes: e.upvotes,
+    replies: e.postcount
+  }));
+  const elemId = `${elemIdPrefix}-forum-threads`;
+  listResponseHandler({
+    listData,
+    elemId,
+    numKeysToReplace: ["replies", "views", "upvotes"],
+    textKeysToReplace: ["title", "author_name", "category_name", "topic_id", "category_id"],
+  });
+  $(`${elemId} .ga-loader-container`).hide();
+}
+
 $().ready(async () => {
   $(`.ga-loader-container`).show();
   await auth0Bootstrap();
@@ -151,4 +187,5 @@ $().ready(async () => {
   );
   await fetchGuides();
   await fetchAchievements();
+  await fetchLatestThreads();
 });
