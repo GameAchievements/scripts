@@ -153,7 +153,7 @@ async function fetchLatestThreads() {
   let listData = [];
   if (resFetch.ok) {
     const resData = (await resFetch.json()).topics;
-    listData = resData.slice(0, 4);
+    listData = resData.slice(0, 5);
   }
   listData = listData.map(e => ({
     id: e.cid,
