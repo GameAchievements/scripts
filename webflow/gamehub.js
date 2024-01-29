@@ -123,7 +123,7 @@ async function fetchGameLatestThreads() {
   let listData = [];
   const elemId = `${elemIdPrefix}-forum-threads`;
 
-  if(!gamehubData.forumCategoryID) {
+  if(gamehubData.forumCategoryID) {
     const resFetch = await fetch(
       `https://${forumDomain}/api/category/${gamehubData.forumCategoryID}`
     );
