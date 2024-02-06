@@ -1,0 +1,15 @@
+{
+  "name": "game-achievements-fe",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/GameAchievements/scripts.git",
+  "author": "Edgar Ferreira <eferreira@imaginarycloud.com>",
+  "license": "MIT",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "serve": "serve"
+  },
+  "dependencies": {
+    "serve": "^14.2.1"
+  }
+}
