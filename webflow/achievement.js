@@ -1,41 +1,41 @@
-const apiDomain = document.querySelector("meta[name=domain]")?.content;
+const apiDomain = document.querySelector('meta[name=domain]')?.content;
 const urlParams = new URLSearchParams(window.location.search);
-const achievementId = urlParams.get("id") || 1044;
+const achievementId = urlParams.get('id') || 1044;
 const elemIdPrefix = `#gas-achievement`;
 const formMessageDelay = 4000;
-$(".ga-loader-container").show();
-$("#ga-sections-container").hide();
+$('.ga-loader-container').show();
+$('#ga-sections-container').hide();
 
 function achievementResponseHandler(res) {
   const elemId = `${elemIdPrefix}-details`;
   const $ghContainer = $(elemId);
-  let dataTemplateActual = $ghContainer.prop("outerHTML");
+  let dataTemplateActual = $ghContainer.prop('outerHTML');
   console.info(`=== ${elemId} ===`, res);
   const textKeysToReplace = [
-    "id",
-    "name",
-    "description",
-    "rarityClass",
-    "gameId",
-    "gameName",
+    'id',
+    'name',
+    'description',
+    'rarityClass',
+    'gameId',
+    'gameName',
   ];
   const numKeysToReplace = [
-    "ownersCount",
-    "recentGamersCount",
-    "guides",
-    "rarity",
-    "gaPoints",
+    'ownersCount',
+    'recentGamersCount',
+    'guides',
+    'rarity',
+    'gaPoints',
   ];
   const achievementImg = res.coverURL || res.imageURL || res.gameImageURL;
   if (achievementImg?.length) {
     dataTemplateActual = $ghContainer
       .css(
-        "background-image",
+        'background-image',
         `linear-gradient(rgba(255,255,255,0),#030922),
           linear-gradient(rgba(70,89,255,.4),rgba(70,89,255,.4)),
           url(${achievementImg})`
       )
-      .prop("outerHTML");
+      .prop('outerHTML');
   }
   Object.entries(res).forEach(([key, value]) => {
     if (textKeysToReplace.includes(key)) {
@@ -47,11 +47,11 @@ function achievementResponseHandler(res) {
         `{|${key}|}`,
         Math.round(value || 0)
       );
-    } else if (key === "platform") {
+    } else if (key === 'platform') {
       dataTemplateActual = showPlatform(value, dataTemplateActual, elemId);
     }
   });
-  $ghContainer.prop("outerHTML", dataTemplateActual);
+  $ghContainer.prop('outerHTML', dataTemplateActual);
 }
 
 async function fetchAchievement() {
@@ -79,14 +79,14 @@ function listResponseHandler({
   textKeysToReplace,
 }) {
   console.info(`=== ${elemId} results ===`, listData);
-  let dataTemplate = $(elemId).prop("outerHTML");
+  let dataTemplate = $(elemId).prop('outerHTML');
   const $list = $(`${elemId} .gas-list`);
   const $emptyList = $(`.gas-list-empty`, $list);
   if (listData.count > 0 && listData[listResultsKey]?.length) {
     const $listHeader = $list.children().first();
-    const $entryTemplate = $(".gas-list-entry", $list).first();
+    const $entryTemplate = $('.gas-list-entry', $list).first();
     $entryTemplate.show();
-    dataTemplate = $entryTemplate.prop("outerHTML");
+    dataTemplate = $entryTemplate.prop('outerHTML');
     $list.html($listHeader).append($entryTemplate);
     $entryTemplate.hide();
     listData[listResultsKey].forEach((item, resIdx) => {
@@ -100,7 +100,7 @@ function listResponseHandler({
         if (textKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
-            cleanupDoubleQuotes(value) || ""
+            cleanupDoubleQuotes(value) || ''
           );
         } else if (numKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
@@ -113,14 +113,14 @@ function listResponseHandler({
         .append(dataTemplateActual)
         .children()
         .last()
-        .removeClass(["bg-light", "bg-dark"])
-        .addClass(`bg-${resIdx % 2 > 0 ? "light" : "dark"}`);
+        .removeClass(['bg-light', 'bg-dark'])
+        .addClass(`bg-${resIdx % 2 > 0 ? 'light' : 'dark'}`);
     });
   } else {
     $list.html($emptyList);
     $emptyList.show();
   }
-  $list.css("display", "flex");
+  $list.css('display', 'flex');
 }
 
 async function listFetcher({ listName, numKeysToReplace, textKeysToReplace }) {
@@ -146,16 +146,16 @@ function achieversHandler({
 }) {
   console.info(`=== ${elemId} results ===`, listsData);
   const $list = $(elemId);
-  let dataTemplate = $list.prop("outerHTML");
+  let dataTemplate = $list.prop('outerHTML');
   const $emptyList = $(`.gas-list-empty`, $list);
   const $listHeader = $list.children().first();
-  const $entryTemplate = $(".gas-list-entry", $list).first();
+  const $entryTemplate = $('.gas-list-entry', $list).first();
   $list.html($listHeader);
   const listDataToRead = listsData[listResultsKey];
   if (listDataToRead?.length > 0) {
     $entryTemplate.show();
     $list.append($entryTemplate);
-    dataTemplate = $entryTemplate.prop("outerHTML");
+    dataTemplate = $entryTemplate.prop('outerHTML');
     $entryTemplate.hide();
     listDataToRead.forEach((item, itemIdx) => {
       let dataTemplateActual = dataTemplate;
@@ -169,20 +169,20 @@ function achieversHandler({
           `{|idx|}`,
           itemIdx + 1
         );
-        if (key === "unlockedAt") {
+        if (key === 'unlockedAt') {
           const { date, time } = gaDateTime(value);
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|unlockedDt|}`,
-            date || "N.A."
+            date || 'N.A.'
           );
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
-            time || "N.A."
+            time || 'N.A.'
           );
         } else if (textKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
-            value || ""
+            value || ''
           );
         }
       });
@@ -190,8 +190,8 @@ function achieversHandler({
         .append(dataTemplateActual)
         .children()
         .last()
-        .removeClass(["bg-light", "bg-dark"])
-        .addClass(`bg-${itemIdx % 2 > 0 ? "light" : "dark"}`);
+        .removeClass(['bg-light', 'bg-dark'])
+        .addClass(`bg-${itemIdx % 2 > 0 ? 'light' : 'dark'}`);
     });
   } else {
     $list.append($emptyList);
@@ -202,7 +202,7 @@ function achieversHandler({
 
 async function achieversFetcher({ listName, type, textKeysToReplace }) {
   const elemId = `${elemIdPrefix}-${listName}-${
-    type === "last" ? "latest" : type
+    type === 'last' ? 'latest' : type
   }`;
   const resLists = await fetch(
     `https://${apiDomain}/api/achievement/${achievementId}/${listName}?type=${type}`
@@ -233,7 +233,7 @@ async function verifyAuthenticatedUserGuideData() {
   if (revData?.ownedGuideId > 0) {
     $(`${elemIdPrefix}-btn-guide-create`).hide();
     $(`${elemIdPrefix}-btn-guide-edit`)
-      .attr("href", `/guide-form?id=${revData.ownedGuideId}`)
+      .attr('href', `/guide-form?id=${revData.ownedGuideId}`)
       .show();
   }
 }
@@ -244,25 +244,25 @@ $().ready(async () => {
   if (await fetchAchievement()) {
     await Promise.all([
       await listFetcher({
-        listName: "guides",
-        numKeysToReplace: ["id", "commentsCount", "viewsCount", "likesCount"],
-        textKeysToReplace: ["profileId", "name", "description", "author"],
+        listName: 'guides',
+        numKeysToReplace: ['id', 'commentsCount', 'viewsCount', 'likesCount'],
+        textKeysToReplace: ['profileId', 'name', 'description', 'author'],
       }),
       await achieversFetcher({
-        listName: "achievers",
-        type: "first",
-        textKeysToReplace: ["name", "profileId"],
+        listName: 'achievers',
+        type: 'first',
+        textKeysToReplace: ['name', 'profileId'],
       }),
       await achieversFetcher({
-        listName: "achievers",
-        type: "last",
-        textKeysToReplace: ["name", "profileId"],
+        listName: 'achievers',
+        type: 'last',
+        textKeysToReplace: ['name', 'profileId'],
       }),
     ]);
-    $(".ga-loader-container").hide();
-    $("#ga-sections-container").show();
-    $("#gas-wf-tab-activator").click();
+    $('.ga-loader-container').hide();
+    $('#ga-sections-container').show();
+    $('#gas-wf-tab-activator').click();
     return;
   }
-  window.location.replace("/achievements");
+  window.location.replace('/achievements');
 });

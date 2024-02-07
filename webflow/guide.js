@@ -1,12 +1,12 @@
-const apiDomain = document.querySelector("meta[name=domain]")?.content;
+const apiDomain = document.querySelector('meta[name=domain]')?.content;
 const urlParams = new URLSearchParams(location.search);
-const guideId = urlParams.get("id") || 1;
+const guideId = urlParams.get('id') || 1;
 let achievementId = 0;
 let hasLike;
 const elemIdPrefix = `#gas-guide`;
 
-$(".ga-loader-container").show();
-$("#ga-sections-container").hide();
+$('.ga-loader-container').show();
+$('#ga-sections-container').hide();
 
 // #gas-guide-comment-form
 
@@ -18,22 +18,22 @@ function loadSections(sections) {
   for (let secIdx = sections.length - 1; secIdx >= 0; secIdx--) {
     const sec = sections[secIdx];
     const $newNavBtn = $navTemp.clone();
-    $newNavBtn.attr("title", sec.title);
+    $newNavBtn.attr('title', sec.title);
     $newNavBtn
       .children()
       .first()
       .text($newNavBtn.text().replace(`{|title|}`, sec.title));
     const secNum = secIdx + 1;
-    $nav.prepend($newNavBtn.attr("href", `${elemIdPrefix}-section-${secNum}`));
+    $nav.prepend($newNavBtn.attr('href', `${elemIdPrefix}-section-${secNum}`));
     const $newSec = $secTemp.clone();
-    const $secTitle = $(".gas-section-title", $newSec);
+    const $secTitle = $('.gas-section-title', $newSec);
     $secTitle.text(
       $secTitle.text().replace(`{|title|}`, `${secNum} › ${sec.title}`)
     );
-    const $secContent = $(".gas-section-content", $newSec);
+    const $secContent = $('.gas-section-content', $newSec);
     $secContent.html($secContent.text().replace(`{|content|}`, sec.content));
     $secs.prepend(
-      $newSec.attr("id", `${elemIdPrefix.slice(1)}-section-${secNum}`)
+      $newSec.attr('id', `${elemIdPrefix.slice(1)}-section-${secNum}`)
     );
   }
   $navTemp.remove();
@@ -43,32 +43,32 @@ function loadSections(sections) {
 function guideResponseHandler(res) {
   const elemId = `${elemIdPrefix}-details`;
   const $ghContainer = $(elemId);
-  let dataTemplateActual = $ghContainer.prop("outerHTML");
+  let dataTemplateActual = $ghContainer.prop('outerHTML');
   console.info(`=== ${elemId} ===`, res);
   const textKeysToReplace = [
-    "id",
-    "name",
-    "description",
-    "achievementId",
-    "achievementName",
-    "gameId",
-    "gameName",
-    "profileId",
-    "author",
-    "createdAt",
-    "updatedAt",
+    'id',
+    'name',
+    'description',
+    'achievementId',
+    'achievementName',
+    'gameId',
+    'gameName',
+    'profileId',
+    'author',
+    'createdAt',
+    'updatedAt',
   ];
-  const numKeysToReplace = ["comments", "upvotes"];
+  const numKeysToReplace = ['comments', 'upvotes'];
   const guideImg = res.coverURL || res.imageURL;
   if (guideImg?.length) {
     dataTemplateActual = $ghContainer
       .css(
-        "background-image",
+        'background-image',
         `linear-gradient(rgba(255,255,255,0),#030922),
           linear-gradient(rgba(70,89,255,.4),rgba(70,89,255,.4)),
           url(${guideImg})`
       )
-      .prop("outerHTML");
+      .prop('outerHTML');
   }
   const $authorImg = $(`.gas-author-cover`, dataTemplateActual);
   if ($authorImg?.length && res.avatar?.length) {
@@ -79,18 +79,18 @@ function guideResponseHandler(res) {
     if (textKeysToReplace.includes(key)) {
       dataTemplateActual = dataTemplateActual.replaceAll(
         `{|${key}|}`,
-        (key.endsWith("At") ? gaDate(value) : value) || ""
+        (key.endsWith('At') ? gaDate(value) : value) || ''
       );
     } else if (numKeysToReplace.includes(key)) {
       dataTemplateActual = dataTemplateActual.replaceAll(
         `{|${key}|}`,
         Math.round(value || 0)
       );
-    } else if (key === "platform") {
+    } else if (key === 'platform') {
       dataTemplateActual = showPlatform(value, dataTemplateActual, elemId);
     }
   });
-  $ghContainer.prop("outerHTML", dataTemplateActual);
+  $ghContainer.prop('outerHTML', dataTemplateActual);
   loadSections(res.sections);
 }
 
@@ -113,14 +113,14 @@ async function fetchGuide() {
 
 function listResponseHandler({ listData, elemId, textKeysToReplace }) {
   console.info(`=== ${elemId} results ===`, listData);
-  let dataTemplate = $(elemId).prop("outerHTML");
+  let dataTemplate = $(elemId).prop('outerHTML');
   const $list = $(`${elemId} .gas-list`);
   const $emptyList = $(`.gas-list-empty`, $list);
   if (listData.count > 0 && listData.results?.length) {
     const $listHeader = $list.children().first();
-    const $entryTemplate = $(".gas-list-entry", $list).first();
+    const $entryTemplate = $('.gas-list-entry', $list).first();
     $entryTemplate.show();
-    dataTemplate = $entryTemplate.prop("outerHTML");
+    dataTemplate = $entryTemplate.prop('outerHTML');
     $list.html($listHeader).append($entryTemplate);
     $entryTemplate.hide();
     listData.results.forEach((item, resIdx) => {
@@ -134,9 +134,9 @@ function listResponseHandler({ listData, elemId, textKeysToReplace }) {
         if (textKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
-            value || ""
+            value || ''
           );
-        } else if (key === "date") {
+        } else if (key === 'date') {
           const { date, time } = gaDateTime(value);
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
@@ -148,8 +148,8 @@ function listResponseHandler({ listData, elemId, textKeysToReplace }) {
         .append(dataTemplateActual)
         .children()
         .last()
-        .removeClass(["bg-light", "bg-dark"])
-        .addClass(`bg-${resIdx % 2 > 0 ? "light" : "dark"}`);
+        .removeClass(['bg-light', 'bg-dark'])
+        .addClass(`bg-${resIdx % 2 > 0 ? 'light' : 'dark'}`);
     });
   } else {
     $list.html($emptyList);
@@ -165,7 +165,7 @@ async function listFetcher({ listName, textKeysToReplace }) {
   );
   const listData = await resList.json();
   // global replacer
-  $(`.gas-guide-${listName}-count`).text(listData.count || "");
+  $(`.gas-guide-${listName}-count`).text(listData.count || '');
   listResponseHandler({
     listData,
     elemId,
@@ -183,26 +183,26 @@ function setupLike(hasLikeFromFetch) {
     $btnDelLike.hide();
   }
   const changeLikeStatus = async () => {
-    $btnLike.attr("disabled", true);
-    $btnDelLike.attr("disabled", true);
+    $btnLike.attr('disabled', true);
+    $btnDelLike.attr('disabled', true);
     const resFetch = await fetch(
       `https://${apiDomain}/api/guide/${guideId}/upvote`,
-      { method: "POST", headers: { Authorization: `Bearer ${token}` } }
+      { method: 'POST', headers: { Authorization: `Bearer ${token}` } }
     );
     const $likesCount = $(`${elemIdPrefix}-upvotes-count`);
     const countChange = hasLike ? -1 : 1;
     hasLike = !hasLike;
     $likesCount.text(Number($likesCount.text() || 0) + countChange);
     if (resFetch.status === 204) {
-      $btnLike.attr("disabled", false).show();
+      $btnLike.attr('disabled', false).show();
       $btnDelLike.hide();
       return;
     }
     $btnLike.hide();
-    $btnDelLike.attr("disabled", false).show();
+    $btnDelLike.attr('disabled', false).show();
   };
-  $btnLike.on("click", changeLikeStatus);
-  $btnDelLike.on("click", changeLikeStatus);
+  $btnLike.on('click', changeLikeStatus);
+  $btnDelLike.on('click', changeLikeStatus);
 }
 
 const setupCommentForm = (hasComment) => {
@@ -214,28 +214,28 @@ const setupCommentForm = (hasComment) => {
   }
   const formMessageDelay = 4000;
   const $submitBtn = $(`.submit-button`, formWrapperId);
-  $submitBtn.attr("disabled", true);
+  $submitBtn.attr('disabled', true);
   const $contentField = $(`[name=comment]`, formWrapperId);
   const submitText = $submitBtn.text();
-  const $errEl = $(".gas-form-error", formWrapperId);
-  const $errorDiv = $("div", $errEl);
+  const $errEl = $('.gas-form-error', formWrapperId);
+  const $errorDiv = $('div', $errEl);
   const txtError = $errEl.text();
-  const $successEl = $(".gas-form-success", formWrapperId);
-  $contentField.on("focusout keyup", function () {
+  const $successEl = $('.gas-form-success', formWrapperId);
+  $contentField.on('focusout keyup', function () {
     if (!$(this).val()?.length) {
       // only contentField required
-      $(this).prev("label").addClass("field-label-missing");
-      $submitBtn.addClass("disabled-button").attr("disabled", true);
+      $(this).prev('label').addClass('field-label-missing');
+      $submitBtn.addClass('disabled-button').attr('disabled', true);
     } else {
-      $(this).prev("label").removeClass("field-label-missing");
-      $submitBtn.removeClass("disabled-button").attr("disabled", false);
+      $(this).prev('label').removeClass('field-label-missing');
+      $submitBtn.removeClass('disabled-button').attr('disabled', false);
     }
   });
-  $submitBtn.on("click", async (e) => {
+  $submitBtn.on('click', async (e) => {
     e.preventDefault();
     if (!$contentField.val().length) {
       $errEl.show();
-      $errorDiv.text("Please write your comment in the box above");
+      $errorDiv.text('Please write your comment in the box above');
       setTimeout(() => {
         $errEl.hide();
         $errorDiv.text(txtError);
@@ -244,16 +244,16 @@ const setupCommentForm = (hasComment) => {
     }
     // disable show popup on leave page (site-settings)
     isUserInputActive = false;
-    $(`input`, formWrapperId).attr("disabled", true);
-    $submitBtn.text($submitBtn.data("wait"));
+    $(`input`, formWrapperId).attr('disabled', true);
+    $submitBtn.text($submitBtn.data('wait'));
     const resFetch = await fetch(
       `https://${apiDomain}/api/guide/${guideId}/comment`,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-          "Content-Type": "application/json",
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ comment: $contentField.val() }),
       }
@@ -265,13 +265,13 @@ const setupCommentForm = (hasComment) => {
       setTimeout(() => {
         $errEl.hide();
         $errorDiv.text(txtError);
-        $(`input`, formWrapperId).attr("disabled", false);
+        $(`input`, formWrapperId).attr('disabled', false);
         $submitBtn.text(submitText);
       }, formMessageDelay);
       return;
     }
     $(`form`, formWrapperId).hide();
-    $successEl.attr("title", revData?.message).show();
+    $successEl.attr('title', revData?.message).show();
     setTimeout(() => {
       location.reload();
     }, formMessageDelay);
@@ -295,7 +295,7 @@ async function verifyAuthenticatedUserGuideData() {
   const revData = await resFetch.json();
   const $editBtn = $(`${elemIdPrefix}-btn-edit`);
   if (revData.ownedGuideId > 0) {
-    $editBtn.attr("href", `/guide-form?id=${revData.ownedGuideId}`).show();
+    $editBtn.attr('href', `/guide-form?id=${revData.ownedGuideId}`).show();
   } else {
     $editBtn.hide();
   }
@@ -308,14 +308,14 @@ $().ready(async () => {
   if (await fetchGuide()) {
     await verifyAuthenticatedUserGuideData();
     await listFetcher({
-      listName: "comments",
+      listName: 'comments',
       numKeysToReplace: [],
-      textKeysToReplace: ["profileId", "author", "comment"],
+      textKeysToReplace: ['profileId', 'author', 'comment'],
     });
-    $(".ga-loader-container").hide();
-    $("#ga-sections-container").show();
-    $("#gas-wf-tab-activator").click();
+    $('.ga-loader-container').hide();
+    $('#ga-sections-container').show();
+    $('#gas-wf-tab-activator').click();
     return;
   }
-  location.replace("/guides");
+  location.replace('/guides');
 });

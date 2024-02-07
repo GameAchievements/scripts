@@ -1,0 +1,1 @@
+$().ready(() => auth0Bootstrap());

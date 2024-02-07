@@ -1,5 +1,5 @@
-const apiDomain = document.querySelector("meta[name=domain]")?.content;
-const forumDomain = document.querySelector("meta[name=forum-domain]")?.content;
+const apiDomain = document.querySelector('meta[name=domain]')?.content;
+const forumDomain = document.querySelector('meta[name=forum-domain]')?.content;
 const elemIdPrefix = `#gas-home`;
 
 function listResponseHandler({
@@ -9,12 +9,12 @@ function listResponseHandler({
   textKeysToReplace,
 }) {
   console.info(`=== ${elemId} results ===`, listData);
-  let dataTemplate = $(elemId).prop("outerHTML");
+  let dataTemplate = $(elemId).prop('outerHTML');
   const $list = $(`${elemId} .gas-list`);
   const $emptyList = $(`${elemId} .gas-list-empty`);
-  const $entryTemplate = $(".gas-list-entry", $list).first();
+  const $entryTemplate = $('.gas-list-entry', $list).first();
   $entryTemplate.show();
-  dataTemplate = $entryTemplate.prop("outerHTML");
+  dataTemplate = $entryTemplate.prop('outerHTML');
   $entryTemplate.hide();
   if (listData?.length && dataTemplate?.length) {
     $list.html($entryTemplate);
@@ -38,11 +38,11 @@ function listResponseHandler({
         ) {
           const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
           if ($entryImg?.length) {
-            dataTemplateActual = elemId.includes("list-games")
+            dataTemplateActual = elemId.includes('list-games')
               ? $entryImg
-                  .css("background-image", `url(${item.imageURL})`)
-                  .parents(".gas-list-entry")
-                  .prop("outerHTML")
+                  .css('background-image', `url(${item.imageURL})`)
+                  .parents('.gas-list-entry')
+                  .prop('outerHTML')
               : showImageFromSrc($entryImg, item.iconURL || item.imageURL) ||
                 dataTemplateActual;
           }
@@ -50,20 +50,20 @@ function listResponseHandler({
         if (textKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
-            (key.endsWith("At") ? gaDate(value) : cleanupDoubleQuotes(value)) ||
-              ""
+            (key.endsWith('At') ? gaDate(value) : cleanupDoubleQuotes(value)) ||
+              ''
           );
         } else if (numKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
             Math.round(value || 0)
           );
-        } else if (key === "lastPlayed") {
+        } else if (key === 'lastPlayed') {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
             gaDate(value)
           );
-        } else if (key === "importedFromPlatform" || key === "platform") {
+        } else if (key === 'importedFromPlatform' || key === 'platform') {
           dataTemplateActual = showPlatform(value, dataTemplateActual);
         }
       });
@@ -76,7 +76,7 @@ function listResponseHandler({
     $(elemId).html($emptyList);
     $emptyList.show();
   }
-  $list.css("display", "flex");
+  $list.css('display', 'flex');
 }
 
 async function fetchGames(type) {
@@ -90,13 +90,13 @@ async function fetchGames(type) {
   listResponseHandler({
     listData,
     elemId,
-    numKeysToReplace: ["id", "players", "achievements"],
+    numKeysToReplace: ['id', 'players', 'achievements'],
     textKeysToReplace: [
-      "id",
-      "name",
-      "description",
-      "lastPlayed",
-      "externalGameId",
+      'id',
+      'name',
+      'description',
+      'lastPlayed',
+      'externalGameId',
     ],
   });
   $(`${elemId} .ga-loader-container`).hide();
@@ -115,8 +115,8 @@ async function fetchGuides() {
   listResponseHandler({
     listData,
     elemId,
-    numKeysToReplace: ["id", "comments", "likes"],
-    textKeysToReplace: ["name", "author", "description", "profileId"],
+    numKeysToReplace: ['id', 'comments', 'likes'],
+    textKeysToReplace: ['name', 'author', 'description', 'profileId'],
   });
   $(`${elemId} .ga-loader-container`).hide();
 }
@@ -134,47 +134,52 @@ async function fetchAchievements() {
   listResponseHandler({
     listData,
     elemId,
-    numKeysToReplace: ["id"],
+    numKeysToReplace: ['id'],
     textKeysToReplace: [
-      "name",
-      "description",
-      "updatedAt",
-      "gameName",
-      "unlockedAt",
+      'name',
+      'description',
+      'updatedAt',
+      'gameName',
+      'unlockedAt',
     ],
   });
   $(`${elemId} .ga-loader-container`).hide();
 }
 
 async function fetchLatestThreads() {
-  const resFetch = await fetch(
-    `https://${forumDomain}/api/recent`
-  );
+  const resFetch = await fetch(`https://${forumDomain}/api/recent`);
   let listData = [];
   if (resFetch.ok) {
     const resData = (await resFetch.json()).topics;
     listData = resData.slice(0, 5);
   }
-  listData = listData.map(e => ({
+  listData = listData.map((e) => ({
     id: e.cid,
     title: e.title,
     topic_id: e.tid,
     author_name: e.user.username,
-    imageURL: (e.user.picture?.toLowerCase().includes('http') ?
-      new DOMParser().parseFromString(e.user.picture, "text/html").documentElement.textContent :
-      'https://uploads-ssl.webflow.com/6455fdc10a7247f51c568c32/64b50ee999d75d5f75a28b08_user%20avatar%20default.svg'),
+    imageURL: e.user.picture?.toLowerCase().includes('http')
+      ? new DOMParser().parseFromString(e.user.picture, 'text/html')
+          .documentElement.textContent
+      : 'https://uploads-ssl.webflow.com/6455fdc10a7247f51c568c32/64b50ee999d75d5f75a28b08_user%20avatar%20default.svg',
     category_name: e.category.name,
     category_id: e.category.cid,
     views: e.viewcount,
     upvotes: e.upvotes,
-    replies: e.postcount
+    replies: e.postcount,
   }));
   const elemId = `${elemIdPrefix}-forum-threads`;
   listResponseHandler({
     listData,
     elemId,
-    numKeysToReplace: ["replies", "views", "upvotes"],
-    textKeysToReplace: ["title", "author_name", "category_name", "topic_id", "category_id"],
+    numKeysToReplace: ['replies', 'views', 'upvotes'],
+    textKeysToReplace: [
+      'title',
+      'author_name',
+      'category_name',
+      'topic_id',
+      'category_id',
+    ],
   });
   $(`${elemId} .ga-loader-container`).hide();
 }
@@ -183,7 +188,7 @@ $().ready(async () => {
   $(`.ga-loader-container`).show();
   await auth0Bootstrap();
   await Promise.all(
-    ["recent", "top"].map(async (type) => await fetchGames(type))
+    ['recent', 'top'].map(async (type) => await fetchGames(type))
   );
   await fetchGuides();
   await fetchAchievements();

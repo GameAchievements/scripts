@@ -1,4 +1,4 @@
-const apiDomain = document.querySelector("meta[name=domain]")?.content;
+const apiDomain = document.querySelector('meta[name=domain]')?.content;
 
 function listResponseHandler({
   listData,
@@ -7,13 +7,13 @@ function listResponseHandler({
   textKeysToReplace,
 }) {
   // console.info(`=== ${elemId} results ===`, listData);
-  let dataTemplate = $(elemId).prop("outerHTML");
+  let dataTemplate = $(elemId).prop('outerHTML');
   const $list = $(`${elemId} .gas-list`);
   const $emptyList = $(`${elemId} .gas-list-empty`);
   if (listData?.length) {
-    const $entryTemplate = $(".gas-list-entry", $list).first();
+    const $entryTemplate = $('.gas-list-entry', $list).first();
     $entryTemplate.show();
-    dataTemplate = $entryTemplate.prop("outerHTML");
+    dataTemplate = $entryTemplate.prop('outerHTML');
     $entryTemplate.hide();
     $list.html($entryTemplate);
     listData.forEach((item, resIdx) => {
@@ -29,7 +29,7 @@ function listResponseHandler({
 
             dataTemplateActual =
               showImageFromSrc(
-                $entryImg.attr("alt", imgCaption).attr("title", imgCaption),
+                $entryImg.attr('alt', imgCaption).attr('title', imgCaption),
                 item.gameIconURL
               ) || dataTemplateActual;
           }
@@ -44,15 +44,15 @@ function listResponseHandler({
         if (textKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
-            (key.endsWith("At") ? gaDate(value) : cleanupDoubleQuotes(value)) ||
-              ""
+            (key.endsWith('At') ? gaDate(value) : cleanupDoubleQuotes(value)) ||
+              ''
           );
         } else if (numKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
             Math.round(value || 0)
           );
-        } else if (key === "platform") {
+        } else if (key === 'platform') {
           dataTemplateActual = showPlatform(value, dataTemplateActual);
         }
       });
@@ -62,10 +62,10 @@ function listResponseHandler({
     $(elemId).html($emptyList);
     $emptyList.show();
   }
-  $list.css("display", "flex");
+  $list.css('display', 'flex');
 }
 
-async function fetchGuides(elemId, searchTerm = "") {
+async function fetchGuides(elemId, searchTerm = '') {
   const paramsObj = {};
   if (searchTerm.length) {
     paramsObj.q = searchTerm;
@@ -74,33 +74,33 @@ async function fetchGuides(elemId, searchTerm = "") {
     `https://${apiDomain}/api/guide/list${
       Object.keys(paramsObj)?.length
         ? `?${new URLSearchParams(paramsObj).toString()}`
-        : ""
+        : ''
     }`
   );
   const fetchData = await resGuides.json();
   $(`${elemId} .gas-list-results-info`).text(
-    (fetchData?.count || 0) + " result(s)"
+    (fetchData?.count || 0) + ' result(s)'
   );
   listResponseHandler({
     listData: fetchData.results,
     elemId,
-    numKeysToReplace: ["likes", "comments"],
+    numKeysToReplace: ['likes', 'comments'],
     textKeysToReplace: [
-      "id",
-      "name",
-      "author",
-      "description",
-      "achievementId",
-      "achievementName",
-      "profileId",
+      'id',
+      'name',
+      'author',
+      'description',
+      'achievementId',
+      'achievementName',
+      'profileId',
     ],
   });
 }
 
 $().ready(async () => {
   await auth0Bootstrap();
-  const elemId = "#gas-list-guides";
+  const elemId = '#gas-list-guides';
   setupListSearch(elemId, fetchGuides);
   await fetchGuides(elemId);
-  $(".ga-loader-container").hide();
+  $('.ga-loader-container').hide();
 });
