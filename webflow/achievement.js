@@ -11,19 +11,11 @@ function achievementResponseHandler(res) {
   const $ghContainer = $(elemId);
   let dataTemplateActual = $ghContainer.prop('outerHTML');
   console.info(`=== ${elemId} ===`, res);
-  const textKeysToReplace = [
-    'id',
-    'name',
-    'description',
-    'rarityClass',
-    'gameId',
-    'gameName',
-  ];
+  const textKeysToReplace = ['id', 'name', 'description', 'gameId', 'gameName'];
   const numKeysToReplace = [
-    'ownersCount',
-    'recentGamersCount',
+    'achievers',
+    'completionPercentage',
     'guides',
-    'rarity',
     'gaPoints',
   ];
   const achievementImg = res.coverURL || res.imageURL || res.gameImageURL;
@@ -49,6 +41,12 @@ function achievementResponseHandler(res) {
       );
     } else if (key === 'platform') {
       dataTemplateActual = showPlatform(value, dataTemplateActual, elemId);
+    } else if (key === 'rarity') {
+      dataTemplateActual = showRarityTagAchievement(
+        value,
+        dataTemplateActual,
+        res['rarityClass']
+      );
     }
   });
   $ghContainer.prop('outerHTML', dataTemplateActual);
