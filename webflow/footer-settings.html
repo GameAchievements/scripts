@@ -1,144 +1,15 @@
-<!------------------------------------- Header code ------------------------------------->
-<meta name="domain" content="gameachievements.up.railway.app"/>
-<meta name="forum-domain" content="forum-dev.gameachievements.net"/>
-<meta name="adsense" content="" />
-<meta name="adsense-unit" content="" />
-<!-- for adsense approval, this script needs to be uncommented here, it should be replaced by script below after approval
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5846875199312899"
-  crossorigin="anonymous"></script>
--->
-<script src="https://cdn.ingest-lr.com/LogRocket.min.js" crossorigin="anonymous"></script>
-<script>window.LogRocket && window.LogRocket.init('tdpmns/dev-gameachievements');</script>
-<style>
-  body {background-color:#030922}
-  .auth-visible,
-  .auth-invisible {
-    visibility: hidden;
-  }
-
-  .auth-hidden {
-    display: none !important;
-  }
-
-  .gas-list,
-  .gas-list-empty,
-  .gas-platform-psn,
-  .gas-platform-xbox,
-  .gas-platform-steam,
-  .gas-role-premium,
-  .gas-role-regular {
-    display: none;
-  }
-
-  .bg-review-score {
-    width: 7.5rem
-  }
-
-  .gas-text-overflow {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .gas-text-2-lines {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .gas-text-4-lines {
-    display: -webkit-box;
-    -webkit-line-clamp: 4;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  /* from https://cssloaders.github.io */
-  .ga-loader {
-    transform: rotateZ(45deg);
-    perspective: 1000px;
-    border-radius: 50%;
-    width: 120px;
-    height: 120px;
-    color: #fff;
-    margin: 0 auto;
-  }
-
-  .ga-loader:before,
-  .ga-loader:after {
-    content: '';
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: inherit;
-    height: inherit;
-    border-radius: 50%;
-    transform: rotateX(70deg);
-    animation: 0.3s spin linear infinite;
-  }
-
-  .ga-loader:after {
-    color: #aa00dd;
-    transform: rotateY(70deg);
-    animation-delay: 0.4s;
-  }
-
-  @keyframes rotate {
-    0% {transform: translate(-50%, -50%) rotateZ(0deg);}
-    100% {transform: translate(-50%, -50%) rotateZ(360deg);}
-  }
-  @keyframes rotateccw {
-    0% {transform: translate(-50%, -50%) rotate(0deg);}
-    100% {transform: translate(-50%, -50%) rotate(-360deg);}
-  }
-  @keyframes spin {
-    0%,
-    100% {box-shadow: 0.35em 0px 0 0px currentcolor;}
-    12% {box-shadow: 0.35em 0.35em 0 0 currentcolor;}
-    25% {box-shadow: 0 0.35em 0 0px currentcolor;}
-    37% {box-shadow: -0.35em 0.35em 0 0 currentcolor;}
-    50% {box-shadow: -0.35em 0 0 0 currentcolor;}
-    62% {box-shadow: -0.35em -0.35em 0 0 currentcolor;}
-    75% {box-shadow: 0px -0.35em 0 0 currentcolor;}
-    87% {box-shadow: 0.35em -0.35em 0 0 currentcolor;}
-  }
-  .gas-rating-scale {display: flex; gap: 1.25rem; overflow-x: auto; margin: 0.35rem 0 0}
-  .gas-rating-scale li {position: relative; cursor: pointer;}
-  .gas-rating-scale p {
-    position: absolute;
-    left: 1.2rem;
-    top: 0.2rem;
-    font-family: Gantari, sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
-    color: #0b1041;
-    display: none;
-  }
-  .gas-rating-scale li:first-of-type p {left: 1.3rem;}
-  .gas-rating-scale li:last-of-type p {left: 1rem;}
-  .gas-rating-scale svg {width: 3rem;fill: #5663ba;transition: fill 0.25s;}
-
-  .adsbygoogle {align-items:center;justify-content:center;height:100%;min-width: 300px;min-height: 50px;}
-
-  /* global webflow classes */
-  .dropdown-select {z-index:10}
-  .dropdown-select-option:first-of-type {border-top-left-radius: 1rem;border-top-right-radius: 1rem;}
-  .dropdown-select-option:last-of-type {border-bottom-left-radius: 1rem;border-bottom-right-radius: 1rem;}
-</style>
-
-<!------------------------------------- Footer code ------------------------------------->
 <!-- ~~~ Global vars ~~~ -->
 <script>
   let auth0Client = null; // auth0 client initialized in configureClient()
   let userAuth0Data = null;
   let token = null;
   let userProfileData = null;
-  const isSafari = navigator.vendor && navigator.vendor.indexOf('Apple') > -1 &&
-               navigator.userAgent &&
-               navigator.userAgent.indexOf('CriOS') == -1 &&
-               navigator.userAgent.indexOf('FxiOS') == -1;
+  const isSafari =
+    navigator.vendor &&
+    navigator.vendor.indexOf('Apple') > -1 &&
+    navigator.userAgent &&
+    navigator.userAgent.indexOf('CriOS') == -1 &&
+    navigator.userAgent.indexOf('FxiOS') == -1;
 </script>
 
 <!-- ~~~ Layout helpers ~~~ -->
@@ -146,25 +17,45 @@
   const gaDate = (isoDate) => {
     const pad = (v) => `0${v}`.slice(-2);
     const dateObj = new Date(isoDate);
-    return `${dateObj.getFullYear()} . ${pad(dateObj.getMonth() + 1)} . ${pad(dateObj.getDate())}`;
+    return `${dateObj.getFullYear()} . ${pad(dateObj.getMonth() + 1)} . ${pad(
+      dateObj.getDate()
+    )}`;
     //_${pad(dateObj.getHours())}-${pad(dateObj.getMinutes())}`
-  }
+  };
   const gaDateTime = (isoDate) => {
     const dateObj = new Date(isoDate);
-    const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
 
-    const date = dateObj.getDate() + " " + month[dateObj.getMonth()] + ", " + dateObj.getFullYear();
+    const date =
+      dateObj.getDate() +
+      ' ' +
+      month[dateObj.getMonth()] +
+      ', ' +
+      dateObj.getFullYear();
     const time = dateObj.toLocaleTimeString().toLowerCase();
-    return { date, time }
-  }
+    return { date, time };
+  };
 
   const platformNameIdMap = (platformName) => {
     switch (platformName) {
-      case "playstation":
+      case 'playstation':
         return 1;
-      case "xbox":
+      case 'xbox':
         return 2;
-      case "steam":
+      case 'steam':
       default:
         return 3;
     }
@@ -180,25 +71,36 @@
     } else if (percent >= 75) {
       return 'ultra-rare';
     }
-  }
+  };
 
   function ratingColor(rate) {
     switch (rate) {
-      case 1: return "#FF6C6C";
-      case 2: return "#FF876C";
-      case 3: return "#FFB36C";
-      case 4: return "#FFD66C";
-      case 5: return "#D0FF6C";
-      case 6: return "#6CFFCA";
-      case 7: return "#69E4FF";
-      case 8: return "#99A3FF";
-      case 9: return "#C699FF";
-      case 10: return "#FFA0EA";
-      default: return "#5663BA";
+      case 1:
+        return '#FF6C6C';
+      case 2:
+        return '#FF876C';
+      case 3:
+        return '#FFB36C';
+      case 4:
+        return '#FFD66C';
+      case 5:
+        return '#D0FF6C';
+      case 6:
+        return '#6CFFCA';
+      case 7:
+        return '#69E4FF';
+      case 8:
+        return '#99A3FF';
+      case 9:
+        return '#C699FF';
+      case 10:
+        return '#FFA0EA';
+      default:
+        return '#5663BA';
     }
   }
 
-  function controllerSVG(svgProps = "") {
+  function controllerSVG(svgProps = '') {
     return `<svg ${svgProps} viewBox="0 0 400 283" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M396.063 200.058C387.286 177.198 388.232 171.375 363.69 113.777C342.879 64.745 324.486 39.1518 302.256 32.5827V16.449C302.256 7.35738 294.899 0 285.807 0H260.74C251.648 0 244.291 7.35738 244.291 16.449V30.7959H155.687V16.449C155.687 7.35738 148.277 0 139.238 0H114.17C105.079 0 97.7212 7.35738 97.7212 16.449V32.5827C75.4388 39.1518 57.098 64.745 36.2345 113.777C11.6925 171.427 12.5859 177.25 3.80958 200.058C-4.91416 222.919 0.341103 257.656 30.0859 275.104C59.8833 292.499 89.6806 279.36 114.17 246.568C138.712 213.775 148.329 215.414 169.35 215.414H230.679C251.701 215.414 261.265 213.775 285.807 246.568C310.297 279.36 340.094 292.446 369.891 275.104C399.636 257.709 404.944 222.919 396.168 200.058H396.063Z" />
     </svg>`;
@@ -207,34 +109,39 @@
     return controllerSVG(`class="bg-review-score" fill="${ratingColor(rate)}"`);
   }
   function rateMark() {
-    $("svg", this).css("fill", ratingColor(Number($(this).data("rate"))));
-    $("p", this).show();
+    $('svg', this).css('fill', ratingColor(Number($(this).data('rate'))));
+    $('p', this).show();
   }
   function rateReset() {
-    $("svg", this).css("fill", "#5663BA");
-    $("p", this).hide();
+    $('svg', this).css('fill', '#5663BA');
+    $('p', this).hide();
   }
   function ratingScale($rateEl, $rateTxtEl) {
     for (let rate = 1; rate < 11; rate++) {
-      $rateEl.append(`<li data-rate="${rate}" role="button"><p>${rate}</p>${controllerSVG()}</li>`);
+      $rateEl.append(
+        `<li data-rate="${rate}" role="button"><p>${rate}</p>${controllerSVG()}</li>`
+      );
     }
-    $("li", $rateEl).click(function () {
-      $(this).siblings().removeClass("rating-active");
-      $(this).addClass("rating-active");
-      const rating = Number($(this).data("rate"));
-      $rateTxtEl.data("rate", rating).text(`${rating}/10`).css("color", ratingColor(rating));
+    $('li', $rateEl).click(function () {
+      $(this).siblings().removeClass('rating-active');
+      $(this).addClass('rating-active');
+      const rating = Number($(this).data('rate'));
+      $rateTxtEl
+        .data('rate', rating)
+        .text(`${rating}/10`)
+        .css('color', ratingColor(rating));
     });
 
-    $("li", $rateEl).on("mouseenter", function () {
+    $('li', $rateEl).on('mouseenter', function () {
       rateMark.apply(this);
       $(this).nextAll().each(rateReset);
       $(this).prevAll().each(rateMark);
     });
 
-    $("li", $rateEl).on("mouseleave", function () {
-      const $active = $(".rating-active", $rateEl);
+    $('li', $rateEl).on('mouseleave', function () {
+      const $active = $('.rating-active', $rateEl);
       if (!$active.length) {
-        $("li", $rateEl).each(rateReset);
+        $('li', $rateEl).each(rateReset);
       } else {
         rateMark.apply($active);
         $active.prevAll().each(rateMark);
@@ -252,7 +159,7 @@
       // Cancel the event as stated by the standard
       evt.preventDefault();
       // Chrome requires returnValue to be set
-      return (evt.returnValue = "");
+      return (evt.returnValue = '');
     }
     return (evt.returnValue = undefined);
   });
@@ -281,11 +188,11 @@
       evt.preventDefault();
       searchTerm = new URLSearchParams($(this).serialize()).get('query');
       if (searchTerm?.length) {
-        $(".ga-loader-container", elemId).show();
-        $(".gas-list,.gas-list-results-info", elemId).hide();
+        $('.ga-loader-container', elemId).show();
+        $('.gas-list,.gas-list-results-info', elemId).hide();
         await fetchFn(elemId, searchTerm);
-        $(".gas-list-results-info", elemId).show();
-        $(".ga-loader-container").hide();
+        $('.gas-list-results-info', elemId).show();
+        $('.ga-loader-container').hide();
       }
     });
   };
@@ -297,16 +204,23 @@
       );
     }
   };
-  const displayMessage = ($msgEl, msgText, type = "success", posAction = () => { }) => {
-    $msgEl.addClass(`${type}-message`).css("display", "flex");
-    $("div:first-child", $msgEl).text(msgText);
+  const displayMessage = (
+    $msgEl,
+    msgText,
+    type = 'success',
+    posAction = () => {}
+  ) => {
+    $msgEl.addClass(`${type}-message`).css('display', 'flex');
+    $('div:first-child', $msgEl).text(msgText);
     setTimeout(() => {
       $msgEl.removeClass(`${type}-message`).hide();
       posAction();
     }, formMessageDelay);
   };
-  const isSteamImage = (imgURL) => imgURL?.includes("steamstatic") || imgURL?.includes("steampowered");
-  const isXboxEdsImage = (imgURL) => imgURL?.includes("images-eds.xboxlive.com");
+  const isSteamImage = (imgURL) =>
+    imgURL?.includes('steamstatic') || imgURL?.includes('steampowered');
+  const isXboxEdsImage = (imgURL) =>
+    imgURL?.includes('images-eds.xboxlive.com');
 
   // ~~~ template replacers/managers ~~~
   const showPlatform = (
@@ -317,7 +231,7 @@
     const platformVerifier = {
       ps: { rgx: /playstation/gi },
       xbox: { rgx: /xbox/gi },
-      steam: { rgx: /steam|pc|windows|mac|linux/gi }
+      steam: { rgx: /steam|pc|windows|mac|linux/gi },
     };
     if (platformVerifier.ps.rgx.test(platformName)) {
       dataTemplateActual = $(`.gas-platform-psn`, dataTemplateActual)
@@ -338,54 +252,50 @@
         .prop('outerHTML');
     }
     return dataTemplateActual;
-  }
+  };
 
-  const showRarityTag = (
-    percentageNumber,
-    dataTemplateActual
-  ) => {
+  const showRarityTag = (percentageNumber, dataTemplateActual) => {
     const classValue = rarityClassCalc(percentageNumber);
     dataTemplateActual = dataTemplateActual.replaceAll(
       `{|rarity|}`,
-      classValue.replace("-", " ")
+      classValue.replace('-', ' ')
     );
     dataTemplateActual = $(`.gas-rarity-tag`, dataTemplateActual)
-      .removeClass("gas-rarity-tag")
+      .removeClass('gas-rarity-tag')
       .addClass(`gas-rarity-tag-${classValue}`)
-      .children(".p1")
+      .children('.p1')
       .addClass(classValue)
-      .parents(".gas-list-entry")
-      .prop("outerHTML");
+      .parents('.gas-list-entry')
+      .prop('outerHTML');
     return dataTemplateActual;
-  }
+  };
 
   // NOTE: if the parent element is corrupted (not found), undefined is returned
-  const showImageFromSrc = (
-    $img,
-    url,
-    parentSelector = ".gas-list-entry"
-  ) => $img
-    .removeAttr("srcset")
-    .removeAttr("sizes")
-    .attr("src", url)
-    .parents(parentSelector)
-    .prop("outerHTML");
+  const showImageFromSrc = ($img, url, parentSelector = '.gas-list-entry') =>
+    $img
+      .removeAttr('srcset')
+      .removeAttr('sizes')
+      .attr('src', url)
+      .parents(parentSelector)
+      .prop('outerHTML');
 
   // replaces standard double quotes by curvy ou single quotes to avoid elements attributes closing — since param can be a number (id), return it
-  const cleanupDoubleQuotes = (content) => content?.length ? content.replace(/"(\w)/g, "“$1").replace(/(\w)"/g, "$1”").replaceAll('"', "'") : content;
+  const cleanupDoubleQuotes = (content) =>
+    content?.length
+      ? content
+          .replace(/"(\w)/g, '“$1')
+          .replace(/(\w)"/g, '$1”')
+          .replaceAll('"', "'")
+      : content;
 
-  const listTemplateAppend = (
-    $list,
-    dataTemplateActual,
-    itemIdx
-  ) => {
+  const listTemplateAppend = ($list, dataTemplateActual, itemIdx) => {
     $list
       .append(dataTemplateActual)
       .children()
       .last()
-      .removeClass(["bg-light", "bg-dark"])
-      .addClass(`bg-${itemIdx % 2 > 0 ? "light" : "dark"}`);
-  }
+      .removeClass(['bg-light', 'bg-dark'])
+      .addClass(`bg-${itemIdx % 2 > 0 ? 'light' : 'dark'}`);
+  };
 </script>
 
 <!-- ~~~ users and auth0 helpers ~~~ -->
@@ -397,8 +307,11 @@
     userProfileData = JSON.parse(sessionStorage.getItem('prof'));
     if (!userProfileData) {
       const resFetch = await fetch(`https://${apiDomain}/api/profile/`, {
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", },
-        credentials: 'include'
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
       });
       userProfileData = await resFetch.json();
       sessionStorage.setItem('prof', JSON.stringify(userProfileData));
@@ -406,9 +319,9 @@
     if (userProfileData.adsOff) {
       $('.ads-section').remove();
     }
-    $(".gas-profile-name").text(userProfileData.name);
+    $('.gas-profile-name').text(userProfileData.name);
     if (userProfileData.imageURL?.length) {
-      $(".gas-profile-avatar").attr('src', userProfileData.imageURL);
+      $('.gas-profile-avatar').attr('src', userProfileData.imageURL);
     }
     const roleName = userProfileData.role?.toLowerCase();
     const $premBtn = $('.gas-premium-btn');
@@ -431,11 +344,11 @@
         $('.gas-popup-btn-confirm', $premPop).one('click', async (evt) => {
           evt.preventDefault();
           const resFetch = await fetch(`https://${apiDomain}/api/payment/`, {
-            method: "POST",
+            method: 'POST',
             headers: {
               Authorization: `Bearer ${token}`,
-              Accept: "application/json",
-              "Content-Type": "application/json",
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
             },
           });
           const payData = await resFetch.json();
@@ -443,7 +356,9 @@
             sessionStorage.removeItem('prof');
             location.replace(payData.paymentPageUrl);
           } else {
-            alert("Payment failure, we apologize for the inconvenience: please try again later.");
+            alert(
+              'Payment failure, we apologize for the inconvenience: please try again later.'
+            );
           }
         });
       });
@@ -452,7 +367,7 @@
       $premPop.remove();
     }
     $('.gas-role-' + roleName).show();
-  }
+  };
 
   /**
    * Starts the authentication flow
@@ -461,7 +376,7 @@
     try {
       const options = {
         authorizationParams: { redirect_uri: location.origin },
-        appState: { targetUrl: location.pathname + location.search }
+        appState: { targetUrl: location.pathname + location.search },
       };
 
       await auth0Client.loginWithRedirect(options);
@@ -478,14 +393,14 @@
       await fetch(`https://${apiDomain}/api/logout`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
-        credentials: 'include'
+        credentials: 'include',
       });
       console.log('[auth0] Logging out');
       sessionStorage.removeItem('prof');
       auth0Client.logout({
         logoutParams: {
-          returnTo: location.origin
-        }
+          returnTo: location.origin,
+        },
       });
     } catch (err) {
       console.log('[auth0] Log out failed', err);
@@ -508,9 +423,9 @@
       domain: config.domain,
       clientId: config.clientId,
       authorizationParams: {
-        audience: config.audience
-      }
-    }
+        audience: config.audience,
+      },
+    };
     if (isSafari) {
       // https://auth0.com/docs/troubleshoot/authentication-issues/renew-tokens-when-using-safari
       clientOptions.useRefreshTokens = true;
@@ -521,8 +436,14 @@
   };
 
   const setButtonsTriggers = () => {
-    $('.gas-auth-btn-login, .gas-auth-btn-signup').on('click', (evt) => { evt.preventDefault(); login(); });
-    $('.gas-auth-btn-logout').on('click', (evt) => { evt.preventDefault(); logout(); });
+    $('.gas-auth-btn-login, .gas-auth-btn-signup').on('click', (evt) => {
+      evt.preventDefault();
+      login();
+    });
+    $('.gas-auth-btn-logout').on('click', (evt) => {
+      evt.preventDefault();
+      logout();
+    });
   };
 
   /**
@@ -560,7 +481,7 @@
           LogRocket.identify(userProfileData.id, {
             name: userProfileData.name,
             email: userAuth0Data.email,
-            subscriptionType: userProfileData.role
+            subscriptionType: userProfileData.role,
           });
         }
       } else {
@@ -600,9 +521,7 @@
 
     let isAuthenticated = await auth0Client.isAuthenticated();
     if (isAuthenticated) {
-      console.log(
-        '[auth0] User is authenticated on ' + location.pathname
-      );
+      console.log('[auth0] User is authenticated on ' + location.pathname);
       return await updateUI(isAuthenticated);
     }
 
@@ -610,7 +529,9 @@
     // after reloading this allow to persist the logged-in state
     // isAuthenticated on reload will be true after these params show up
     const urlParams = new URLSearchParams(location.search);
-    const shouldParseResult = Boolean(urlParams.get('code')?.length) && Boolean(urlParams.get('state')?.length);
+    const shouldParseResult =
+      Boolean(urlParams.get('code')?.length) &&
+      Boolean(urlParams.get('state')?.length);
     if (shouldParseResult) {
       console.log('[auth0] Parsing redirect');
       try {
@@ -619,7 +540,11 @@
         // "query parameters must be removed from the URL so that if the user refreshes the page,
         //  the app does not try to parse the state and code parameters again.
         //  https://auth0.com/docs/quickstart/spa/vanillajs
-        window.history.replaceState({}, document.title, result?.appState?.targetUrl || location.pathname);
+        window.history.replaceState(
+          {},
+          document.title,
+          result?.appState?.targetUrl || location.pathname
+        );
         isAuthenticated = true;
 
         console.log('[auth0] Logged in!');
