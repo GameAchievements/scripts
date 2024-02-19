@@ -15,8 +15,7 @@ $('#gas-gh-top-old').remove();
 $('#gas-gh-about-old').remove();
 $('#achievements-old').remove();
 
-function gamehubResponseHandler(res1, elemId) {
-  const { releaseDate, supportedLanguages, ...res } = res1;
+function gamehubResponseHandler(res, elemId) {
   const $ghContainer = $(elemId);
   let dataTemplateActual = $ghContainer.prop('outerHTML');
   console.info(`=== ${elemId} ===`, res);

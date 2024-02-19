@@ -102,6 +102,35 @@ async function fetchGames(type) {
   $(`${elemId} .ga-loader-container`).hide();
 }
 
+async function homeMetricsMetricsHandler() {
+  const resFetch = await fetch(`https://${apiDomain}/api/game/stats`);
+  const resData = await resFetch.json();
+
+  const $ghContainer = $('#top-page');
+  let dataTemplateActual = $ghContainer.prop('outerHTML');
+
+  console.info(`=== #top-page ===`, resData);
+
+  const numKeysToReplace = [
+    'registeredUsers', //label: registered gamers
+    'gamesTracked', //label: games tracked
+    'achievementsTracked', //label: achievements tracked
+    'achievementsUnlocked', //label: achievements unlocked
+    'forumPosts', //label: forum posts
+  ];
+
+  Object.entries(resData).forEach(([key, value]) => {
+    if (numKeysToReplace.find((el) => el.toLowerCase() === key.toLowerCase())) {
+      dataTemplateActual = dataTemplateActual.replaceAll(
+        `{|${key}|}`,
+        Math.round(value || 0)
+      );
+    }
+  });
+  console.log('dataTemplateActual', dataTemplateActual);
+  $ghContainer.prop('outerHTML', dataTemplateActual);
+}
+
 async function fetchGuides() {
   const resFetch = await fetch(
     `https://${apiDomain}/api/guide/list?perPage=5&orderBy=createdAt:desc`
@@ -190,6 +219,7 @@ $().ready(async () => {
   await Promise.all(
     ['recent', 'top'].map(async (type) => await fetchGames(type))
   );
+  await homeMetricsMetricsHandler();
   await fetchGuides();
   await fetchAchievements();
   await fetchLatestThreads();
