@@ -15,20 +15,44 @@ $('#gas-gh-top-old').remove();
 $('#gas-gh-about-old').remove();
 $('#achievements-old').remove();
 
-function gamehubResponseHandler(res, elemId) {
+function gamehubResponseHandler(res1, elemId) {
+  const { releaseDate, supportedLanguages, ...res } = res1;
   const $ghContainer = $(elemId);
   let dataTemplateActual = $ghContainer.prop('outerHTML');
   console.info(`=== ${elemId} ===`, res);
-  const textKeysToReplace = ['name', 'igdbId', 'description', 'releaseDate'];
-  const numKeysToReplace = [
-    'ownersCount',
-    'achievementsCount',
-    'recentGamersCount',
-    'gaReviewScore',
-    'versionsCount',
-    'completion',
+  // top section keys to replace
+  const textTopKeysToReplace = ['name', 'igdbId', 'description'];
+  const numTopKeysToReplace = [
+    'ownersCount', //label: players
+    'achievementsCount', //label: total achievements
+    'gaReviewScore', //label: GA score
+    'versionsCount', //label: game versions
+    'completion', //label: average completion
   ];
-  const keysWithArrays = ['genres', 'modes', 'publishers', 'developers'];
+
+  // about section keys to replace
+  const textAboutKeysToReplace = ['releaseDate'];
+  const numAboutKeysToReplace = [];
+  const keysWithArrays = [
+    'developers',
+    'publishers',
+    'franchises',
+    'engines',
+    'modes',
+    'genres',
+    'themes',
+    'series',
+    'supportedLanguages',
+    'playerPerspectives',
+  ];
+
+  //join section arrays
+  const textKeysToReplace = [
+    ...textTopKeysToReplace,
+    ...textAboutKeysToReplace,
+  ];
+  const numKeysToReplace = [...numTopKeysToReplace, ...numAboutKeysToReplace];
+
   if (elemId.endsWith('top') && (res.coverURL || res.imageURL)?.length) {
     dataTemplateActual = $ghContainer
       .css(
@@ -39,7 +63,7 @@ function gamehubResponseHandler(res, elemId) {
       )
       .prop('outerHTML');
   }
-  $('.gas-img', dataTemplateActual).each((idx, elm) => {
+  $('.gas-img', dataTemplateActual).each((elm) => {
     if (res.imageURL?.length) {
       dataTemplateActual =
         showImageFromSrc($(elm), res.imageURL, elemId) || dataTemplateActual;
@@ -67,26 +91,32 @@ function gamehubResponseHandler(res, elemId) {
         elemId
       );
     } else if (keysWithArrays.includes(key)) {
-      const $tags = $(`.gas-tags-${key}`, dataTemplateActual);
-      if ($tags?.length && value?.length) {
-        dataTemplateActual = $tags
-          .html(
-            value
-              .map(
-                (tag) =>
-                  `<div class="${
-                    'igdb'
-                    // key === "consoles" ? "gh-console" : "igdb"
-                  }-tag" title="${tag}"><div class="gas-text-overflow">${tag}</div></div>`
-              )
-              .join('\n')
-          )
-          .parents(elemId)
-          .prop('outerHTML');
-      }
+      dataTemplateActual = dataTemplateActual.replaceAll(
+        `{|${key}|}`,
+        value?.length ? value.join(', ') : 'N.A.'
+      );
     }
   });
   $ghContainer.prop('outerHTML', dataTemplateActual);
+
+  const resKeys = Object.keys(res);
+  const emptyElems = [
+    ...numTopKeysToReplace,
+    ...textKeysToReplace,
+    ...keysWithArrays,
+  ].filter((el) => !resKeys.includes(el));
+
+  emptyElems.forEach((el) => {
+    $(`div:contains({|${el}|})`).parent('.entry-wrapper').remove();
+  });
+
+  if (elemId.endsWith('about') && emptyElems.length > 0) {
+    $('.about-game-entry-div').each(function () {
+      if ($(this).find('.entry-wrapper').length === 0) {
+        $(this).remove();
+      }
+    });
+  }
 }
 
 async function fetchGamehub() {
@@ -245,16 +275,14 @@ function listResponseHandlerHome({
   $list.css('display', 'flex');
 }
 
-function listResponseHandler(props) {
-  const {
-    listData,
-    elemId,
-    numKeysToReplace,
-    textKeysToReplace,
-    tabCounts,
-    tabMatcher,
-  } = props;
-
+function listResponseHandler({
+  listData,
+  elemId,
+  numKeysToReplace,
+  textKeysToReplace,
+  tabCounts,
+  tabMatcher,
+}) {
   const $listTabs = $(`${elemId} .gas-list-tabs`);
   console.info(`=== ${elemId} results ===`, listData);
   let dataTemplate = $listTabs.prop('outerHTML');
@@ -396,7 +424,6 @@ async function listFetcher({
   const listData = await resList.json();
   if (Array.isArray(listData) || listData.length > 0) {
     let tabCounts;
-
     if (Array.isArray(tabs)) {
       tabCounts = {};
       tabs.forEach((tabName) => {
@@ -935,11 +962,11 @@ $().ready(async () => {
     setupListSearch(`${elemIdPrefix}-leaderboard`, leaderboardsFetcher);
     await Promise.all([
       await versionsFetcher(),
-      await listFetcher({
-        listName: 'achievements',
-        numKeysToReplace: ['id', 'score', 'achieversCount', 'gAPoints'],
-        textKeysToReplace: ['name', 'description', 'updatedAt'],
-      }),
+      // await listFetcher({
+      //   listName: 'achievements',
+      //   numKeysToReplace: ['id', 'score', 'achieversCount', 'gAPoints'],
+      //   textKeysToReplace: ['name', 'description', 'updatedAt'],
+      // }),
       await leaderboardsFetcher(`${elemIdPrefix}-leaderboard`),
       await listFetcher({
         listName: 'guides',
