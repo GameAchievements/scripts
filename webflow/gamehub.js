@@ -62,7 +62,7 @@ function gamehubResponseHandler(res, elemId) {
       )
       .prop('outerHTML');
   }
-  $('.gas-img', dataTemplateActual).each((elm) => {
+  $('.gas-img', dataTemplateActual).each((idx, elm) => {
     if (res.imageURL?.length) {
       dataTemplateActual =
         showImageFromSrc($(elm), res.imageURL, elemId) || dataTemplateActual;
