@@ -268,6 +268,13 @@ function listResponseHandlerHome({
     if (listData?.length && !dataTemplate?.length) {
       console.error(`${elemId} template issue (missing a '.gas-' class?)`);
     }
+
+    let $emptyElem = $emptyList.children().first();
+    let $emptyElemTemplate = $emptyElem
+      .prop('outerHTML')
+      .replaceAll('{|name|}', gamehubData.name);
+
+    $emptyElem = $emptyElem.prop('outerHTML', $emptyElemTemplate);
     $(elemId).html($emptyList);
     $emptyList.show();
   }
@@ -728,6 +735,7 @@ async function versionsFetcher() {
 }
 
 const setupGAReview = () => {
+  $('#official-review-game-title').text(gamehubData.name);
   $(`${elemIdPrefix}-top-ga-score`).prepend(ratingSVG(0));
   $(`${elemIdPrefix}-top-ga-score-text`).text('-');
   if (!gamehubData?.gaReviewURL?.length) {
@@ -735,6 +743,7 @@ const setupGAReview = () => {
     return;
   }
   const gaReviewSectionId = `${elemIdPrefix}-official-review`;
+
   $(gaReviewSectionId).css('display', 'flex');
   $(`${gaReviewSectionId}-placeholder`).hide();
   $(`${gaReviewSectionId}-url`).attr('href', gamehubData.gaReviewURL);
