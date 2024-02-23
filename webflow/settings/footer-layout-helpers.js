@@ -254,13 +254,17 @@ const showRarityTag = (percentageNumber, dataTemplateActual) => {
   return dataTemplateActual;
 };
 
-const showRarityTagAchievement = (percentageNumber, dataTemplateActual) => {
+const showRarityTagAchievement = (
+  percentageNumber,
+  dataTemplateActual,
+  parent = '.hero-section-achievement'
+) => {
   const classValue = rarityClassCalc(percentageNumber);
 
   dataTemplateActual = $(`.rarity-tag-wrapper`, dataTemplateActual)
     .children(`:not(.gas-rarity-tag-${classValue})`)
     .hide()
-    .parents('.hero-section-achievement')
+    .parents(parent)
     .prop('outerHTML');
 
   return dataTemplateActual;
