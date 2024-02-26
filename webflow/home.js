@@ -65,6 +65,11 @@ function listResponseHandler({
           );
         } else if (key === 'importedFromPlatform' || key === 'platform') {
           dataTemplateActual = showPlatform(value, dataTemplateActual);
+        } else if (key === 'gameVersionData') {
+          dataTemplateActual = dataTemplateActual.replaceAll(
+            `{|gameName|}`,
+            value.name
+          );
         }
       });
       $list.append(dataTemplateActual);
@@ -87,6 +92,7 @@ async function fetchGames(type) {
     listData = resData?.slice(0, 4);
   }
   const elemId = `${elemIdPrefix}-list-games-${type}`;
+
   listResponseHandler({
     listData,
     elemId,
@@ -127,7 +133,6 @@ async function homeMetricsMetricsHandler() {
       );
     }
   });
-  console.log('dataTemplateActual', dataTemplateActual);
   $ghContainer.prop('outerHTML', dataTemplateActual);
 }
 
