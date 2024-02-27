@@ -7,6 +7,7 @@ function listResponseHandler({
   elemId,
   numKeysToReplace,
   textKeysToReplace,
+  drillDown = { key: null, keysToReplace: null },
 }) {
   console.info(`=== ${elemId} results ===`, listData);
   let dataTemplate = $(elemId).prop('outerHTML');
@@ -63,8 +64,26 @@ function listResponseHandler({
             `{|${key}|}`,
             gaDate(value)
           );
-        } else if (key === 'importedFromPlatform' || key === 'platform') {
+        } else if (
+          key === 'importedFromPlatform' ||
+          key === 'platform' ||
+          key === 'platforms'
+        ) {
           dataTemplateActual = showPlatform(value, dataTemplateActual);
+        } else if (drillDown.key && key === drillDown.key) {
+          drillDown.keysToReplace.forEach((drillReplaceKey) => {
+            if (drillReplaceKey === 'platform') {
+              dataTemplateActual = showPlatform(
+                value[drillReplaceKey],
+                dataTemplateActual
+              );
+            } else {
+              dataTemplateActual = dataTemplateActual.replaceAll(
+                `{|${drillReplaceKey}|}`,
+                Math.round(value[drillReplaceKey] || 0)
+              );
+            }
+          });
         }
       });
       $list.append(dataTemplateActual);
@@ -87,10 +106,17 @@ async function fetchGames(type) {
     listData = resData?.slice(0, 4);
   }
   const elemId = `${elemIdPrefix}-list-games-${type}`;
+
   listResponseHandler({
     listData,
     elemId,
-    numKeysToReplace: ['id', 'players', 'achievements'],
+    numKeysToReplace: [
+      'id',
+      'players',
+      'achievements',
+      'averageCompletion',
+      'totalAchievements',
+    ],
     textKeysToReplace: [
       'id',
       'name',
@@ -127,7 +153,6 @@ async function homeMetricsMetricsHandler() {
       );
     }
   });
-  console.log('dataTemplateActual', dataTemplateActual);
   $ghContainer.prop('outerHTML', dataTemplateActual);
 }
 
@@ -164,13 +189,11 @@ async function fetchAchievements() {
     listData,
     elemId,
     numKeysToReplace: ['id'],
-    textKeysToReplace: [
-      'name',
-      'description',
-      'updatedAt',
-      'gameName',
-      'unlockedAt',
-    ],
+    textKeysToReplace: ['name', 'description'],
+    drillDown: {
+      key: 'gameVersionData',
+      keysToReplace: ['completion', 'platform', 'totalAchievements'],
+    },
   });
   $(`${elemId} .ga-loader-container`).hide();
 }
