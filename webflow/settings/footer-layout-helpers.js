@@ -270,6 +270,16 @@ const showRarityTagAchievement = (
   return dataTemplateActual;
 };
 
+const showTrophy = (trophyType, dataTemplateActual, parent = '.gh-row') => {
+  dataTemplateActual = $(`.trophy-wrapper`, dataTemplateActual)
+    .children(`:not(.trophy-${trophyType.toLowerCase()})`)
+    .hide()
+    .parents(parent)
+    .prop('outerHTML');
+
+  return dataTemplateActual;
+};
+
 // NOTE: if the parent element is corrupted (not found), undefined is returned
 const showImageFromSrc = ($img, url, parentSelector = '.gas-list-entry') =>
   $img

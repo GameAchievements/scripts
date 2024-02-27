@@ -572,7 +572,10 @@ async function versionAchievementsFetcher(versionGameId, platformId) {
   const resLists = await fetch(
     `https://${apiDomain}/api/game/${versionGameId}/achievements${
       platformId ? `?platform=${platformId}` : ''
-    }`
+    }`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
   );
   const listData = await resLists.json();
   console.info(`=== ${elemId} results ===`, listData);
@@ -619,10 +622,9 @@ async function versionAchievementsFetcher(versionGameId, platformId) {
             dataTemplateActual,
             '.gh-row'
           );
+        } else if (key === 'trophyType') {
+          dataTemplateActual = showTrophy(value, dataTemplateActual);
         }
-        //  else if (key === 'platform') {
-        // dataTemplateActual = showPlatform(value, dataTemplateActual);
-        // }
       });
       listTemplateAppend($list, dataTemplateActual, itemIdx);
     });
