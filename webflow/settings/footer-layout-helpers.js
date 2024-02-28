@@ -289,7 +289,6 @@ const showAchievementUnlocked = (
   parent = '.gh-row'
 ) => {
   if (userProgress.unlocked) {
-    console.log('gaTime', gaTime(userProgress.unlockedAt));
     dataTemplateActual = dataTemplateActual.replaceAll(
       `{|unlockedAt|}`,
       `${gaTime(userProgress.unlockedAt)}<br />${gaDate(
