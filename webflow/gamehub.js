@@ -558,7 +558,6 @@ async function achieversFetcher({
 }
 
 async function versionAchievementsFetcher(versionGameId, platformId) {
-  console.log('platformId', platformId);
   const elemId = `${elemIdPrefix}-achievements`;
   const $loader = $(`${elemId} .ga-loader-container`);
   const $list = $(
@@ -581,14 +580,14 @@ async function versionAchievementsFetcher(versionGameId, platformId) {
   const listData = await resLists.json();
   console.info(`=== ${elemId} results ===`, listData);
 
-  const textKeysToReplace = ['name', 'description', 'updatedAt'];
+  const textKeysToReplace = ['name', 'description'];
   const numKeysToReplace = ['id', 'score', 'achieversCount', 'gAPoints'];
 
   const $listParent = $list.parent();
   const $listHeader = $list.children().first();
-  const $entryTemplate = $('.gh-row', $list).last();
+  const $entryTemplate = $('.gh-row', $list).first();
   $entryTemplate.show();
-  dataTemplate = $entryTemplate.prop('outerHTML');
+  let dataTemplate = $entryTemplate.prop('outerHTML');
   $list.html($listHeader).append($entryTemplate);
   if (listData.length > 0) {
     $entryTemplate.hide();
@@ -624,9 +623,19 @@ async function versionAchievementsFetcher(versionGameId, platformId) {
           );
         } else if (key === 'trophyType' && platformId === 1) {
           dataTemplateActual = showTrophy(value, dataTemplateActual);
+        } else if (key === 'userProgress' && value?.unlocked) {
+          dataTemplateActual = dataTemplateActual.replaceAll(
+            `{|unlockedAt|}`,
+            gaDate(value.unlockedAt)
+          );
         }
       });
-      listTemplateAppend($list, dataTemplateActual, itemIdx);
+      listTemplateAppend(
+        $list,
+        dataTemplateActual,
+        itemIdx
+        // item.userProgress?.unlocked
+      );
     });
     $loader.hide();
     $listParent.removeClass('hidden');
