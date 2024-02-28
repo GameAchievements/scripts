@@ -7,8 +7,10 @@ const gaDate = (isoDate) => {
   )}`;
 };
 const gaTime = (isoDate) => {
+  const pad = (v) => `0${v}`.slice(-2);
   const dateObj = new Date(isoDate);
-  return `${dateObj.getHours()}:${dateObj.getMinutes()}`;
+
+  return `${pad(dateObj.getHours())}h${pad(dateObj.getMinutes())}`;
 };
 const gaDateTime = (isoDate) => {
   const dateObj = new Date(isoDate);
