@@ -623,18 +623,18 @@ async function versionAchievementsFetcher(versionGameId, platformId) {
           );
         } else if (key === 'trophyType' && platformId === 1) {
           dataTemplateActual = showTrophy(value, dataTemplateActual);
-        } else if (key === 'userProgress' && value?.unlocked) {
-          dataTemplateActual = dataTemplateActual.replaceAll(
-            `{|unlockedAt|}`,
-            gaDate(value.unlockedAt)
+        } else if (key === 'userProgress') {
+          dataTemplateActual = showAchievementUnlocked(
+            value,
+            dataTemplateActual
           );
         }
       });
       listTemplateAppend(
         $list,
         dataTemplateActual,
-        itemIdx
-        // item.userProgress?.unlocked
+        itemIdx,
+        item.userProgress?.unlocked
       );
     });
     $loader.hide();

@@ -5,7 +5,10 @@ const gaDate = (isoDate) => {
   return `${dateObj.getFullYear()} . ${pad(dateObj.getMonth() + 1)} . ${pad(
     dateObj.getDate()
   )}`;
-  //_${pad(dateObj.getHours())}-${pad(dateObj.getMinutes())}`
+};
+const gaTime = (isoDate) => {
+  const dateObj = new Date(isoDate);
+  return `${dateObj.getHours()}:${dateObj.getMinutes()}`;
 };
 const gaDateTime = (isoDate) => {
   const dateObj = new Date(isoDate);
@@ -280,6 +283,30 @@ const showTrophy = (trophyType, dataTemplateActual, parent = '.gh-row') => {
   return dataTemplateActual;
 };
 
+const showAchievementUnlocked = (
+  userProgress,
+  dataTemplateActual,
+  parent = '.gh-row'
+) => {
+  if (userProgress.unlocked) {
+    console.log('gaTime', gaTime(userProgress.unlockedAt));
+    dataTemplateActual = dataTemplateActual.replaceAll(
+      `{|unlockedAt|}`,
+      `${gaTime(userProgress.unlockedAt)}<br />${gaDate(
+        userProgress.unlockedAt
+      )}`
+    );
+  }
+
+  dataTemplateActual = $(`.status-wrapper`, dataTemplateActual)
+    .children(`:not(.${userProgress.unlocked ? 'unlocked' : 'locked'}-status)`)
+    .hide()
+    .parents(parent)
+    .prop('outerHTML');
+
+  return dataTemplateActual;
+};
+
 // NOTE: if the parent element is corrupted (not found), undefined is returned
 const showImageFromSrc = ($img, url, parentSelector = '.gas-list-entry') =>
   $img
@@ -298,11 +325,17 @@ const cleanupDoubleQuotes = (content) =>
         .replaceAll('"', "'")
     : content;
 
-const listTemplateAppend = ($list, dataTemplateActual, itemIdx) => {
+const listTemplateAppend = (
+  $list,
+  dataTemplateActual,
+  itemIdx,
+  unlocked = false
+) => {
   $list
     .append(dataTemplateActual)
     .children()
     .last()
-    .removeClass(['bg-light', 'bg-dark'])
-    .addClass(`bg-${itemIdx % 2 > 0 ? 'light' : 'dark'}`);
+    .removeClass(['bg-light', 'bg-dark', 'locked', 'unlocked'])
+    .addClass(`bg-${itemIdx % 2 > 0 ? 'light' : 'dark'}`)
+    .addClass(`${unlocked ? 'unlocked' : 'locked'}`);
 };
