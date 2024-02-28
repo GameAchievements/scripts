@@ -558,11 +558,12 @@ async function achieversFetcher({
 }
 
 async function versionAchievementsFetcher(versionGameId, platformId) {
+  console.log('platformId', platformId);
   const elemId = `${elemIdPrefix}-achievements`;
   const $loader = $(`${elemId} .ga-loader-container`);
   const $list = $(
     `${elemId} .${
-      platformId === 1 ? 'psn' : platformId === 2 ? 'xbox' : 'steam'
+      platformId === 1 ? 'psn' : platformId === 2 ? 'xbox' : 'xbox' //'steam'
     }-achievement-list`
   );
   const $emptyList = $(`${elemId} .empty-state`);
@@ -586,7 +587,6 @@ async function versionAchievementsFetcher(versionGameId, platformId) {
   const $listParent = $list.parent();
   const $listHeader = $list.children().first();
   const $entryTemplate = $('.gh-row', $list).last();
-
   $entryTemplate.show();
   dataTemplate = $entryTemplate.prop('outerHTML');
   $list.html($listHeader).append($entryTemplate);
@@ -622,7 +622,7 @@ async function versionAchievementsFetcher(versionGameId, platformId) {
             dataTemplateActual,
             '.gh-row'
           );
-        } else if (key === 'trophyType') {
+        } else if (key === 'trophyType' && platformId === 1) {
           dataTemplateActual = showTrophy(value, dataTemplateActual);
         }
       });
@@ -653,11 +653,18 @@ async function versionSelectOption(e) {
 }
 
 async function versionsFetcher() {
-  if (!gamehubData.versionDetails) {
-    return;
-  }
   const listName = 'versions';
   const elemId = `${elemIdPrefix}-${listName}`;
+  if (!gamehubData.versionDetails) {
+    const platformId = Number(
+      gamehubData.platforms.length >= 1
+        ? platformNameIdMap(gamehubData.platforms[0])
+        : 0
+    );
+    $(versionsDropdownId).remove();
+    return versionAchievementsFetcher(gamehubData.id, platformId);
+  }
+
   const resLists = await fetch(`${gamehubURL}/${listName}`);
   const listData = await resLists.json();
   const numKeysToReplace = ['achievementsCount'];
@@ -748,6 +755,19 @@ async function versionsFetcher() {
   $list.css('display', 'flex');
   $(`${elemId}-tab .gas-list-empty`).show();
   $(`${elemId},${elemId}-tab-btn`).css('display', 'flex');
+}
+
+async function achievementsFetcher() {
+  const elemId = `${elemIdPrefix}-achievements`;
+  const platformId = null;
+  const resLists = await fetch(
+    `https://${apiDomain}/api/game/${gamehubData.id}/achievements${''}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  const listData = await resLists.json();
+  console.info(`=== ${elemId} results ===`, listData);
 }
 
 const setupGAReview = () => {
