@@ -290,7 +290,8 @@ const showAchievementUnlocked = (
   dataTemplateActual,
   parent = '.gh-row'
 ) => {
-  if (userProgress.unlocked) {
+  const unlocked = userProgress?.unlocked;
+  if (unlocked) {
     dataTemplateActual = dataTemplateActual.replaceAll(
       `{|unlockedAt|}`,
       `${gaTime(userProgress.unlockedAt)}<br />${gaDate(
@@ -300,7 +301,7 @@ const showAchievementUnlocked = (
   }
 
   dataTemplateActual = $(`.status-wrapper`, dataTemplateActual)
-    .children(`:not(.${userProgress.unlocked ? 'unlocked' : 'locked'}-status)`)
+    .children(`:not(.${unlocked ? 'unlocked' : 'locked'}-status)`)
     .hide()
     .parents(parent)
     .prop('outerHTML');
