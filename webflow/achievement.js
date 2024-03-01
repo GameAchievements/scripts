@@ -32,8 +32,6 @@ function achievementResponseHandler(res) {
   Object.entries(res).forEach(([key, value]) => {
     if (textKeysToReplace.includes(key)) {
       dataTemplateActual = dataTemplateActual.replaceAll(`{|${key}|}`, value);
-      // global replacements
-      // $(`${elemIdPrefix.replace("#", ".")}-${key}`).text(value);
     } else if (numKeysToReplace.includes(key)) {
       dataTemplateActual = dataTemplateActual.replaceAll(
         `{|${key}|}`,
@@ -42,11 +40,7 @@ function achievementResponseHandler(res) {
     } else if (key === 'platform') {
       dataTemplateActual = showPlatform(value, dataTemplateActual, elemId);
     } else if (key === 'rarity') {
-      dataTemplateActual = showRarityTagAchievement(
-        value,
-        dataTemplateActual,
-        res['rarityClass']
-      );
+      dataTemplateActual = showRarityTagAchievement(value, dataTemplateActual);
     }
   });
   $ghContainer.prop('outerHTML', dataTemplateActual);
