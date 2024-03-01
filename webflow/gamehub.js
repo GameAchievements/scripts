@@ -569,12 +569,13 @@ async function versionAchievementsFetcher(versionGameId, platformId) {
   $emptyList.hide();
   $list.hide();
   $loader.show();
+  const authHeader = { Authorization: `Bearer ${token}` };
   const resLists = await fetch(
     `https://${apiDomain}/api/game/${versionGameId}/achievements${
       platformId ? `?platform=${platformId}` : ''
     }`,
     {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: token ? authHeader : {},
     }
   );
   const listData = await resLists.json();
