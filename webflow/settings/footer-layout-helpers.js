@@ -5,7 +5,12 @@ const gaDate = (isoDate) => {
   return `${dateObj.getFullYear()} . ${pad(dateObj.getMonth() + 1)} . ${pad(
     dateObj.getDate()
   )}`;
-  //_${pad(dateObj.getHours())}-${pad(dateObj.getMinutes())}`
+};
+const gaTime = (isoDate) => {
+  const pad = (v) => `0${v}`.slice(-2);
+  const dateObj = new Date(isoDate);
+
+  return `${pad(dateObj.getHours())}h${pad(dateObj.getMinutes())}`;
 };
 const gaDateTime = (isoDate) => {
   const dateObj = new Date(isoDate);
@@ -254,13 +259,51 @@ const showRarityTag = (percentageNumber, dataTemplateActual) => {
   return dataTemplateActual;
 };
 
-const showRarityTagAchievement = (percentageNumber, dataTemplateActual) => {
+const showRarityTagAchievement = (
+  percentageNumber,
+  dataTemplateActual,
+  parent = '.hero-section-achievement'
+) => {
   const classValue = rarityClassCalc(percentageNumber);
 
   dataTemplateActual = $(`.rarity-tag-wrapper`, dataTemplateActual)
     .children(`:not(.gas-rarity-tag-${classValue})`)
     .hide()
-    .parents('.hero-section-achievement')
+    .parents(parent)
+    .prop('outerHTML');
+
+  return dataTemplateActual;
+};
+
+const showTrophy = (trophyType, dataTemplateActual, parent = '.gh-row') => {
+  dataTemplateActual = $(`.trophy-wrapper`, dataTemplateActual)
+    .children(`:not(.trophy-${trophyType.toLowerCase()})`)
+    .hide()
+    .parents(parent)
+    .prop('outerHTML');
+
+  return dataTemplateActual;
+};
+
+const showAchievementUnlocked = (
+  userProgress,
+  dataTemplateActual,
+  parent = '.gh-row'
+) => {
+  const unlocked = userProgress?.unlocked;
+  if (unlocked) {
+    dataTemplateActual = dataTemplateActual.replaceAll(
+      `{|unlockedAt|}`,
+      `${gaTime(userProgress.unlockedAt)}<br />${gaDate(
+        userProgress.unlockedAt
+      )}`
+    );
+  }
+
+  dataTemplateActual = $(`.status-wrapper`, dataTemplateActual)
+    .children(`:not(.${unlocked ? 'unlocked' : 'locked'}-status)`)
+    .hide()
+    .parents(parent)
     .prop('outerHTML');
 
   return dataTemplateActual;
@@ -284,11 +327,17 @@ const cleanupDoubleQuotes = (content) =>
         .replaceAll('"', "'")
     : content;
 
-const listTemplateAppend = ($list, dataTemplateActual, itemIdx) => {
+const listTemplateAppend = (
+  $list,
+  dataTemplateActual,
+  itemIdx,
+  unlocked = false
+) => {
   $list
     .append(dataTemplateActual)
     .children()
     .last()
-    .removeClass(['bg-light', 'bg-dark'])
-    .addClass(`bg-${itemIdx % 2 > 0 ? 'light' : 'dark'}`);
+    .removeClass(['bg-light', 'bg-dark', 'locked', 'unlocked'])
+    .addClass(`bg-${itemIdx % 2 > 0 ? 'light' : 'dark'}`)
+    .addClass(`${unlocked ? 'unlocked' : 'locked'}`);
 };

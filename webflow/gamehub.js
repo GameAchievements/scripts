@@ -13,7 +13,6 @@ $('#ga-sections-container').hide();
 //REMOVE OLD ELEMENTS
 $('#gas-gh-top-old').remove();
 $('#gas-gh-about-old').remove();
-$('#achievements-old').remove();
 
 function gamehubResponseHandler(res, elemId) {
   const $ghContainer = $(elemId);
@@ -268,6 +267,13 @@ function listResponseHandlerHome({
     if (listData?.length && !dataTemplate?.length) {
       console.error(`${elemId} template issue (missing a '.gas-' class?)`);
     }
+
+    let $emptyElem = $emptyList.children().first();
+    let $emptyElemTemplate = $emptyElem
+      .prop('outerHTML')
+      .replaceAll('{|name|}', gamehubData.name);
+
+    $emptyElem = $emptyElem.prop('outerHTML', $emptyElemTemplate);
     $(elemId).html($emptyList);
     $emptyList.show();
   }
@@ -552,36 +558,48 @@ async function achieversFetcher({
 }
 
 async function versionAchievementsFetcher(versionGameId, platformId) {
-  const elemId = `${elemIdPrefix}-versions-tab`;
+  const elemId = `${elemIdPrefix}-achievements`;
   const $loader = $(`${elemId} .ga-loader-container`);
-  const $list = $(`${elemId} .gas-list`);
-  const $emptyList = $(`${elemId} .gas-list-empty`);
+  const $list = $(
+    `${elemId} .${
+      platformId === 1 ? 'psn' : platformId === 2 ? 'xbox' : 'xbox' //'steam'
+    }-achievement-list`
+  );
+  const $emptyList = $(`${elemId} .empty-state`);
   $emptyList.hide();
   $list.hide();
   $loader.show();
+  const authHeader = { Authorization: `Bearer ${token}` };
   const resLists = await fetch(
     `https://${apiDomain}/api/game/${versionGameId}/achievements${
       platformId ? `?platform=${platformId}` : ''
-    }`
+    }`,
+    {
+      headers: token ? authHeader : {},
+    }
   );
   const listData = await resLists.json();
   console.info(`=== ${elemId} results ===`, listData);
+
+  const textKeysToReplace = ['name', 'description'];
   const numKeysToReplace = ['id', 'score', 'achieversCount', 'gAPoints'];
-  const textKeysToReplace = ['name', 'description', 'updatedAt'];
+
+  const $listParent = $list.parent();
   const $listHeader = $list.children().first();
-  const $entryTemplate = $('.gas-list-entry', $list).first();
+  const $entryTemplate = $('.gh-row', $list).first();
   $entryTemplate.show();
-  dataTemplate = $entryTemplate.prop('outerHTML');
+  let dataTemplate = $entryTemplate.prop('outerHTML');
   $list.html($listHeader).append($entryTemplate);
   if (listData.length > 0) {
-    // $entryTemplate.hide();
+    $entryTemplate.hide();
     listData.forEach((item, itemIdx) => {
       let dataTemplateActual = dataTemplate;
       Object.entries(item).forEach(([key, value]) => {
         const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
         if ($entryImg && item.iconURL?.length) {
           dataTemplateActual =
-            showImageFromSrc($entryImg, item.iconURL) || dataTemplateActual;
+            showImageFromSrc($entryImg, item.iconURL, '.gh-row') ||
+            dataTemplateActual;
         }
         if (key === 'name') {
           dataTemplateActual = dataTemplateActual.replaceAll(
@@ -598,15 +616,30 @@ async function versionAchievementsFetcher(versionGameId, platformId) {
             `{|${key}|}`,
             Math.round(value || 0)
           );
-        } else if (key === 'platform') {
-          dataTemplateActual = showPlatform(value, dataTemplateActual);
         } else if (key === 'rarity') {
-          dataTemplateActual = showRarityTag(value, dataTemplateActual);
+          dataTemplateActual = showRarityTagAchievement(
+            value,
+            dataTemplateActual,
+            '.gh-row'
+          );
+        } else if (key === 'trophyType' && platformId === 1) {
+          dataTemplateActual = showTrophy(value, dataTemplateActual);
+        } else if (key === 'userProgress') {
+          dataTemplateActual = showAchievementUnlocked(
+            value,
+            dataTemplateActual
+          );
         }
       });
-      listTemplateAppend($list, dataTemplateActual, itemIdx);
+      listTemplateAppend(
+        $list,
+        dataTemplateActual,
+        itemIdx,
+        item.userProgress?.unlocked
+      );
     });
     $loader.hide();
+    $listParent.removeClass('hidden');
     $list.css({ display: 'flex', 'flex-direction': 'column' });
     $emptyList.hide();
   } else {
@@ -630,11 +663,18 @@ async function versionSelectOption(e) {
 }
 
 async function versionsFetcher() {
-  if (!gamehubData.versionDetails) {
-    return;
-  }
   const listName = 'versions';
   const elemId = `${elemIdPrefix}-${listName}`;
+  if (!gamehubData.versionDetails) {
+    const platformId = Number(
+      gamehubData.platforms.length >= 1
+        ? platformNameIdMap(gamehubData.platforms[0])
+        : 0
+    );
+    $(versionsDropdownId).remove();
+    return versionAchievementsFetcher(gamehubData.id, platformId);
+  }
+
   const resLists = await fetch(`${gamehubURL}/${listName}`);
   const listData = await resLists.json();
   const numKeysToReplace = ['achievementsCount'];
@@ -727,7 +767,21 @@ async function versionsFetcher() {
   $(`${elemId},${elemId}-tab-btn`).css('display', 'flex');
 }
 
+async function achievementsFetcher() {
+  const elemId = `${elemIdPrefix}-achievements`;
+  const platformId = null;
+  const resLists = await fetch(
+    `https://${apiDomain}/api/game/${gamehubData.id}/achievements${''}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  const listData = await resLists.json();
+  console.info(`=== ${elemId} results ===`, listData);
+}
+
 const setupGAReview = () => {
+  $('#official-review-game-title').text(gamehubData.name);
   $(`${elemIdPrefix}-top-ga-score`).prepend(ratingSVG(0));
   $(`${elemIdPrefix}-top-ga-score-text`).text('-');
   if (!gamehubData?.gaReviewURL?.length) {
@@ -735,6 +789,7 @@ const setupGAReview = () => {
     return;
   }
   const gaReviewSectionId = `${elemIdPrefix}-official-review`;
+
   $(gaReviewSectionId).css('display', 'flex');
   $(`${gaReviewSectionId}-placeholder`).hide();
   $(`${gaReviewSectionId}-url`).attr('href', gamehubData.gaReviewURL);
@@ -961,11 +1016,6 @@ $().ready(async () => {
     setupListSearch(`${elemIdPrefix}-leaderboard`, leaderboardsFetcher);
     await Promise.all([
       await versionsFetcher(),
-      // await listFetcher({
-      //   listName: 'achievements',
-      //   numKeysToReplace: ['id', 'score', 'achieversCount', 'gAPoints'],
-      //   textKeysToReplace: ['name', 'description', 'updatedAt'],
-      // }),
       await leaderboardsFetcher(`${elemIdPrefix}-leaderboard`),
       await listFetcher({
         listName: 'guides',
