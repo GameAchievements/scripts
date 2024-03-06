@@ -1,3 +1,5 @@
+import { showPlatform } from '../utils';
+
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 const urlParams = new URLSearchParams(window.location.search);
 const achievementId = urlParams.get('id') || 1044;

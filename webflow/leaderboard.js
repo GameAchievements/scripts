@@ -1,3 +1,5 @@
+import { showPlatform } from '../utils';
+
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 const featureName = 'leaderboard';
 const formMessageDelay = 4000;

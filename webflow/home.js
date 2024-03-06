@@ -1,3 +1,5 @@
+import { showPlatform } from '../utils';
+
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 const forumDomain = document.querySelector('meta[name=forum-domain]')?.content;
 const elemIdPrefix = `#gas-home`;

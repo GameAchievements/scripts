@@ -1,3 +1,5 @@
+import { showRarityTagAchievement, showPlatform, gaDate } from '../utils';
+
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 const forumDomain = document.querySelector('meta[name=forum-domain]')?.content;
 const urlParams = new URLSearchParams(location.search);
@@ -617,6 +619,7 @@ async function versionAchievementsFetcher(versionGameId, platformId) {
             Math.round(value || 0)
           );
         } else if (key === 'rarity') {
+          //TODO: change this, bellow is original
           dataTemplateActual = showRarityTagAchievement(
             value,
             dataTemplateActual,

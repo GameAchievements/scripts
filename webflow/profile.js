@@ -1,3 +1,5 @@
+import { showPlatform } from '../utils';
+
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 const urlParams = new URLSearchParams(location.search);
 let profileId = urlParams.get('id');
