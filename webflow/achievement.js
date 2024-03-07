@@ -1,4 +1,10 @@
-import { showPlatform } from '../utils';
+import {
+  showPlatform,
+  gaDateTime,
+  showRarityTagAchievement,
+  showImageFromSrc,
+  cleanupDoubleQuotes,
+} from '../utils';
 
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 const urlParams = new URLSearchParams(window.location.search);

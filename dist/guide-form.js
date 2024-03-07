@@ -1,3 +1,346 @@
-(()=>{var b=document.querySelector("meta[name=domain]")?.content,E=new URLSearchParams(window.location.search),u=Number(E.get("id"))||0,h=u>0,m=Number(E.get("achievementId"))||0,o,v="#gas-guide",i=`${v}-form`,g=4e3,F=4,l=2,U=$(".gas-form-section",i).last().clone(),w="section-2";$(".ga-loader-container").show();$("#ga-sections-container").hide();var A=(e,t)=>t?(isUserInputActive=!0,!0):!1,S=e=>{if((e.hasClass("gas-form-tinymce")?tinyMCE.get(e.attr("id")).getContent():e.val())?.length)return e.prev("label").removeClass("field-label-missing");e.prev("label").addClass("field-label-missing")},y=e=>{let t=!1,n=!1;e?.length&&S(e);for(let s of $("input[name][required]",i))if(t=A($(s),$(s).val()?.length),!t)break;for(let s of $(".gas-form-tinymce",i))if(n=A($(s),tinyMCE.get($(s).attr("id")).getContent()?.length),!n)break;t&&n?$(`${i}-btn-submit`).removeClass("disabled-button").attr("disabled",!1):$(`${i}-btn-submit`).addClass("disabled-button").attr("disabled",!0)},k,C={selector:".gas-form-tinymce",height:200,menubar:!1,toolbar_mode:"floating",plugins:"link image lists",toolbar:"undo redo | bold italic underline | numlist bullist",content_style:"body { font-family:Gantari,sans-serif; font-size:1rem }",setup:e=>{e.on("Paste Change input Undo Redo",t=>{clearTimeout(k),k=setTimeout(()=>y($(e.targetElm)),100)})}};function P(){if(confirm("Do you want to remove this section?")){y();let e=$(this).parents(".gas-form-section");tinyMCE.get($(".gas-form-tinymce",e).attr("id")).remove(),e.remove(),l--,$(".gas-form-section label[for$=-title]",i).each((t,n)=>$(n).text(`${t+1}${$(n).text().slice(1)}`)),l<=F&&$(".gas-form-section-add",i).show()}}async function x(){l++,$(`${i}-btn-submit`).addClass("disabled-button").attr("disabled",!0);let e=U.clone().show(),t=`section-${l}`;$(`label[for=${w}-title]`,e).text(`${l} \u203A section name*`).attr("for",`${t}-title`),$(`[name=${w}-title]`,e).attr("name",`${t}-title`).on("focusout keyup",function(){y($(this))}),$(`label[for=${w}-content]`,e).attr("for",`${t}-content`);let n=`${t}-content`;$(".gas-form-tinymce",e).attr("id",n).attr("name",n).attr("data-name",n),$(".gas-form-section-del",e).on("click",P),$(".gas-form-sections",i).append(e),C.selector=`#${n}`,await tinymce.init(C),l>F&&$(".gas-form-section-add",i).hide()}async function L(){$(".gas-form-tinymce",U).removeAttr("id"),await tinymce.init(C),h&&o?.id===u&&($("[name=guide-title]",i).val(o.name),$("[name=guide-description]",i).val(o.description),o.sections.forEach(async(c,a)=>{a>1&&a<o.sections.length&&await x(),$(`[name=section-${a+1}-title]`).val(c.title),tinyMCE.get(`section-${a+1}-content`).setContent(c.content)})),$(".gas-form-section-add",i).on("click",x),$(".gas-form-section-del",i).on("click",P),$(`${i}-btn-cancel`,i).on("click",c=>{c.preventDefault();let a=$("#gas-popup-leave-confirmation");a.css({opacity:1,display:"flex"}),$(".gas-popup-btn-close",a).one("click",r=>{r.preventDefault(),a.hide()}),$(".gas-popup-btn-leave",a).one("click",r=>{r.preventDefault(),isUserInputActive=!1,a.hide(),d()})}),$(`${i}-btn-submit`).attr("disabled",!0);let e=$(`${i}-btn-submit`).val(),t=$(".gas-form-error",i),n=$("div",t),s=t.text(),f=$(".gas-form-success",i);$("input[name][required]",i).on("focusout keyup",function(){y($(this))}),$(`${i}-btn-submit`).on("click",async c=>{c.preventDefault(),$(`${i}-btn-submit`).addClass("disabled-button").attr("disabled",!0),isUserInputActive=!1,$(`${i}-btn-submit`).val($(`${i}-btn-submit`).data("wait"));let a=[];$(".gas-form-section",i).each(function(){a.push({title:$("input[name$=-title]",this).val(),content:tinyMCE.get($(".gas-form-tinymce",this).attr("id")).getContent()})});let r={author:"GA user",title:$("[name=guide-title]",i).val(),description:$("[name=guide-description]",i).val(),sections:a},I="POST",D=`https://${b}/api/guide`;if(h)D+=`/${u}`,I="PUT",r.author=o.author,r.profileId=o.profileId;else{if(!userProfileData){t.show(),n.text("Issue on accessing your data for saving. Please try again later."),$(`${i}-btn-submit`).val(e),setTimeout(()=>{t.hide(),n.text(s)},g);return}r.profileId=userProfileData.id,r.author=userProfileData.name,r.achievementId=m}let T=await fetch(D,{method:I,headers:{Authorization:`Bearer ${token}`,Accept:"application/json","Content-Type":"application/json"},body:JSON.stringify(r)}),j=await T.json();if(![200,201].includes(T.status)){t.show(),n.text(j?.message),$(`${i}-btn-submit`).val(e).removeClass("disabled-button").attr("disabled",!1),setTimeout(()=>{t.hide(),n.text(s)},g);return}f.show(),$(`${i}-btn-submit`).val(e),setTimeout(()=>{$(`${i}-fields`).hide()},g/5),setTimeout(()=>{isUserInputActive=!1,f.hide(),d()},g)})}function p(e,t=`${v}-details`){let n=$(t),s=n.prop("outerHTML");console.info(`=== ${t} ===`,e);let f=["id","name","achievementId","achievementName","gameId","gameName"],c=e.coverURL||e.imageURL;c?.length&&t.endsWith("details")&&(s=n.css("background-image",`linear-gradient(rgba(255,255,255,0),#030922),
+(() => {
+  // utils/dateTIme.js
+  var gaDate = (isoDate) => {
+    const pad = (v) => `0${v}`.slice(-2);
+    const dateObj = new Date(isoDate);
+    return `${dateObj.getFullYear()} . ${pad(dateObj.getMonth() + 1)} . ${pad(
+      dateObj.getDate()
+    )}`;
+  };
+
+  // utils/achievementNameSlicer.js
+  var achievementNameSlicer = (name) => {
+    if (!name) {
+      return "N.A.";
+    }
+    const metaDivider = name.lastIndexOf(" | ");
+    return metaDivider > 0 ? name.slice(0, metaDivider) : name;
+  };
+
+  // webflow/guide-form.js
+  var apiDomain = document.querySelector("meta[name=domain]")?.content;
+  var urlParams = new URLSearchParams(window.location.search);
+  var guideId = Number(urlParams.get("id")) || 0;
+  var isEditing = guideId > 0;
+  var achievementId = Number(urlParams.get("achievementId")) || 0;
+  var guideFetchedData;
+  var elemIdPrefix = `#gas-guide`;
+  var elemId = `${elemIdPrefix}-form`;
+  var formMessageDelay2 = 4e3;
+  var sectionsLimit = 4;
+  var sectionsCount = 2;
+  var $sectionTemp = $(".gas-form-section", elemId).last().clone();
+  var templatePrefix = "section-2";
+  $(".ga-loader-container").show();
+  $("#ga-sections-container").hide();
+  var isRequiredFilled = ($el, hasLen) => {
+    if (hasLen) {
+      isUserInputActive = true;
+      return true;
+    }
+    return false;
+  };
+  var highlightRequiredLabel = ($el) => {
+    if (($el.hasClass("gas-form-tinymce") ? tinyMCE.get($el.attr("id")).getContent() : $el.val())?.length) {
+      return $el.prev("label").removeClass("field-label-missing");
+    }
+    $el.prev("label").addClass("field-label-missing");
+  };
+  var canSubmit = ($elChanged) => {
+    let allInputsFilled = false;
+    let allTextareasFilled = false;
+    if ($elChanged?.length) {
+      highlightRequiredLabel($elChanged);
+    }
+    for (const inp of $("input[name][required]", elemId)) {
+      allInputsFilled = isRequiredFilled($(inp), $(inp).val()?.length);
+      if (!allInputsFilled) {
+        break;
+      }
+    }
+    for (const txt of $(".gas-form-tinymce", elemId)) {
+      allTextareasFilled = isRequiredFilled(
+        $(txt),
+        tinyMCE.get($(txt).attr("id")).getContent()?.length
+      );
+      if (!allTextareasFilled) {
+        break;
+      }
+    }
+    if (allInputsFilled && allTextareasFilled) {
+      $(`${elemId}-btn-submit`).removeClass("disabled-button").attr("disabled", false);
+    } else {
+      $(`${elemId}-btn-submit`).addClass("disabled-button").attr("disabled", true);
+    }
+  };
+  var editorChangeHandlerId;
+  var tmceObj = {
+    selector: ".gas-form-tinymce",
+    height: 200,
+    menubar: false,
+    toolbar_mode: "floating",
+    plugins: "link image lists",
+    toolbar: "undo redo | bold italic underline | numlist bullist",
+    content_style: "body { font-family:Gantari,sans-serif; font-size:1rem }",
+    setup: (editor) => {
+      editor.on("Paste Change input Undo Redo", (evt) => {
+        clearTimeout(editorChangeHandlerId);
+        editorChangeHandlerId = setTimeout(
+          () => canSubmit($(editor.targetElm)),
+          100
+        );
+      });
+    }
+  };
+  function delSection() {
+    if (confirm("Do you want to remove this section?")) {
+      canSubmit();
+      const $sec = $(this).parents(".gas-form-section");
+      tinyMCE.get($(".gas-form-tinymce", $sec).attr("id")).remove();
+      $sec.remove();
+      sectionsCount--;
+      $(`.gas-form-section label[for$=-title]`, elemId).each(
+        (secIdx, el) => $(el).text(`${secIdx + 1}${$(el).text().slice(1)}`)
+      );
+      if (sectionsCount <= sectionsLimit) {
+        $(".gas-form-section-add", elemId).show();
+      }
+    }
+  }
+  async function addSection() {
+    sectionsCount++;
+    $(`${elemId}-btn-submit`).addClass("disabled-button").attr("disabled", true);
+    const $newSection = $sectionTemp.clone().show();
+    const curSecId = `section-${sectionsCount}`;
+    $(`label[for=${templatePrefix}-title]`, $newSection).text(`${sectionsCount} \u203A section name*`).attr("for", `${curSecId}-title`);
+    $(`[name=${templatePrefix}-title]`, $newSection).attr("name", `${curSecId}-title`).on("focusout keyup", function() {
+      canSubmit($(this));
+    });
+    $(`label[for=${templatePrefix}-content]`, $newSection).attr(
+      "for",
+      `${curSecId}-content`
+    );
+    const tinyId = `${curSecId}-content`;
+    $(".gas-form-tinymce", $newSection).attr("id", tinyId).attr("name", tinyId).attr("data-name", tinyId);
+    $(".gas-form-section-del", $newSection).on("click", delSection);
+    $(".gas-form-sections", elemId).append($newSection);
+    tmceObj.selector = `#${tinyId}`;
+    await tinymce.init(tmceObj);
+    if (sectionsCount > sectionsLimit) {
+      $(".gas-form-section-add", elemId).hide();
+    }
+  }
+  async function setupForm() {
+    $(".gas-form-tinymce", $sectionTemp).removeAttr("id");
+    await tinymce.init(tmceObj);
+    if (isEditing && guideFetchedData?.id === guideId) {
+      $("[name=guide-title]", elemId).val(guideFetchedData.name);
+      $("[name=guide-description]", elemId).val(guideFetchedData.description);
+      guideFetchedData.sections.forEach(async (sec, secIdx) => {
+        if (secIdx > 1 && secIdx < guideFetchedData.sections.length) {
+          await addSection();
+        }
+        $(`[name=section-${secIdx + 1}-title]`).val(sec.title);
+        tinyMCE.get(`section-${secIdx + 1}-content`).setContent(sec.content);
+      });
+    }
+    $(".gas-form-section-add", elemId).on("click", addSection);
+    $(".gas-form-section-del", elemId).on("click", delSection);
+    $(`${elemId}-btn-cancel`, elemId).on("click", (evt) => {
+      evt.preventDefault();
+      const $popupWrapper = $(`#gas-popup-leave-confirmation`);
+      $popupWrapper.css({ opacity: 1, display: "flex" });
+      $(`.gas-popup-btn-close`, $popupWrapper).one("click", (evt2) => {
+        evt2.preventDefault();
+        $popupWrapper.hide();
+      });
+      $(`.gas-popup-btn-leave`, $popupWrapper).one("click", (evt2) => {
+        evt2.preventDefault();
+        isUserInputActive = false;
+        $popupWrapper.hide();
+        redirectAway();
+      });
+    });
+    $(`${elemId}-btn-submit`).attr("disabled", true);
+    const submitText = $(`${elemId}-btn-submit`).val();
+    const $errEl = $(".gas-form-error", elemId);
+    const $errorDiv = $("div", $errEl);
+    const txtError = $errEl.text();
+    const $successEl = $(".gas-form-success", elemId);
+    $(`input[name][required]`, elemId).on("focusout keyup", function() {
+      canSubmit($(this));
+    });
+    $(`${elemId}-btn-submit`).on("click", async (e) => {
+      e.preventDefault();
+      $(`${elemId}-btn-submit`).addClass("disabled-button").attr("disabled", true);
+      isUserInputActive = false;
+      $(`${elemId}-btn-submit`).val($(`${elemId}-btn-submit`).data("wait"));
+      let sections = [];
+      $(".gas-form-section", elemId).each(function() {
+        sections.push({
+          title: $("input[name$=-title]", this).val(),
+          content: tinyMCE.get($(".gas-form-tinymce", this).attr("id")).getContent()
+        });
+      });
+      const reqData = {
+        author: "GA user",
+        title: $("[name=guide-title]", elemId).val(),
+        description: $("[name=guide-description]", elemId).val(),
+        sections
+      };
+      let method = "POST";
+      let guideURL = `https://${apiDomain}/api/guide`;
+      if (isEditing) {
+        guideURL += `/${guideId}`;
+        method = "PUT";
+        reqData.author = guideFetchedData.author;
+        reqData.profileId = guideFetchedData.profileId;
+      } else {
+        if (!userProfileData) {
+          $errEl.show();
+          $errorDiv.text(
+            "Issue on accessing your data for saving. Please try again later."
+          );
+          $(`${elemId}-btn-submit`).val(submitText);
+          setTimeout(() => {
+            $errEl.hide();
+            $errorDiv.text(txtError);
+          }, formMessageDelay2);
+          return;
+        }
+        reqData.profileId = userProfileData.id;
+        reqData.author = userProfileData.name;
+        reqData.achievementId = achievementId;
+      }
+      const resFecth = await fetch(guideURL, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(reqData)
+      });
+      const revData = await resFecth.json();
+      if (![200, 201].includes(resFecth.status)) {
+        $errEl.show();
+        $errorDiv.text(revData?.message);
+        $(`${elemId}-btn-submit`).val(submitText).removeClass("disabled-button").attr("disabled", false);
+        setTimeout(() => {
+          $errEl.hide();
+          $errorDiv.text(txtError);
+        }, formMessageDelay2);
+        return;
+      }
+      $successEl.show();
+      $(`${elemId}-btn-submit`).val(submitText);
+      setTimeout(() => {
+        $(`${elemId}-fields`).hide();
+      }, formMessageDelay2 / 5);
+      setTimeout(() => {
+        isUserInputActive = false;
+        $successEl.hide();
+        redirectAway();
+      }, formMessageDelay2);
+    });
+  }
+  function detailsResponseHandler(res, elemId2 = `${elemIdPrefix}-details`) {
+    const $ghContainer = $(elemId2);
+    let dataTemplateActual = $ghContainer.prop("outerHTML");
+    console.info(`=== ${elemId2} ===`, res);
+    const textKeysToReplace = [
+      "id",
+      "name",
+      "achievementId",
+      "achievementName",
+      "gameId",
+      "gameName"
+    ];
+    const guideImg = res.coverURL || res.imageURL;
+    if (guideImg?.length && elemId2.endsWith("details")) {
+      dataTemplateActual = $ghContainer.css(
+        "background-image",
+        `linear-gradient(rgba(255,255,255,0),#030922),
           linear-gradient(rgba(70,89,255,.4),rgba(70,89,255,.4)),
-          url(${c})`).prop("outerHTML")),Object.entries(e).forEach(([a,r])=>{a==="achievementName"?s=s.replaceAll(`{|${a}|}`,achievementNameSlicer(r)):f.includes(a)&&(s=s.replaceAll(`{|${a}|}`,(a.endsWith("At")?gaDate(r):r)||""))}),n.prop("outerHTML",s)}async function M(){o=await(await fetch(`https://${b}/api/guide/${u}`)).json(),Object.keys(o).length>0&&o.id&&(document.title=`${o.name?.length?o.name:o.id} | ${document.title}`,p(o),p(o,`${v}-form`))}async function R(){let t=await(await fetch(`https://${b}/api/achievement/${m}`)).json();Object.keys(t).length>0&&t.id&&(document.title=`Achievement ${t.name?.length?t.name:t.id} | ${document.title}`,t.achievementName=t.name,p(t),p(t,`${v}-form`))}function d(){window.location.replace(h?`/guide?id=${u}`:m>0?`/achievement?id=${m}`:"/guides")}$().ready(async()=>{if(await auth0Bootstrap(),!token){console.log("User not authenticated"),d();return}if(h){if(await M(),o?.achievementId>0){let e=await fetch(`https://${b}/api/achievement/${o.achievementId}/guide-auth-user-data`,{headers:{Authorization:`Bearer ${token}`}});if(e.status!==200){console.log("User not found/issue, cannot access to guide edition"),d();return}if(!(await e.json()).ownedGuideId){console.log("This form does not belong to the creator"),d();return}}}else if(m>0)await R();else{console.log("no valid parameter provided"),d();return}await L(),$(".ga-loader-container").hide(),$("#ga-sections-container").show()});})();
+          url(${guideImg})`
+      ).prop("outerHTML");
+    }
+    Object.entries(res).forEach(([key, value]) => {
+      if (key === "achievementName") {
+        dataTemplateActual = dataTemplateActual.replaceAll(
+          `{|${key}|}`,
+          achievementNameSlicer(value)
+        );
+      } else if (textKeysToReplace.includes(key)) {
+        dataTemplateActual = dataTemplateActual.replaceAll(
+          `{|${key}|}`,
+          (key.endsWith("At") ? gaDate(value) : value) || ""
+        );
+      }
+    });
+    $ghContainer.prop("outerHTML", dataTemplateActual);
+  }
+  async function fetchGuide() {
+    const resFetch = await fetch(`https://${apiDomain}/api/guide/${guideId}`);
+    guideFetchedData = await resFetch.json();
+    if (Object.keys(guideFetchedData).length > 0 && guideFetchedData.id) {
+      document.title = `${guideFetchedData.name?.length ? guideFetchedData.name : guideFetchedData.id} | ${document.title}`;
+      detailsResponseHandler(guideFetchedData);
+      detailsResponseHandler(guideFetchedData, `${elemIdPrefix}-form`);
+    }
+  }
+  async function fetchAchievement() {
+    const resFetch = await fetch(
+      `https://${apiDomain}/api/achievement/${achievementId}`
+    );
+    const achievementFetchedData = await resFetch.json();
+    if (Object.keys(achievementFetchedData).length > 0 && achievementFetchedData.id) {
+      document.title = `Achievement ${achievementFetchedData.name?.length ? achievementFetchedData.name : achievementFetchedData.id} | ${document.title}`;
+      achievementFetchedData.achievementName = achievementFetchedData.name;
+      detailsResponseHandler(achievementFetchedData);
+      detailsResponseHandler(achievementFetchedData, `${elemIdPrefix}-form`);
+    }
+  }
+  function redirectAway() {
+    window.location.replace(
+      isEditing ? `/guide?id=${guideId}` : achievementId > 0 ? `/achievement?id=${achievementId}` : "/guides"
+    );
+  }
+  $().ready(async () => {
+    await auth0Bootstrap();
+    if (!token) {
+      console.log("User not authenticated");
+      redirectAway();
+      return;
+    }
+    if (isEditing) {
+      await fetchGuide();
+      if (guideFetchedData?.achievementId > 0) {
+        const resFetch = await fetch(
+          `https://${apiDomain}/api/achievement/${guideFetchedData.achievementId}/guide-auth-user-data`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (resFetch.status !== 200) {
+          console.log("User not found/issue, cannot access to guide edition");
+          redirectAway();
+          return;
+        }
+        const revData = await resFetch.json();
+        if (!revData.ownedGuideId) {
+          console.log("This form does not belong to the creator");
+          redirectAway();
+          return;
+        }
+      }
+    } else if (achievementId > 0) {
+      await fetchAchievement();
+    } else {
+      console.log("no valid parameter provided");
+      redirectAway();
+      return;
+    }
+    await setupForm();
+    $(".ga-loader-container").hide();
+    $("#ga-sections-container").show();
+  });
+})();

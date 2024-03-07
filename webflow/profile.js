@@ -1,4 +1,15 @@
-import { showPlatform } from '../utils';
+import {
+  showPlatform,
+  showImageFromSrc,
+  platformNameIdMap,
+  rarityClassCalc,
+  gaDate,
+  cleanupDoubleQuotes,
+  displayMessage,
+  scrollToURLHash,
+  isSteamImage,
+  ratingSVG,
+} from '../utils';
 
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 const urlParams = new URLSearchParams(location.search);

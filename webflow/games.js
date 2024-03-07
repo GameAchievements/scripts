@@ -1,4 +1,11 @@
-import { showPlatform } from '../utils';
+import {
+  showPlatform,
+  showImageFromSrc,
+  gaDate,
+  cleanupDoubleQuotes,
+  isSteamImage,
+  setupListSearch,
+} from '../utils';
 
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 

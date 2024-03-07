@@ -1,4 +1,22 @@
-import { showRarityTagAchievement, showPlatform, gaDate } from '../utils';
+import {
+  listTemplateAppend,
+  showRarityTagAchievement,
+  showPlatform,
+  showRarityTag,
+  showTrophy,
+  showImageFromSrc,
+  gaDate,
+  gaDateTime,
+  showAchievementUnlocked,
+  platformNameIdMap,
+  cleanupDoubleQuotes,
+  isSteamImage,
+  isXboxEdsImage,
+  achievementNameSlicer,
+  setupListSearch,
+  ratingScale,
+  ratingSVG,
+} from '../utils';
 
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 const forumDomain = document.querySelector('meta[name=forum-domain]')?.content;

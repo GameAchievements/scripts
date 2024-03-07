@@ -1,3 +1,354 @@
-(()=>{var b=(s,t,n=".gas-list-entry")=>{let e={ps:{rgx:/playstation/gi},xbox:{rgx:/xbox/gi},steam:{rgx:/steam|pc|windows|mac|linux/gi}};return e.ps.rgx.test(s)&&(t=$(".gas-platform-psn",t).css("display","inherit").parents(n).prop("outerHTML")),e.steam.rgx.test(s)&&(t=$(".gas-platform-steam",t).css("display","inherit").parents(n).prop("outerHTML")),e.xbox.rgx.test(s)&&(t=$(".gas-platform-xbox",t).css("display","inherit").parents(n).prop("outerHTML")),t};var p=document.querySelector("meta[name=domain]")?.content,T=new URLSearchParams(location.search),f=T.get("id")||1,w=0,g,l="#gas-guide";$(".ga-loader-container").show();$("#ga-sections-container").hide();function L(s){let t=$(`${l}-nav`),n=$(`${l}-sections`),e=$(".gas-nav-btn",t).first(),a=$(".gas-section",n).first();for(let c=s.length-1;c>=0;c--){let o=s[c],i=e.clone();i.attr("title",o.title),i.children().first().text(i.text().replace("{|title|}",o.title));let r=c+1;t.prepend(i.attr("href",`${l}-section-${r}`));let m=a.clone(),d=$(".gas-section-title",m);d.text(d.text().replace("{|title|}",`${r} \u203A ${o.title}`));let h=$(".gas-section-content",m);h.html(h.text().replace("{|content|}",o.content)),n.prepend(m.attr("id",`${l.slice(1)}-section-${r}`))}e.remove(),a.remove()}function D(s){let t=`${l}-details`,n=$(t),e=n.prop("outerHTML");console.info(`=== ${t} ===`,s);let a=["id","name","description","achievementId","achievementName","gameId","gameName","profileId","author","createdAt","updatedAt"],c=["comments","upvotes"],o=s.coverURL||s.imageURL;o?.length&&(e=n.css("background-image",`linear-gradient(rgba(255,255,255,0),#030922),
+(() => {
+  // utils/dateTIme.js
+  var gaDate = (isoDate) => {
+    const pad = (v) => `0${v}`.slice(-2);
+    const dateObj = new Date(isoDate);
+    return `${dateObj.getFullYear()} . ${pad(dateObj.getMonth() + 1)} . ${pad(
+      dateObj.getDate()
+    )}`;
+  };
+  var gaDateTime = (isoDate) => {
+    const dateObj = new Date(isoDate);
+    const month = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
+    ];
+    const date = dateObj.getDate() + " " + month[dateObj.getMonth()] + ", " + dateObj.getFullYear();
+    const time = dateObj.toLocaleTimeString().toLowerCase();
+    return { date, time };
+  };
+
+  // utils/achievementNameSlicer.js
+  var achievementNameSlicer = (name) => {
+    if (!name) {
+      return "N.A.";
+    }
+    const metaDivider = name.lastIndexOf(" | ");
+    return metaDivider > 0 ? name.slice(0, metaDivider) : name;
+  };
+
+  // utils/templateReplacers/showPlatform.js
+  var showPlatform = (platformName, dataTemplateActual, parentSelector = ".gas-list-entry") => {
+    const platformVerifier = {
+      ps: { rgx: /playstation/gi },
+      xbox: { rgx: /xbox/gi },
+      steam: { rgx: /steam|pc|windows|mac|linux/gi }
+    };
+    if (platformVerifier.ps.rgx.test(platformName)) {
+      dataTemplateActual = $(`.gas-platform-psn`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+    }
+    if (platformVerifier.steam.rgx.test(platformName)) {
+      dataTemplateActual = $(`.gas-platform-steam`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+    }
+    if (platformVerifier.xbox.rgx.test(platformName)) {
+      dataTemplateActual = $(`.gas-platform-xbox`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+    }
+    return dataTemplateActual;
+  };
+
+  // utils/templateReplacers/showImageFromSrc.js
+  var showImageFromSrc = ($img, url, parentSelector = ".gas-list-entry") => $img.removeAttr("srcset").removeAttr("sizes").attr("src", url).parents(parentSelector).prop("outerHTML");
+
+  // webflow/guide.js
+  var apiDomain = document.querySelector("meta[name=domain]")?.content;
+  var urlParams = new URLSearchParams(location.search);
+  var guideId = urlParams.get("id") || 1;
+  var achievementId = 0;
+  var hasLike;
+  var elemIdPrefix = `#gas-guide`;
+  $(".ga-loader-container").show();
+  $("#ga-sections-container").hide();
+  function loadSections(sections) {
+    const $nav = $(`${elemIdPrefix}-nav`);
+    const $secs = $(`${elemIdPrefix}-sections`);
+    const $navTemp = $(`.gas-nav-btn`, $nav).first();
+    const $secTemp = $(`.gas-section`, $secs).first();
+    for (let secIdx = sections.length - 1; secIdx >= 0; secIdx--) {
+      const sec = sections[secIdx];
+      const $newNavBtn = $navTemp.clone();
+      $newNavBtn.attr("title", sec.title);
+      $newNavBtn.children().first().text($newNavBtn.text().replace(`{|title|}`, sec.title));
+      const secNum = secIdx + 1;
+      $nav.prepend($newNavBtn.attr("href", `${elemIdPrefix}-section-${secNum}`));
+      const $newSec = $secTemp.clone();
+      const $secTitle = $(".gas-section-title", $newSec);
+      $secTitle.text(
+        $secTitle.text().replace(`{|title|}`, `${secNum} \u203A ${sec.title}`)
+      );
+      const $secContent = $(".gas-section-content", $newSec);
+      $secContent.html($secContent.text().replace(`{|content|}`, sec.content));
+      $secs.prepend(
+        $newSec.attr("id", `${elemIdPrefix.slice(1)}-section-${secNum}`)
+      );
+    }
+    $navTemp.remove();
+    $secTemp.remove();
+  }
+  function guideResponseHandler(res) {
+    const elemId = `${elemIdPrefix}-details`;
+    const $ghContainer = $(elemId);
+    let dataTemplateActual = $ghContainer.prop("outerHTML");
+    console.info(`=== ${elemId} ===`, res);
+    const textKeysToReplace = [
+      "id",
+      "name",
+      "description",
+      "achievementId",
+      "achievementName",
+      "gameId",
+      "gameName",
+      "profileId",
+      "author",
+      "createdAt",
+      "updatedAt"
+    ];
+    const numKeysToReplace = ["comments", "upvotes"];
+    const guideImg = res.coverURL || res.imageURL;
+    if (guideImg?.length) {
+      dataTemplateActual = $ghContainer.css(
+        "background-image",
+        `linear-gradient(rgba(255,255,255,0),#030922),
           linear-gradient(rgba(70,89,255,.4),rgba(70,89,255,.4)),
-          url(${o})`).prop("outerHTML"));let i=$(".gas-author-cover",e);i?.length&&s.avatar?.length&&(e=showImageFromSrc(i,s.avatar,t)||e),Object.entries(s).forEach(([r,m])=>{a.includes(r)?e=e.replaceAll(`{|${r}|}`,(r.endsWith("At")?gaDate(m):m)||""):c.includes(r)?e=e.replaceAll(`{|${r}|}`,Math.round(m||0)):r==="platform"&&(e=b(m,e,t))}),n.prop("outerHTML",e),L(s.sections)}async function C(){let s=await fetch(`https://${p}/api/guide/${f}`);if(s.status!==200)return;let t=await s.json();return Object.keys(t).length>0&&t.id&&(document.title=`${t.name?.length?t.name:t.id} | ${document.title}`,w=t.achievementId,t.achievementName=achievementNameSlicer(t.achievementName),D(t)),t}function I({listData:s,elemId:t,textKeysToReplace:n}){console.info(`=== ${t} results ===`,s);let e=$(t).prop("outerHTML"),a=$(`${t} .gas-list`),c=$(".gas-list-empty",a);if(s.count>0&&s.results?.length){let o=a.children().first(),i=$(".gas-list-entry",a).first();i.show(),e=i.prop("outerHTML"),a.html(o).append(i),i.hide(),s.results.forEach((r,m)=>{let d=e;Object.entries(r).forEach(([h,u])=>{let x=$(".gas-list-entry-cover",d);if(x.length&&r.imageUrl?.length&&(d=showImageFromSrc(x,r.imageURL)||d),n.includes(h))d=d.replaceAll(`{|${h}|}`,u||"");else if(h==="date"){let{date:v,time:y}=gaDateTime(u);d=d.replaceAll(`{|${h}|}`,`${v} at ${y}`)}}),a.append(d).children().last().removeClass(["bg-light","bg-dark"]).addClass(`bg-${m%2>0?"light":"dark"}`)})}else a.html(c),c.show();a.show()}async function M({listName:s,textKeysToReplace:t}){let n=`${l}-${s}`,a=await(await fetch(`https://${p}/api/guide/${f}/${s}`)).json();$(`.gas-guide-${s}-count`).text(a.count||""),I({listData:a,elemId:n,textKeysToReplace:t})}function k(s){g=s;let t=$(`${l}-btn-like`),n=$(`${l}-btn-like-del`);g?t.hide():n.hide();let e=async()=>{t.attr("disabled",!0),n.attr("disabled",!0);let a=await fetch(`https://${p}/api/guide/${f}/upvote`,{method:"POST",headers:{Authorization:`Bearer ${token}`}}),c=$(`${l}-upvotes-count`),o=g?-1:1;if(g=!g,c.text(Number(c.text()||0)+o),a.status===204){t.attr("disabled",!1).show(),n.hide();return}t.hide(),n.attr("disabled",!1).show()};t.on("click",e),n.on("click",e)}var H=s=>{let t=`${l}-comment-form`;if(s){$(`${l}-btn-add-comment`).hide(),$(t).parent().hide();return}let n=4e3,e=$(".submit-button",t);e.attr("disabled",!0);let a=$("[name=comment]",t),c=e.text(),o=$(".gas-form-error",t),i=$("div",o),r=o.text(),m=$(".gas-form-success",t);a.on("focusout keyup",function(){$(this).val()?.length?($(this).prev("label").removeClass("field-label-missing"),e.removeClass("disabled-button").attr("disabled",!1)):($(this).prev("label").addClass("field-label-missing"),e.addClass("disabled-button").attr("disabled",!0))}),e.on("click",async d=>{if(d.preventDefault(),!a.val().length){o.show(),i.text("Please write your comment in the box above"),setTimeout(()=>{o.hide(),i.text(r)},n);return}isUserInputActive=!1,$("input",t).attr("disabled",!0),e.text(e.data("wait"));let h=await fetch(`https://${p}/api/guide/${f}/comment`,{method:"POST",headers:{Authorization:`Bearer ${token}`,Accept:"application/json","Content-Type":"application/json"},body:JSON.stringify({comment:a.val()})}),u=await h.json();if(h.status!==201){o.show(),i.text(u?.message),setTimeout(()=>{o.hide(),i.text(r),$("input",t).attr("disabled",!1),e.text(c)},n);return}$("form",t).hide(),m.attr("title",u?.message).show(),setTimeout(()=>{location.reload()},n)})};async function j(){if(!token||!w)return;let s=await fetch(`https://${p}/api/achievement/${w}/guide-auth-user-data?id=${f}`,{headers:{Authorization:`Bearer ${token}`}});if(s.status!==200){$(`${l}-nav-auth`).hide(),$(`${l}-comment-form`).parent().hide();return}let t=await s.json(),n=$(`${l}-btn-edit`);t.ownedGuideId>0?n.attr("href",`/guide-form?id=${t.ownedGuideId}`).show():n.hide(),k(t.hasLike),H(t.hasComment)}$().ready(async()=>{if(await auth0Bootstrap(),await C()){await j(),await M({listName:"comments",numKeysToReplace:[],textKeysToReplace:["profileId","author","comment"]}),$(".ga-loader-container").hide(),$("#ga-sections-container").show(),$("#gas-wf-tab-activator").click();return}location.replace("/guides")});})();
+          url(${guideImg})`
+      ).prop("outerHTML");
+    }
+    const $authorImg = $(`.gas-author-cover`, dataTemplateActual);
+    if ($authorImg?.length && res.avatar?.length) {
+      dataTemplateActual = showImageFromSrc($authorImg, res.avatar, elemId) || dataTemplateActual;
+    }
+    Object.entries(res).forEach(([key, value]) => {
+      if (textKeysToReplace.includes(key)) {
+        dataTemplateActual = dataTemplateActual.replaceAll(
+          `{|${key}|}`,
+          (key.endsWith("At") ? gaDate(value) : value) || ""
+        );
+      } else if (numKeysToReplace.includes(key)) {
+        dataTemplateActual = dataTemplateActual.replaceAll(
+          `{|${key}|}`,
+          Math.round(value || 0)
+        );
+      } else if (key === "platform") {
+        dataTemplateActual = showPlatform(value, dataTemplateActual, elemId);
+      }
+    });
+    $ghContainer.prop("outerHTML", dataTemplateActual);
+    loadSections(res.sections);
+  }
+  async function fetchGuide() {
+    const resFetch = await fetch(`https://${apiDomain}/api/guide/${guideId}`);
+    if (resFetch.status !== 200) {
+      return;
+    }
+    const resData = await resFetch.json();
+    if (Object.keys(resData).length > 0 && resData.id) {
+      document.title = `${resData.name?.length ? resData.name : resData.id} | ${document.title}`;
+      achievementId = resData.achievementId;
+      resData.achievementName = achievementNameSlicer(resData.achievementName);
+      guideResponseHandler(resData);
+    }
+    return resData;
+  }
+  function listResponseHandler({ listData, elemId, textKeysToReplace }) {
+    console.info(`=== ${elemId} results ===`, listData);
+    let dataTemplate = $(elemId).prop("outerHTML");
+    const $list = $(`${elemId} .gas-list`);
+    const $emptyList = $(`.gas-list-empty`, $list);
+    if (listData.count > 0 && listData.results?.length) {
+      const $listHeader = $list.children().first();
+      const $entryTemplate = $(".gas-list-entry", $list).first();
+      $entryTemplate.show();
+      dataTemplate = $entryTemplate.prop("outerHTML");
+      $list.html($listHeader).append($entryTemplate);
+      $entryTemplate.hide();
+      listData.results.forEach((item, resIdx) => {
+        let dataTemplateActual = dataTemplate;
+        Object.entries(item).forEach(([key, value]) => {
+          const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+          if ($entryImg.length && item.imageUrl?.length) {
+            dataTemplateActual = showImageFromSrc($entryImg, item.imageURL) || dataTemplateActual;
+          }
+          if (textKeysToReplace.includes(key)) {
+            dataTemplateActual = dataTemplateActual.replaceAll(
+              `{|${key}|}`,
+              value || ""
+            );
+          } else if (key === "date") {
+            const { date, time } = gaDateTime(value);
+            dataTemplateActual = dataTemplateActual.replaceAll(
+              `{|${key}|}`,
+              `${date} at ${time}`
+            );
+          }
+        });
+        $list.append(dataTemplateActual).children().last().removeClass(["bg-light", "bg-dark"]).addClass(`bg-${resIdx % 2 > 0 ? "light" : "dark"}`);
+      });
+    } else {
+      $list.html($emptyList);
+      $emptyList.show();
+    }
+    $list.show();
+  }
+  async function listFetcher({ listName, textKeysToReplace }) {
+    const elemId = `${elemIdPrefix}-${listName}`;
+    const resList = await fetch(
+      `https://${apiDomain}/api/guide/${guideId}/${listName}`
+    );
+    const listData = await resList.json();
+    $(`.gas-guide-${listName}-count`).text(listData.count || "");
+    listResponseHandler({
+      listData,
+      elemId,
+      textKeysToReplace
+    });
+  }
+  function setupLike(hasLikeFromFetch) {
+    hasLike = hasLikeFromFetch;
+    const $btnLike = $(`${elemIdPrefix}-btn-like`);
+    const $btnDelLike = $(`${elemIdPrefix}-btn-like-del`);
+    if (hasLike) {
+      $btnLike.hide();
+    } else {
+      $btnDelLike.hide();
+    }
+    const changeLikeStatus = async () => {
+      $btnLike.attr("disabled", true);
+      $btnDelLike.attr("disabled", true);
+      const resFetch = await fetch(
+        `https://${apiDomain}/api/guide/${guideId}/upvote`,
+        { method: "POST", headers: { Authorization: `Bearer ${token}` } }
+      );
+      const $likesCount = $(`${elemIdPrefix}-upvotes-count`);
+      const countChange = hasLike ? -1 : 1;
+      hasLike = !hasLike;
+      $likesCount.text(Number($likesCount.text() || 0) + countChange);
+      if (resFetch.status === 204) {
+        $btnLike.attr("disabled", false).show();
+        $btnDelLike.hide();
+        return;
+      }
+      $btnLike.hide();
+      $btnDelLike.attr("disabled", false).show();
+    };
+    $btnLike.on("click", changeLikeStatus);
+    $btnDelLike.on("click", changeLikeStatus);
+  }
+  var setupCommentForm = (hasComment) => {
+    const formWrapperId = `${elemIdPrefix}-comment-form`;
+    if (hasComment) {
+      $(`${elemIdPrefix}-btn-add-comment`).hide();
+      $(formWrapperId).parent().hide();
+      return;
+    }
+    const formMessageDelay2 = 4e3;
+    const $submitBtn = $(`.submit-button`, formWrapperId);
+    $submitBtn.attr("disabled", true);
+    const $contentField = $(`[name=comment]`, formWrapperId);
+    const submitText = $submitBtn.text();
+    const $errEl = $(".gas-form-error", formWrapperId);
+    const $errorDiv = $("div", $errEl);
+    const txtError = $errEl.text();
+    const $successEl = $(".gas-form-success", formWrapperId);
+    $contentField.on("focusout keyup", function() {
+      if (!$(this).val()?.length) {
+        $(this).prev("label").addClass("field-label-missing");
+        $submitBtn.addClass("disabled-button").attr("disabled", true);
+      } else {
+        $(this).prev("label").removeClass("field-label-missing");
+        $submitBtn.removeClass("disabled-button").attr("disabled", false);
+      }
+    });
+    $submitBtn.on("click", async (e) => {
+      e.preventDefault();
+      if (!$contentField.val().length) {
+        $errEl.show();
+        $errorDiv.text("Please write your comment in the box above");
+        setTimeout(() => {
+          $errEl.hide();
+          $errorDiv.text(txtError);
+        }, formMessageDelay2);
+        return;
+      }
+      isUserInputActive = false;
+      $(`input`, formWrapperId).attr("disabled", true);
+      $submitBtn.text($submitBtn.data("wait"));
+      const resFetch = await fetch(
+        `https://${apiDomain}/api/guide/${guideId}/comment`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ comment: $contentField.val() })
+        }
+      );
+      const revData = await resFetch.json();
+      if (resFetch.status !== 201) {
+        $errEl.show();
+        $errorDiv.text(revData?.message);
+        setTimeout(() => {
+          $errEl.hide();
+          $errorDiv.text(txtError);
+          $(`input`, formWrapperId).attr("disabled", false);
+          $submitBtn.text(submitText);
+        }, formMessageDelay2);
+        return;
+      }
+      $(`form`, formWrapperId).hide();
+      $successEl.attr("title", revData?.message).show();
+      setTimeout(() => {
+        location.reload();
+      }, formMessageDelay2);
+    });
+  };
+  async function verifyAuthenticatedUserGuideData() {
+    if (!token || !achievementId) {
+      return;
+    }
+    const resFetch = await fetch(
+      `https://${apiDomain}/api/achievement/${achievementId}/guide-auth-user-data?id=${guideId}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (resFetch.status !== 200) {
+      $(`${elemIdPrefix}-nav-auth`).hide();
+      $(`${elemIdPrefix}-comment-form`).parent().hide();
+      return;
+    }
+    const revData = await resFetch.json();
+    const $editBtn = $(`${elemIdPrefix}-btn-edit`);
+    if (revData.ownedGuideId > 0) {
+      $editBtn.attr("href", `/guide-form?id=${revData.ownedGuideId}`).show();
+    } else {
+      $editBtn.hide();
+    }
+    setupLike(revData.hasLike);
+    setupCommentForm(revData.hasComment);
+  }
+  $().ready(async () => {
+    await auth0Bootstrap();
+    if (await fetchGuide()) {
+      await verifyAuthenticatedUserGuideData();
+      await listFetcher({
+        listName: "comments",
+        numKeysToReplace: [],
+        textKeysToReplace: ["profileId", "author", "comment"]
+      });
+      $(".ga-loader-container").hide();
+      $("#ga-sections-container").show();
+      $("#gas-wf-tab-activator").click();
+      return;
+    }
+    location.replace("/guides");
+  });
+})();

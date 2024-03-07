@@ -1,8 +1,13 @@
-import { showPlatform } from '../utils';
+import {
+  showPlatform,
+  gaDate,
+  showImageFromSrc,
+  cleanupDoubleQuotes,
+  setupListSearch,
+} from '../utils';
 
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 
-let achievementsCount = 0;
 let filterTxt = 'All';
 let $entryTemplate, $listHeader, $emptyList;
 

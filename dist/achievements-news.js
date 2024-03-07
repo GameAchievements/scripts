@@ -1,1 +1,4 @@
-(()=>{$().ready(()=>auth0Bootstrap());})();
+(() => {
+  // webflow/achievements-news.js
+  $().ready(() => auth0Bootstrap());
+})();

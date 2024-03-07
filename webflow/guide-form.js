@@ -1,4 +1,6 @@
 // <script src="https://cdn.tiny.cloud/1/sj801m9s9ivbndop77c87iww4n5onm4rvgcxo1a63ayhv32s/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+import { gaDate, achievementNameSlicer } from '../utils';
+
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 const urlParams = new URLSearchParams(window.location.search);
 const guideId = Number(urlParams.get('id')) || 0;
