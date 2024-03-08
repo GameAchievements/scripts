@@ -11,7 +11,7 @@ const elemIdPrefix = `#gas-achievement`;
 $('.ga-loader-container').show();
 $('#ga-sections-container').hide();
 
-$().ready(async () => {
+$(async () => {
   await auth0Bootstrap();
   await verifyAuthenticatedUserGuideData(
     elemIdPrefix,
