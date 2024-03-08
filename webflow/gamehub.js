@@ -637,7 +637,6 @@ async function versionAchievementsFetcher(versionGameId, platformId) {
             Math.round(value || 0)
           );
         } else if (key === 'rarity') {
-          //TODO: change this, bellow is original
           dataTemplateActual = showRarityTagAchievement(
             value,
             dataTemplateActual,
@@ -687,10 +686,9 @@ async function versionsFetcher() {
   const listName = 'versions';
   const elemId = `${elemIdPrefix}-${listName}`;
   if (!gamehubData.versionDetails) {
+    const platform = gamehubData.platforms ?? gamehubData.importedFromPlatforms;
     const platformId = Number(
-      gamehubData.platforms.length >= 1
-        ? platformNameIdMap(gamehubData.platforms[0])
-        : 0
+      platform?.length >= 1 ? platformNameIdMap(platform[0].toLowerCase()) : 0
     );
     $(versionsDropdownId).remove();
     return versionAchievementsFetcher(gamehubData.id, platformId);

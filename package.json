@@ -17,6 +17,7 @@
     "esbuild": "^0.20.1"
   },
   "devDependencies": {
+    "@types/jquery": "^3.5.29",
     "serve": "^14.2.1"
   }
 }
