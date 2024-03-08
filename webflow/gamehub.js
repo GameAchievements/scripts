@@ -1,3 +1,5 @@
+import { fetchGamehub } from '../components/GamehubPage/GameHubData';
+import { loadReviewSection } from '../components/GamehubPage/ReviewSection';
 import {
   listTemplateAppend,
   showRarityTagAchievement,
@@ -33,142 +35,6 @@ $('#ga-sections-container').hide();
 //REMOVE OLD ELEMENTS
 $('#gas-gh-top-old').remove();
 $('#gas-gh-about-old').remove();
-
-function gamehubResponseHandler(res, elemId) {
-  const $ghContainer = $(elemId);
-  let dataTemplateActual = $ghContainer.prop('outerHTML');
-  console.info(`=== ${elemId} ===`, res);
-  // top section keys to replace
-  const textTopKeysToReplace = ['name', 'igdbId', 'description'];
-  const numTopKeysToReplace = [
-    'ownersCount', //label: players
-    'achievementsCount', //label: total achievements
-    'gaReviewScore', //label: GA score
-    'versionsCount', //label: game versions
-    'completion', //label: average completion
-  ];
-
-  // about section keys to replace
-  const textAboutKeysToReplace = ['releaseDate'];
-  const numAboutKeysToReplace = [];
-  const keysWithArrays = [
-    'developers',
-    'publishers',
-    'franchises',
-    'engines',
-    'modes',
-    'genres',
-    'themes',
-    'series',
-    'supportedLanguages',
-    'playerPerspectives',
-  ];
-
-  //join section arrays
-  const textKeysToReplace = [
-    ...textTopKeysToReplace,
-    ...textAboutKeysToReplace,
-  ];
-  const numKeysToReplace = [...numTopKeysToReplace, ...numAboutKeysToReplace];
-
-  if (elemId.endsWith('top') && (res.coverURL || res.imageURL)?.length) {
-    dataTemplateActual = $ghContainer
-      .css(
-        'background-image',
-        `linear-gradient(rgba(255,255,255,0),#030922),
-          linear-gradient(rgba(70,89,255,.4),rgba(70,89,255,.4)),
-          url(${res.coverURL || res.imageURL})`
-      )
-      .prop('outerHTML');
-  }
-  $('.gas-img', dataTemplateActual).each((idx, elm) => {
-    if (res.imageURL?.length) {
-      dataTemplateActual =
-        showImageFromSrc($(elm), res.imageURL, elemId) || dataTemplateActual;
-    }
-  });
-  Object.entries(res).forEach(([key, value]) => {
-    if (
-      textKeysToReplace.find((el) => el.toLowerCase() === key.toLowerCase())
-    ) {
-      dataTemplateActual = dataTemplateActual.replaceAll(
-        `{|${key}|}`,
-        value?.length ? (key.endsWith('Date') ? gaDate(value) : value) : 'N.A.'
-      );
-    } else if (
-      numKeysToReplace.find((el) => el.toLowerCase() === key.toLowerCase())
-    ) {
-      dataTemplateActual = dataTemplateActual.replaceAll(
-        `{|${key}|}`,
-        Math.round(value || 0)
-      );
-    } else if (key === 'platformsInGACount' && elemId.endsWith('top')) {
-      dataTemplateActual = showPlatform(
-        value?.length ? value : res['importedFromPlatforms'],
-        dataTemplateActual,
-        elemId
-      );
-    } else if (keysWithArrays.includes(key)) {
-      dataTemplateActual = dataTemplateActual.replaceAll(
-        `{|${key}|}`,
-        value?.length ? value.join(', ') : 'N.A.'
-      );
-    }
-  });
-  $ghContainer.prop('outerHTML', dataTemplateActual);
-
-  const resKeys = Object.keys(res);
-  const emptyElems = [
-    ...numTopKeysToReplace,
-    ...textKeysToReplace,
-    ...keysWithArrays,
-  ].filter((el) => !resKeys.includes(el));
-
-  emptyElems.forEach((el) => {
-    $(`div:contains({|${el}|})`).parent('.entry-wrapper').remove();
-  });
-
-  if (elemId.endsWith('about') && emptyElems.length > 0) {
-    $('.about-game-entry-div').each(function () {
-      if ($(this).find('.entry-wrapper').length === 0) {
-        $(this).remove();
-      }
-    });
-  }
-}
-
-async function fetchGamehub() {
-  const resFetch = await fetch(gamehubURL);
-  if (!resFetch.ok) {
-    location.replace('/games');
-    return;
-  }
-  const resData = await resFetch.json();
-  if (Object.keys(resData).length > 0 && resData.id) {
-    if (
-      resData.versionDetails &&
-      resData.versionDetails.defaultVersion !== Number(gameId)
-    ) {
-      // redirect to the default game version
-      location.replace(`/game?id=${resData.versionDetails.defaultVersion}`);
-      return;
-    }
-    document.title = `${resData.name?.length ? resData.name : resData.id} | ${
-      document.title
-    }`;
-    if (resData.igdbId?.length) {
-      ['top', 'about'].forEach((elemIdSuf) => {
-        gamehubResponseHandler(resData, `${elemIdPrefix}-${elemIdSuf}`);
-      });
-    } else {
-      $(
-        `${elemIdPrefix}-about,${elemIdPrefix}-igdb-id,[href="${elemIdPrefix}-about"]`
-      ).remove();
-      gamehubResponseHandler(resData, `${elemIdPrefix}-top`);
-    }
-  }
-  return resData;
-}
 
 async function fetchGameLatestThreads() {
   let listData = [];
@@ -799,129 +665,6 @@ async function achievementsFetcher() {
   console.info(`=== ${elemId} results ===`, listData);
 }
 
-const setupGAReview = () => {
-  $('#official-review-game-title').text(gamehubData.name);
-  $(`${elemIdPrefix}-top-ga-score`).prepend(ratingSVG(0));
-  $(`${elemIdPrefix}-top-ga-score-text`).text('-');
-  if (!gamehubData?.gaReviewURL?.length) {
-    // without URL, do not display official review
-    return;
-  }
-  const gaReviewSectionId = `${elemIdPrefix}-official-review`;
-
-  $(gaReviewSectionId).css('display', 'flex');
-  $(`${gaReviewSectionId}-placeholder`).hide();
-  $(`${gaReviewSectionId}-url`).attr('href', gamehubData.gaReviewURL);
-  if (gamehubData?.gaReviewSummary?.length) {
-    $(`${gaReviewSectionId}-summary`).text(gamehubData.gaReviewSummary);
-  }
-  if (gamehubData?.gaReviewScore) {
-    const roundedRate = Math.round(gamehubData.gaReviewScore);
-    const rateEl = ratingSVG(roundedRate);
-    $(`${gaReviewSectionId}-score-text`).text(roundedRate);
-    $(`${gaReviewSectionId}-score-bg`).replaceWith(rateEl);
-    $(`${elemIdPrefix}-top-ga-score .bg-review-score`).replaceWith(rateEl);
-    $(`${elemIdPrefix}-top-ga-score-text`).text(roundedRate);
-  } else {
-    $(`${gaReviewSectionId}-score`).parent().remove();
-  }
-};
-
-const setupReviewForm = async () => {
-  const formWrapperId = `${elemIdPrefix}-review-form`;
-  const resReview = await fetch(`${gamehubURL}/review`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (resReview.status === 200) {
-    $(formWrapperId).remove();
-    return;
-  }
-  const $submitBtn = $(`.submit-button`, formWrapperId);
-  $submitBtn.attr('disabled', true);
-  const $titleField = $(`[name=title]`, formWrapperId);
-  const $contentField = $(`[name=content]`, formWrapperId);
-  const $requiredFields = $(`[name][required]`, formWrapperId);
-  const submitText = $submitBtn.val();
-  const $errEl = $('.gas-form-error', formWrapperId);
-  const $errorDiv = $('div', $errEl);
-  const txtError = $errEl.text();
-  const $successEl = $('.gas-form-success', formWrapperId);
-  const $ratingScale = $('.gas-rating-scale', formWrapperId);
-  const $rateChosen = $('.gas-rating-selected', formWrapperId);
-  ratingScale($ratingScale, $rateChosen);
-  let requiredFilled = false;
-  const canSubmit = () => {
-    if (requiredFilled && Number($rateChosen.data('rate'))) {
-      $submitBtn.removeClass('disabled-button').attr('disabled', false);
-    }
-  };
-  $requiredFields.on('focusout keyup', function () {
-    $requiredFields.each(function () {
-      if (!$(this).val()?.length) {
-        requiredFilled = false;
-        $(this).prev('label').addClass('field-label-missing');
-        $submitBtn.addClass('disabled-button').attr('disabled', true);
-      } else {
-        requiredFilled = true;
-        $(this).prev('label').removeClass('field-label-missing');
-      }
-    });
-    canSubmit();
-  });
-  $('li', $ratingScale).one('click', function () {
-    $ratingScale.parent().prev('label').removeClass('field-label-missing');
-    canSubmit();
-  });
-  $submitBtn.on('click', async (e) => {
-    e.preventDefault();
-    const rating = Number($rateChosen.data('rate') || 0);
-    if (!rating || !$titleField.val()?.length || !$contentField.val().length) {
-      $errEl.show();
-      $errorDiv.text('Please choose a rating and fill-in required fields');
-      setTimeout(() => {
-        $errEl.hide();
-        $errorDiv.text(txtError);
-      }, formMessageDelay);
-      return;
-    }
-    // disable show popup on leave page (site-settings)
-    isUserInputActive = false;
-    $(`input`, formWrapperId).attr('disabled', true);
-    $submitBtn.val($submitBtn.data('wait'));
-    const reqData = {
-      title: $titleField.val(),
-      content: $contentField.val(),
-      rating,
-    };
-    const resFecth = await fetch(`${gamehubURL}/review`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(reqData),
-    });
-    const revData = await resFecth.json();
-    if (resFecth.status !== 201) {
-      $errEl.show();
-      $errorDiv.text(revData?.message);
-      setTimeout(() => {
-        $errEl.hide();
-        $errorDiv.text(txtError);
-        $(`input`, formWrapperId).attr('disabled', false);
-        $submitBtn.val(submitText);
-      }, formMessageDelay);
-      return;
-    }
-    $(`form`, formWrapperId).hide();
-    $successEl.attr('title', revData?.message).show();
-    setTimeout(() => {
-      location.reload();
-    }, formMessageDelay);
-  });
-};
-
 async function leaderboardsFetcher(elemId, searchTerm = '') {
   let dataTemplate = $(elemId).prop('outerHTML');
   platformsTabNames.forEach(async (tabName) => {
@@ -1028,10 +771,9 @@ async function leaderboardsFetcher(elemId, searchTerm = '') {
 
 $().ready(async () => {
   await auth0Bootstrap();
-  gamehubData = await fetchGamehub();
+  gamehubData = await fetchGamehub(gamehubURL, gameId, elemIdPrefix);
   if (gamehubData) {
-    setupGAReview();
-    setupReviewForm();
+    loadReviewSection(elemIdPrefix, gamehubURL, token, gamehubData);
     setupListSearch(`${elemIdPrefix}-leaderboard`, leaderboardsFetcher);
     await Promise.all([
       await versionsFetcher(),

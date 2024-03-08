@@ -81,11 +81,11 @@ async function achieversFetcher(
   });
 }
 
-export const loadAchieversSection = async (
+export async function loadAchieversSection(
   elemIdPrefix,
   apiDomain,
   achievementId
-) => {
+) {
   await achieversFetcher(
     { elemIdPrefix, apiDomain, achievementId },
     {
@@ -102,4 +102,4 @@ export const loadAchieversSection = async (
       textKeysToReplace: ['name', 'profileId'],
     }
   );
-};
+}

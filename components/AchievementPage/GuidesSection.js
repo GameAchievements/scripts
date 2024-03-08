@@ -70,11 +70,11 @@ async function listFetcher(
   });
 }
 
-export const loadGuidesSection = async (
+export async function loadGuidesSection(
   elemIdPrefix,
   apiDomain,
   achievementId
-) => {
+) {
   await listFetcher(
     { elemIdPrefix, apiDomain, achievementId },
     {
@@ -83,4 +83,4 @@ export const loadGuidesSection = async (
       textKeysToReplace: ['profileId', 'name', 'description', 'author'],
     }
   );
-};
+}

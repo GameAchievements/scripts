@@ -153,7 +153,7 @@
       textKeysToReplace
     });
   }
-  var loadAchieversSection = async (elemIdPrefix2, apiDomain2, achievementId2) => {
+  async function loadAchieversSection(elemIdPrefix2, apiDomain2, achievementId2) {
     await achieversFetcher(
       { elemIdPrefix: elemIdPrefix2, apiDomain: apiDomain2, achievementId: achievementId2 },
       {
@@ -170,7 +170,7 @@
         textKeysToReplace: ["name", "profileId"]
       }
     );
-  };
+  }
 
   // components/AchievementPage/GuidesSection.js
   function listResponseHandler({
@@ -232,7 +232,7 @@
       textKeysToReplace
     });
   }
-  var loadGuidesSection = async (elemIdPrefix2, apiDomain2, achievementId2) => {
+  async function loadGuidesSection(elemIdPrefix2, apiDomain2, achievementId2) {
     await listFetcher(
       { elemIdPrefix: elemIdPrefix2, apiDomain: apiDomain2, achievementId: achievementId2 },
       {
@@ -241,7 +241,7 @@
         textKeysToReplace: ["profileId", "name", "description", "author"]
       }
     );
-  };
+  }
 
   // components/AchievementPage/AchievementData.js
   function achievementResponseHandler(elemIdPrefix2, res) {
