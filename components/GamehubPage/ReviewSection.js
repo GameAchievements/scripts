@@ -1,6 +1,8 @@
 import { ratingSVG, ratingScale } from '../../utils';
 
-function setupGAReview(gamehubData, elemIdPrefix) {
+const elemIdPrefix = `#gas-gh`;
+
+function setupGAReview(gamehubData) {
   $('#official-review-game-title').text(gamehubData.name);
   $(`${elemIdPrefix}-top-ga-score`).prepend(ratingSVG(0));
   $(`${elemIdPrefix}-top-ga-score-text`).text('-');
@@ -28,7 +30,7 @@ function setupGAReview(gamehubData, elemIdPrefix) {
   }
 }
 
-async function setupReviewForm(elemIdPrefix, gamehubURL, token) {
+async function setupReviewForm(gamehubURL, token) {
   const formWrapperId = `${elemIdPrefix}-review-form`;
   const resReview = await fetch(`${gamehubURL}/review`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -124,12 +126,47 @@ async function setupReviewForm(elemIdPrefix, gamehubURL, token) {
   });
 }
 
-export function loadReviewSection(
-  elemIdPrefix,
-  gamehubURL,
-  token,
-  gamehubData
-) {
-  setupGAReview(gamehubData, elemIdPrefix);
-  setupReviewForm(elemIdPrefix, gamehubURL, token);
+export function loadReviewSection(gamehubURL, token, gamehubData) {
+  setupGAReview(gamehubData);
+  setupReviewForm(gamehubURL, token);
+}
+
+export function reviewsBarsHandler({ listData, elemId }) {
+  const $barsContainer = $(elemId + '-bars');
+  let barItems = [];
+  const bars = ['positive', 'mixed', 'negative'];
+  if (listData.length) {
+    bars.forEach((barName) => {
+      barItems = listData.filter(
+        (item) => item.classification?.toLowerCase() === barName
+      );
+      const $bar = $(`.gas-bar-${barName}`, $barsContainer);
+      if ($bar.length) {
+        // when barItems == 0, 1% width shows a little bit of the bar
+        $bar.css('width', `${100 * (barItems.length / listData.length) || 1}%`);
+      }
+      const $barText = $(`.gas-bar-text-${barName}`, $barsContainer);
+      if ($barText.length) {
+        $barText.text(barItems?.length);
+      }
+    });
+
+    const avgRating = Math.round(
+      listData
+        .map((li) => li.rating)
+        .reduce((prevLi, currLi) => prevLi + currLi) / listData.length
+    );
+    $(`.gas-avg-rate-wrapper`).each((idx, rateEl) => {
+      $(rateEl).prepend(ratingSVG(avgRating));
+      $('.gas-avg-rate-text', rateEl).text(avgRating);
+    });
+  } else {
+    bars.forEach((barName) => {
+      $(`.gas-bar-${barName}`, $barsContainer).css('width', '1%');
+    });
+    $(`.gas-avg-rate-wrapper`).each((idx, rateEl) => {
+      $(rateEl).prepend(ratingSVG(0));
+      $('.gas-avg-rate-text', rateEl).text('-');
+    });
+  }
 }

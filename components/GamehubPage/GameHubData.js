@@ -1,5 +1,7 @@
 import { showImageFromSrc, showPlatform, gaDate } from '../../utils';
 
+const elemIdPrefix = `#gas-gh`;
+
 function gamehubResponseHandler(res, elemId) {
   const $ghContainer = $(elemId);
   let dataTemplateActual = $ghContainer.prop('outerHTML');
@@ -103,7 +105,7 @@ function gamehubResponseHandler(res, elemId) {
   }
 }
 
-export async function fetchGamehub(gamehubURL, gameId, elemIdPrefix) {
+export async function fetchGamehub(gamehubURL, gameId) {
   const resFetch = await fetch(gamehubURL);
   if (!resFetch.ok) {
     location.replace('/games');

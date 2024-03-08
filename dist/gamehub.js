@@ -1,6 +1,6 @@
 (() => {
   // utils/dateTIme.js
-  var gaDate = (isoDate) => {
+  var gaDate2 = (isoDate) => {
     const pad = (v) => `0${v}`.slice(-2);
     const dateObj = new Date(isoDate);
     return `${dateObj.getFullYear()} . ${pad(dateObj.getMonth() + 1)} . ${pad(
@@ -110,7 +110,7 @@
     if (unlocked) {
       dataTemplateActual = dataTemplateActual.replaceAll(
         `{|unlockedAt|}`,
-        `${gaTime(userProgress.unlockedAt)}<br />${gaDate(
+        `${gaTime(userProgress.unlockedAt)}<br />${gaDate2(
           userProgress.unlockedAt
         )}`
       );
@@ -140,14 +140,14 @@
   };
 
   // utils/templateReplacers/setupListSearch.js
-  var setupListSearch = (elemId, fetchFn) => {
+  var setupListSearch = (elemId, fetchFn, extraParams = {}) => {
     $(`${elemId} form.search`).on("submit", async function(evt) {
       evt.preventDefault();
       searchTerm = new URLSearchParams($(this).serialize()).get("query");
       if (searchTerm?.length) {
         $(".ga-loader-container", elemId).show();
         $(".gas-list,.gas-list-results-info", elemId).hide();
-        await fetchFn(elemId, searchTerm);
+        await fetchFn(elemId, searchTerm, extraParams);
         $(".gas-list-results-info", elemId).show();
         $(".ga-loader-container").hide();
       }
@@ -226,7 +226,281 @@
     return controllerSVG(`class="bg-review-score" fill="${ratingColor(rate)}"`);
   }
 
+  // components/GamehubPage/AchieversSection.js
+  var elemIdPrefix = `#gas-gh`;
+  function achieversHandler({
+    listsData,
+    elemId,
+    numKeysToReplace,
+    textKeysToReplace
+  }) {
+    console.info(`=== ${elemId} results ===`, listsData);
+    const $achieversLists = $(
+      `${elemId} .gas-list-first, ${elemId} .gas-list-latest`
+    );
+    $achieversLists.each((listIdx, listEl) => {
+      const $list = $(listEl);
+      let dataTemplate = $list.prop("outerHTML");
+      const $emptyList = $(`.gas-list-empty`, $list);
+      const $listHeader = $list.children().first();
+      const $entryTemplate = $(".gas-list-entry", $list).first();
+      $list.html($listHeader);
+      const listDataToRead = listsData[listIdx === 0 ? "firstAchievers" : "latestAchievers"];
+      if (listDataToRead?.length > 0) {
+        $entryTemplate.show();
+        $list.append($entryTemplate);
+        dataTemplate = $entryTemplate.prop("outerHTML");
+        $entryTemplate.hide();
+        listDataToRead.forEach((item, itemIdx) => {
+          let dataTemplateActual = dataTemplate;
+          Object.entries(item).forEach(([key, value]) => {
+            const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+            if ($entryImg && item.iconURL?.length) {
+              dataTemplateActual = showImageFromSrc($entryImg, item.avatar) || dataTemplateActual;
+            }
+            dataTemplateActual = dataTemplateActual.replaceAll(
+              `{|idx|}`,
+              itemIdx + 1
+            );
+            if (key === "unlockedAt") {
+              const { date, time } = gaDateTime(value);
+              dataTemplateActual = dataTemplateActual.replaceAll(
+                `{|unlockedDt|}`,
+                date || "N.A."
+              );
+              dataTemplateActual = dataTemplateActual.replaceAll(
+                `{|${key}|}`,
+                time || "N.A."
+              );
+            } else if (textKeysToReplace.includes(key)) {
+              dataTemplateActual = dataTemplateActual.replaceAll(
+                `{|${key}|}`,
+                value || ""
+              );
+            } else if (numKeysToReplace.includes(key)) {
+              dataTemplateActual = dataTemplateActual.replaceAll(
+                `{|${key}|}`,
+                Math.round(value || 0)
+              );
+            }
+          });
+          listTemplateAppend($list, dataTemplateActual, itemIdx);
+        });
+      } else {
+        $list.append($emptyList);
+        $emptyList.show();
+      }
+    });
+  }
+  async function achieversFetcher({ gamehubURL: gamehubURL2 }, { listName, numKeysToReplace, textKeysToReplace }) {
+    const elemId = `${elemIdPrefix}-${listName}`;
+    const resLists = await fetch(`${gamehubURL2}/${listName}`);
+    const listsData = await resLists.json();
+    achieversHandler({
+      listsData,
+      elemId,
+      numKeysToReplace,
+      textKeysToReplace
+    });
+  }
+  async function loadAchievers(gamehubURL2) {
+    await achieversFetcher(
+      { gamehubURL: gamehubURL2 },
+      {
+        listName: "achievers",
+        numKeysToReplace: ["id", "achievementId"],
+        textKeysToReplace: ["profileId", "achievementName", "playerName", "name"]
+      }
+    );
+  }
+
+  // components/GamehubPage/AchievementsSection.js
+  var elemIdPrefix2 = "#gas-gh";
+  var apiDomain = document.querySelector("meta[name=domain]")?.content;
+  async function versionAchievementsFetcher(versionGameId, platformId) {
+    const elemId = `${elemIdPrefix2}-achievements`;
+    const $loader = $(`${elemId} .ga-loader-container`);
+    const $list = $(
+      `${elemId} .${platformId === 1 ? "psn" : platformId === 2 ? "xbox" : "xbox"}-achievement-list`
+    );
+    const $emptyList = $(`${elemId} .empty-state`);
+    $emptyList.hide();
+    $list.hide();
+    $loader.show();
+    const authHeader = { Authorization: `Bearer ${token}` };
+    const resLists = await fetch(
+      `https://${apiDomain}/api/game/${versionGameId}/achievements${platformId ? `?platform=${platformId}` : ""}`,
+      {
+        headers: token ? authHeader : {}
+      }
+    );
+    const listData = await resLists.json();
+    console.info(`=== ${elemId} results ===`, listData);
+    const textKeysToReplace = ["name", "description"];
+    const numKeysToReplace = ["id", "score", "achieversCount", "gAPoints"];
+    const $listParent = $list.parent();
+    const $listHeader = $list.children().first();
+    const $entryTemplate = $(".gh-row", $list).first();
+    $entryTemplate.show();
+    let dataTemplate = $entryTemplate.prop("outerHTML");
+    $list.html($listHeader).append($entryTemplate);
+    if (listData.length > 0) {
+      $entryTemplate.hide();
+      listData.forEach((item, itemIdx) => {
+        let dataTemplateActual = dataTemplate;
+        Object.entries(item).forEach(([key, value]) => {
+          const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+          if ($entryImg && item.iconURL?.length) {
+            dataTemplateActual = showImageFromSrc($entryImg, item.iconURL, ".gh-row") || dataTemplateActual;
+          }
+          if (key === "name") {
+            dataTemplateActual = dataTemplateActual.replaceAll(
+              `{|name|}`,
+              achievementNameSlicer(value) || "N.A."
+            );
+          } else if (textKeysToReplace.includes(key)) {
+            dataTemplateActual = dataTemplateActual.replaceAll(
+              `{|${key}|}`,
+              (key.endsWith("At") ? gaDate(value) : value) || ""
+            );
+          } else if (numKeysToReplace.includes(key)) {
+            dataTemplateActual = dataTemplateActual.replaceAll(
+              `{|${key}|}`,
+              Math.round(value || 0)
+            );
+          } else if (key === "rarity") {
+            dataTemplateActual = showRarityTagAchievement(
+              value,
+              dataTemplateActual,
+              ".gh-row"
+            );
+          } else if (key === "trophyType" && platformId === 1) {
+            dataTemplateActual = showTrophy(value, dataTemplateActual);
+          } else if (key === "userProgress") {
+            dataTemplateActual = showAchievementUnlocked(
+              value,
+              dataTemplateActual
+            );
+          }
+        });
+        listTemplateAppend(
+          $list,
+          dataTemplateActual,
+          itemIdx,
+          item.userProgress?.unlocked
+        );
+      });
+      $loader.hide();
+      $listParent.removeClass("hidden");
+      $list.css({ display: "flex", "flex-direction": "column" });
+      $emptyList.hide();
+    } else {
+      $loader.hide();
+      $list.hide();
+      $emptyList.show();
+    }
+  }
+
+  // components/GamehubPage/AvailableVersionsSection.js
+  var elemIdPrefix3 = "#gas-gh";
+  var versionsDropdownId = "#gas-gh-versions-dropdown";
+  async function versionSelectOption(e) {
+    const $optSelected = $(e.target);
+    $(`${versionsDropdownId}-options,${versionsDropdownId}-toggle`).removeClass(
+      "w--open"
+    );
+    const selectedGameId = Number($optSelected.data("version-id"));
+    const platformId = Number(
+      platformNameIdMap($optSelected.data("platform")?.toLowerCase()) || 0
+    );
+    $(`${versionsDropdownId}-text-selected`).text($optSelected.text());
+    versionAchievementsFetcher(selectedGameId, platformId);
+  }
+  async function versionsFetcher(gamehubData, gamehubURL2) {
+    const listName = "versions";
+    const elemId = `${elemIdPrefix3}-${listName}`;
+    if (!gamehubData.versionDetails) {
+      const platform = gamehubData.platforms ?? gamehubData.importedFromPlatforms;
+      const platformId = Number(
+        platform?.length >= 1 ? platformNameIdMap(platform[0].toLowerCase()) : 0
+      );
+      $(versionsDropdownId).remove();
+      return versionAchievementsFetcher(gamehubData.id, platformId);
+    }
+    const resLists = await fetch(`${gamehubURL2}/${listName}`);
+    const listData = await resLists.json();
+    const numKeysToReplace = ["achievementsCount"];
+    const textKeysToReplace = ["gameId", "externalGameId", "region"];
+    console.info(`=== ${elemId} results ===`, listData);
+    let dataTemplate = $(elemId).prop("outerHTML");
+    const $list = $(`${elemId} .gas-list`);
+    const $headerDesc = $(`${elemId} .heading-description-wrapper`).children().last();
+    let $headerDescTemplate = $headerDesc.prop("outerHTML");
+    if ($headerDescTemplate) {
+      $headerDescTemplate = $headerDescTemplate.replaceAll(
+        "{|name|}",
+        gamehubData.name
+      );
+      $headerDesc.prop("outerHTML", $headerDescTemplate);
+    }
+    if (listData.length) {
+      const $listHeader = $list.children().first();
+      const $entryTemplate = $(".gas-list-entry", $list).first();
+      $entryTemplate.show();
+      dataTemplate = $entryTemplate.prop("outerHTML");
+      $list.html($listHeader).append($entryTemplate);
+      $entryTemplate.hide();
+      const versionOptClass = "gas-version-option";
+      const $selectOptTemplate = $(`${versionsDropdownId}-options`).children().first();
+      $selectOptTemplate.addClass(versionOptClass);
+      listData.forEach((item, itemIdx) => {
+        const $versionOpt = $selectOptTemplate.clone();
+        const versionOptionSuffix = item.consoles[0] + (item.region ? ` \u2014 ${item.region} ` : "");
+        $versionOpt.data("version-id", item.gameId).data("version-external-id", item.externalGameId).data("platform", item.platform).text(
+          (item.name?.length ? `${item.name} | ` : "") + versionOptionSuffix
+        );
+        $(`${versionsDropdownId}-options`).append($versionOpt);
+        let dataTemplateActual = dataTemplate;
+        Object.entries(item).forEach(([key, value]) => {
+          if (textKeysToReplace.includes(key)) {
+            dataTemplateActual = dataTemplateActual.replaceAll(
+              `{|${key}|}`,
+              value || "?"
+            );
+          } else if (numKeysToReplace.includes(key)) {
+            dataTemplateActual = dataTemplateActual.replaceAll(
+              `{|${key}|}`,
+              Math.round(value || 0)
+            );
+          } else if (key === "name") {
+            dataTemplateActual = dataTemplateActual.replaceAll(
+              `{|${key}|}`,
+              // when the name is empty, identify by console & region
+              item.name?.length ? item.name : versionOptionSuffix
+            );
+          } else if (key === "platform") {
+            dataTemplateActual = showPlatform(value, dataTemplateActual);
+          } else if (key === "consoles") {
+            dataTemplateActual = $(".gas-console-tags", dataTemplateActual).html(
+              value.map((csl) => {
+                const csli = csl.toLowerCase();
+                return `<div class="console-${csli.startsWith("ps") ? "playstation" : csli.slice(0, 4)}">${csl}</div>`;
+              })
+            ).parents(".gas-list-entry").prop("outerHTML");
+          }
+        });
+        listTemplateAppend($list, dataTemplateActual, itemIdx);
+      });
+      $selectOptTemplate.remove();
+      $(`.${versionOptClass}`).on("click", versionSelectOption);
+    }
+    $list.css("display", "flex");
+    $(`${elemId}-tab .gas-list-empty`).show();
+    $(`${elemId},${elemId}-tab-btn`).css("display", "flex");
+  }
+
   // components/GamehubPage/GameHubData.js
+  var elemIdPrefix4 = `#gas-gh`;
   function gamehubResponseHandler(res, elemId) {
     const $ghContainer = $(elemId);
     let dataTemplateActual = $ghContainer.prop("outerHTML");
@@ -280,7 +554,7 @@
       if (textKeysToReplace.find((el) => el.toLowerCase() === key.toLowerCase())) {
         dataTemplateActual = dataTemplateActual.replaceAll(
           `{|${key}|}`,
-          value?.length ? key.endsWith("Date") ? gaDate(value) : value : "N.A."
+          value?.length ? key.endsWith("Date") ? gaDate2(value) : value : "N.A."
         );
       } else if (numKeysToReplace.find((el) => el.toLowerCase() === key.toLowerCase())) {
         dataTemplateActual = dataTemplateActual.replaceAll(
@@ -318,7 +592,7 @@
       });
     }
   }
-  async function fetchGamehub(gamehubURL2, gameId2, elemIdPrefix2) {
+  async function fetchGamehub(gamehubURL2, gameId2) {
     const resFetch = await fetch(gamehubURL2);
     if (!resFetch.ok) {
       location.replace("/games");
@@ -333,46 +607,47 @@
       document.title = `${resData.name?.length ? resData.name : resData.id} | ${document.title}`;
       if (resData.igdbId?.length) {
         ["top", "about"].forEach((elemIdSuf) => {
-          gamehubResponseHandler(resData, `${elemIdPrefix2}-${elemIdSuf}`);
+          gamehubResponseHandler(resData, `${elemIdPrefix4}-${elemIdSuf}`);
         });
       } else {
         $(
-          `${elemIdPrefix2}-about,${elemIdPrefix2}-igdb-id,[href="${elemIdPrefix2}-about"]`
+          `${elemIdPrefix4}-about,${elemIdPrefix4}-igdb-id,[href="${elemIdPrefix4}-about"]`
         ).remove();
-        gamehubResponseHandler(resData, `${elemIdPrefix2}-top`);
+        gamehubResponseHandler(resData, `${elemIdPrefix4}-top`);
       }
     }
     return resData;
   }
 
   // components/GamehubPage/ReviewSection.js
-  function setupGAReview(gamehubData2, elemIdPrefix2) {
-    $("#official-review-game-title").text(gamehubData2.name);
-    $(`${elemIdPrefix2}-top-ga-score`).prepend(ratingSVG(0));
-    $(`${elemIdPrefix2}-top-ga-score-text`).text("-");
-    if (!gamehubData2?.gaReviewURL?.length) {
+  var elemIdPrefix5 = `#gas-gh`;
+  function setupGAReview(gamehubData) {
+    $("#official-review-game-title").text(gamehubData.name);
+    $(`${elemIdPrefix5}-top-ga-score`).prepend(ratingSVG(0));
+    $(`${elemIdPrefix5}-top-ga-score-text`).text("-");
+    if (!gamehubData?.gaReviewURL?.length) {
       return;
     }
-    const gaReviewSectionId = `${elemIdPrefix2}-official-review`;
+    const gaReviewSectionId = `${elemIdPrefix5}-official-review`;
     $(gaReviewSectionId).css("display", "flex");
     $(`${gaReviewSectionId}-placeholder`).hide();
-    $(`${gaReviewSectionId}-url`).attr("href", gamehubData2.gaReviewURL);
-    if (gamehubData2?.gaReviewSummary?.length) {
-      $(`${gaReviewSectionId}-summary`).text(gamehubData2.gaReviewSummary);
+    $(`${gaReviewSectionId}-url`).attr("href", gamehubData.gaReviewURL);
+    if (gamehubData?.gaReviewSummary?.length) {
+      $(`${gaReviewSectionId}-summary`).text(gamehubData.gaReviewSummary);
     }
-    if (gamehubData2?.gaReviewScore) {
-      const roundedRate = Math.round(gamehubData2.gaReviewScore);
+    if (gamehubData?.gaReviewScore) {
+      const roundedRate = Math.round(gamehubData.gaReviewScore);
       const rateEl = ratingSVG(roundedRate);
       $(`${gaReviewSectionId}-score-text`).text(roundedRate);
       $(`${gaReviewSectionId}-score-bg`).replaceWith(rateEl);
-      $(`${elemIdPrefix2}-top-ga-score .bg-review-score`).replaceWith(rateEl);
-      $(`${elemIdPrefix2}-top-ga-score-text`).text(roundedRate);
+      $(`${elemIdPrefix5}-top-ga-score .bg-review-score`).replaceWith(rateEl);
+      $(`${elemIdPrefix5}-top-ga-score-text`).text(roundedRate);
     } else {
       $(`${gaReviewSectionId}-score`).parent().remove();
     }
   }
-  async function setupReviewForm(elemIdPrefix2, gamehubURL2, token2) {
-    const formWrapperId = `${elemIdPrefix2}-review-form`;
+  async function setupReviewForm(gamehubURL2, token2) {
+    const formWrapperId = `${elemIdPrefix5}-review-form`;
     const resReview = await fetch(`${gamehubURL2}/review`, {
       headers: { Authorization: `Bearer ${token2}` }
     });
@@ -464,128 +739,48 @@
       }, formMessageDelay);
     });
   }
-  function loadReviewSection(elemIdPrefix2, gamehubURL2, token2, gamehubData2) {
-    setupGAReview(gamehubData2, elemIdPrefix2);
-    setupReviewForm(elemIdPrefix2, gamehubURL2, token2);
+  function loadReviewSection(gamehubURL2, token2, gamehubData) {
+    setupGAReview(gamehubData);
+    setupReviewForm(gamehubURL2, token2);
   }
-
-  // webflow/gamehub.js
-  var apiDomain = document.querySelector("meta[name=domain]")?.content;
-  var forumDomain = document.querySelector("meta[name=forum-domain]")?.content;
-  var urlParams = new URLSearchParams(location.search);
-  var gameId = urlParams.get("id") || 1044;
-  var gamehubURL = `https://${apiDomain}/api/game/${gameId}`;
-  var elemIdPrefix = `#gas-gh`;
-  var versionsDropdownId = `${elemIdPrefix}-versions-dropdown`;
-  var platformsTabNames = ["all", "playstation", "xbox", "steam"];
-  var gamehubData;
-  $(".ga-loader-container").show();
-  $("#ga-sections-container").hide();
-  $("#gas-gh-top-old").remove();
-  $("#gas-gh-about-old").remove();
-  async function fetchGameLatestThreads() {
-    let listData = [];
-    const elemId = `${elemIdPrefix}-forum-threads`;
-    if (gamehubData.forumCategoryID) {
-      const resFetch = await fetch(
-        `https://${forumDomain}/api/category/${gamehubData.forumCategoryID}`
+  function reviewsBarsHandler({ listData, elemId }) {
+    const $barsContainer = $(elemId + "-bars");
+    let barItems = [];
+    const bars = ["positive", "mixed", "negative"];
+    if (listData.length) {
+      bars.forEach((barName) => {
+        barItems = listData.filter(
+          (item) => item.classification?.toLowerCase() === barName
+        );
+        const $bar = $(`.gas-bar-${barName}`, $barsContainer);
+        if ($bar.length) {
+          $bar.css("width", `${100 * (barItems.length / listData.length) || 1}%`);
+        }
+        const $barText = $(`.gas-bar-text-${barName}`, $barsContainer);
+        if ($barText.length) {
+          $barText.text(barItems?.length);
+        }
+      });
+      const avgRating = Math.round(
+        listData.map((li) => li.rating).reduce((prevLi, currLi) => prevLi + currLi) / listData.length
       );
-      if (resFetch.ok) {
-        const resData = (await resFetch.json()).topics;
-        listData = resData.slice(0, 5);
-      }
-      listData = listData.map((e) => ({
-        id: e.cid,
-        title: e.title,
-        topic_id: e.tid,
-        author_name: e.user.username,
-        imageURL: e.user.picture?.toLowerCase().includes("http") ? new DOMParser().parseFromString(e.user.picture, "text/html").documentElement.textContent : "https://uploads-ssl.webflow.com/6455fdc10a7247f51c568c32/64b50ee999d75d5f75a28b08_user%20avatar%20default.svg",
-        category_name: e.category.name,
-        category_id: e.category.cid,
-        views: e.viewcount,
-        upvotes: e.upvotes,
-        replies: e.postcount
-      }));
-    }
-    listResponseHandlerHome({
-      listData,
-      elemId,
-      numKeysToReplace: ["replies", "views", "upvotes"],
-      textKeysToReplace: [
-        "title",
-        "author_name",
-        "category_name",
-        "topic_id",
-        "category_id"
-      ]
-    });
-    $(`${elemId} .ga-loader-container`).hide();
-  }
-  function listResponseHandlerHome({
-    listData,
-    elemId,
-    numKeysToReplace,
-    textKeysToReplace
-  }) {
-    console.info(`=== ${elemId} results ===`, listData);
-    let dataTemplate = $(elemId).prop("outerHTML");
-    const $list = $(`${elemId} .gas-list`);
-    const $emptyList = $(`${elemId} .gas-list-empty`);
-    const $entryTemplate = $(".gas-list-entry", $list).first();
-    $entryTemplate.show();
-    dataTemplate = $entryTemplate.prop("outerHTML");
-    $entryTemplate.hide();
-    if (listData?.length && dataTemplate?.length) {
-      $list.html($entryTemplate);
-      listData.forEach((item, resIdx) => {
-        let dataTemplateActual = dataTemplate;
-        dataTemplateActual = dataTemplateActual.replaceAll(`{|idx|}`, resIdx + 1);
-        Object.entries(item).forEach(([key, value]) => {
-          if (item.gameIconURL?.length && !isSteamImage(item.gameIconURL)) {
-            const $gameImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
-            if ($gameImg?.length) {
-              dataTemplateActual = showImageFromSrc($gameImg, item.gameIconURL) || dataTemplateActual;
-            }
-          }
-          if ((item.iconURL?.length || item.imageURL?.length) && !isXboxEdsImage(item.imageURL) && !isSteamImage(item.imageURL) && !isSteamImage(item.iconURL)) {
-            const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
-            if ($entryImg?.length) {
-              dataTemplateActual = elemId.includes("list-games") ? $entryImg.css("background-image", `url(${item.imageURL})`).parents(".gas-list-entry").prop("outerHTML") : showImageFromSrc($entryImg, item.iconURL || item.imageURL) || dataTemplateActual;
-            }
-          }
-          if (textKeysToReplace.includes(key)) {
-            dataTemplateActual = dataTemplateActual.replaceAll(
-              `{|${key}|}`,
-              (key.endsWith("At") ? gaDate(value) : cleanupDoubleQuotes(value)) || ""
-            );
-          } else if (numKeysToReplace.includes(key)) {
-            dataTemplateActual = dataTemplateActual.replaceAll(
-              `{|${key}|}`,
-              Math.round(value || 0)
-            );
-          } else if (key === "lastPlayed") {
-            dataTemplateActual = dataTemplateActual.replaceAll(
-              `{|${key}|}`,
-              gaDate(value)
-            );
-          } else if (key === "importedFromPlatform" || key === "platform") {
-            dataTemplateActual = showPlatform(value, dataTemplateActual);
-          }
-        });
-        $list.append(dataTemplateActual);
+      $(`.gas-avg-rate-wrapper`).each((idx, rateEl) => {
+        $(rateEl).prepend(ratingSVG(avgRating));
+        $(".gas-avg-rate-text", rateEl).text(avgRating);
       });
     } else {
-      if (listData?.length && !dataTemplate?.length) {
-        console.error(`${elemId} template issue (missing a '.gas-' class?)`);
-      }
-      let $emptyElem = $emptyList.children().first();
-      let $emptyElemTemplate = $emptyElem.prop("outerHTML").replaceAll("{|name|}", gamehubData.name);
-      $emptyElem = $emptyElem.prop("outerHTML", $emptyElemTemplate);
-      $(elemId).html($emptyList);
-      $emptyList.show();
+      bars.forEach((barName) => {
+        $(`.gas-bar-${barName}`, $barsContainer).css("width", "1%");
+      });
+      $(`.gas-avg-rate-wrapper`).each((idx, rateEl) => {
+        $(rateEl).prepend(ratingSVG(0));
+        $(".gas-avg-rate-text", rateEl).text("-");
+      });
     }
-    $list.css("display", "flex");
   }
+
+  // components/GamehubPage/utils/listResponseHandler.js
+  var platformsTabNames = ["all", "playstation", "xbox", "steam"];
   function listResponseHandler({
     listData,
     elemId,
@@ -672,50 +867,11 @@
       }
     });
   }
-  function reviewsBarsHandler({ listData, elemId }) {
-    const $barsContainer = $(elemId + "-bars");
-    let barItems = [];
-    const bars = ["positive", "mixed", "negative"];
-    if (listData.length) {
-      bars.forEach((barName) => {
-        barItems = listData.filter(
-          (item) => item.classification?.toLowerCase() === barName
-        );
-        const $bar = $(`.gas-bar-${barName}`, $barsContainer);
-        if ($bar.length) {
-          $bar.css("width", `${100 * (barItems.length / listData.length) || 1}%`);
-        }
-        const $barText = $(`.gas-bar-text-${barName}`, $barsContainer);
-        if ($barText.length) {
-          $barText.text(barItems?.length);
-        }
-      });
-      const avgRating = Math.round(
-        listData.map((li) => li.rating).reduce((prevLi, currLi) => prevLi + currLi) / listData.length
-      );
-      $(`.gas-avg-rate-wrapper`).each((idx, rateEl) => {
-        $(rateEl).prepend(ratingSVG(avgRating));
-        $(".gas-avg-rate-text", rateEl).text(avgRating);
-      });
-    } else {
-      bars.forEach((barName) => {
-        $(`.gas-bar-${barName}`, $barsContainer).css("width", "1%");
-      });
-      $(`.gas-avg-rate-wrapper`).each((idx, rateEl) => {
-        $(rateEl).prepend(ratingSVG(0));
-        $(".gas-avg-rate-text", rateEl).text("-");
-      });
-    }
-  }
-  async function listFetcher({
-    listName,
-    numKeysToReplace,
-    textKeysToReplace,
-    tabs,
-    tabMatcher
-  }) {
-    const elemId = `${elemIdPrefix}-${listName}`;
-    const resList = await fetch(`${gamehubURL}/${listName}`);
+
+  // components/GamehubPage/utils/listFetcher.js
+  async function listFetcher({ elemIdPrefix: elemIdPrefix8, gamehubURL: gamehubURL2 }, { listName, numKeysToReplace, textKeysToReplace, tabs, tabMatcher }) {
+    const elemId = `${elemIdPrefix8}-${listName}`;
+    const resList = await fetch(`${gamehubURL2}/${listName}`);
     const listData = await resList.json();
     if (Array.isArray(listData) || listData.length > 0) {
       let tabCounts;
@@ -742,7 +898,7 @@
           });
           break;
         case "guides":
-          $(`${elemIdPrefix}-top .gas-count-guides`).text(listData.length);
+          $(`${elemIdPrefix8}-top .gas-count-guides`).text(listData.length);
           break;
         default:
           break;
@@ -757,265 +913,136 @@
       });
     }
   }
-  function achieversHandler({
-    listsData,
-    elemId,
-    numKeysToReplace,
-    textKeysToReplace
-  }) {
-    console.info(`=== ${elemId} results ===`, listsData);
-    const $achieversLists = $(
-      `${elemId} .gas-list-first, ${elemId} .gas-list-latest`
-    );
-    $achieversLists.each((listIdx, listEl) => {
-      const $list = $(listEl);
-      let dataTemplate = $list.prop("outerHTML");
-      const $emptyList = $(`.gas-list-empty`, $list);
-      const $listHeader = $list.children().first();
-      const $entryTemplate = $(".gas-list-entry", $list).first();
-      $list.html($listHeader);
-      const listDataToRead = listsData[listIdx === 0 ? "firstAchievers" : "latestAchievers"];
-      if (listDataToRead?.length > 0) {
-        $entryTemplate.show();
-        $list.append($entryTemplate);
-        dataTemplate = $entryTemplate.prop("outerHTML");
-        $entryTemplate.hide();
-        listDataToRead.forEach((item, itemIdx) => {
-          let dataTemplateActual = dataTemplate;
-          Object.entries(item).forEach(([key, value]) => {
-            const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
-            if ($entryImg && item.iconURL?.length) {
-              dataTemplateActual = showImageFromSrc($entryImg, item.avatar) || dataTemplateActual;
-            }
-            dataTemplateActual = dataTemplateActual.replaceAll(
-              `{|idx|}`,
-              itemIdx + 1
-            );
-            if (key === "unlockedAt") {
-              const { date, time } = gaDateTime(value);
-              dataTemplateActual = dataTemplateActual.replaceAll(
-                `{|unlockedDt|}`,
-                date || "N.A."
-              );
-              dataTemplateActual = dataTemplateActual.replaceAll(
-                `{|${key}|}`,
-                time || "N.A."
-              );
-            } else if (textKeysToReplace.includes(key)) {
-              dataTemplateActual = dataTemplateActual.replaceAll(
-                `{|${key}|}`,
-                value || ""
-              );
-            } else if (numKeysToReplace.includes(key)) {
-              dataTemplateActual = dataTemplateActual.replaceAll(
-                `{|${key}|}`,
-                Math.round(value || 0)
-              );
-            }
-          });
-          listTemplateAppend($list, dataTemplateActual, itemIdx);
-        });
-      } else {
-        $list.append($emptyList);
-        $emptyList.show();
-      }
-    });
-  }
-  async function achieversFetcher({
-    listName,
-    numKeysToReplace,
-    textKeysToReplace
-  }) {
-    const elemId = `${elemIdPrefix}-${listName}`;
-    const resLists = await fetch(`${gamehubURL}/${listName}`);
-    const listsData = await resLists.json();
-    achieversHandler({
-      listsData,
-      elemId,
-      numKeysToReplace,
-      textKeysToReplace
-    });
-  }
-  async function versionAchievementsFetcher(versionGameId, platformId) {
-    const elemId = `${elemIdPrefix}-achievements`;
-    const $loader = $(`${elemId} .ga-loader-container`);
-    const $list = $(
-      `${elemId} .${platformId === 1 ? "psn" : platformId === 2 ? "xbox" : "xbox"}-achievement-list`
-    );
-    const $emptyList = $(`${elemId} .empty-state`);
-    $emptyList.hide();
-    $list.hide();
-    $loader.show();
-    const authHeader = { Authorization: `Bearer ${token}` };
-    const resLists = await fetch(
-      `https://${apiDomain}/api/game/${versionGameId}/achievements${platformId ? `?platform=${platformId}` : ""}`,
+
+  // components/GamehubPage/GuidesSection.js
+  async function loadGuides(elemIdPrefix8, gamehubURL2) {
+    await listFetcher(
+      { elemIdPrefix: elemIdPrefix8, gamehubURL: gamehubURL2 },
       {
-        headers: token ? authHeader : {}
+        listName: "guides",
+        numKeysToReplace: ["id", "commentsCount", "viewsCount", "likesCount"],
+        textKeysToReplace: [
+          "profileId",
+          "name",
+          "description",
+          "author",
+          "updatedAt"
+        ]
       }
     );
-    const listData = await resLists.json();
-    console.info(`=== ${elemId} results ===`, listData);
-    const textKeysToReplace = ["name", "description"];
-    const numKeysToReplace = ["id", "score", "achieversCount", "gAPoints"];
-    const $listParent = $list.parent();
-    const $listHeader = $list.children().first();
-    const $entryTemplate = $(".gh-row", $list).first();
-    $entryTemplate.show();
-    let dataTemplate = $entryTemplate.prop("outerHTML");
-    $list.html($listHeader).append($entryTemplate);
-    if (listData.length > 0) {
-      $entryTemplate.hide();
-      listData.forEach((item, itemIdx) => {
-        let dataTemplateActual = dataTemplate;
-        Object.entries(item).forEach(([key, value]) => {
-          const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
-          if ($entryImg && item.iconURL?.length) {
-            dataTemplateActual = showImageFromSrc($entryImg, item.iconURL, ".gh-row") || dataTemplateActual;
-          }
-          if (key === "name") {
-            dataTemplateActual = dataTemplateActual.replaceAll(
-              `{|name|}`,
-              achievementNameSlicer(value) || "N.A."
-            );
-          } else if (textKeysToReplace.includes(key)) {
-            dataTemplateActual = dataTemplateActual.replaceAll(
-              `{|${key}|}`,
-              (key.endsWith("At") ? gaDate(value) : value) || ""
-            );
-          } else if (numKeysToReplace.includes(key)) {
-            dataTemplateActual = dataTemplateActual.replaceAll(
-              `{|${key}|}`,
-              Math.round(value || 0)
-            );
-          } else if (key === "rarity") {
-            dataTemplateActual = showRarityTagAchievement(
-              value,
-              dataTemplateActual,
-              ".gh-row"
-            );
-          } else if (key === "trophyType" && platformId === 1) {
-            dataTemplateActual = showTrophy(value, dataTemplateActual);
-          } else if (key === "userProgress") {
-            dataTemplateActual = showAchievementUnlocked(
-              value,
-              dataTemplateActual
-            );
-          }
-        });
-        listTemplateAppend(
-          $list,
-          dataTemplateActual,
-          itemIdx,
-          item.userProgress?.unlocked
-        );
-      });
-      $loader.hide();
-      $listParent.removeClass("hidden");
-      $list.css({ display: "flex", "flex-direction": "column" });
-      $emptyList.hide();
-    } else {
-      $loader.hide();
-      $list.hide();
-      $emptyList.show();
-    }
   }
-  async function versionSelectOption(e) {
-    const $optSelected = $(e.target);
-    $(`${versionsDropdownId}-options,${versionsDropdownId}-toggle`).removeClass(
-      "w--open"
-    );
-    const selectedGameId = Number($optSelected.data("version-id"));
-    const platformId = Number(
-      platformNameIdMap($optSelected.data("platform")?.toLowerCase()) || 0
-    );
-    $(`${versionsDropdownId}-text-selected`).text($optSelected.text());
-    versionAchievementsFetcher(selectedGameId, platformId);
-  }
-  async function versionsFetcher() {
-    const listName = "versions";
-    const elemId = `${elemIdPrefix}-${listName}`;
-    if (!gamehubData.versionDetails) {
-      const platform = gamehubData.platforms ?? gamehubData.importedFromPlatforms;
-      const platformId = Number(
-        platform?.length >= 1 ? platformNameIdMap(platform[0].toLowerCase()) : 0
-      );
-      $(versionsDropdownId).remove();
-      return versionAchievementsFetcher(gamehubData.id, platformId);
-    }
-    const resLists = await fetch(`${gamehubURL}/${listName}`);
-    const listData = await resLists.json();
-    const numKeysToReplace = ["achievementsCount"];
-    const textKeysToReplace = ["gameId", "externalGameId", "region"];
+
+  // components/GamehubPage/LatestThreadsSection.js
+  var elemIdPrefix6 = `#gas-gh`;
+  var forumDomain = document.querySelector("meta[name=forum-domain]")?.content;
+  function listResponseHandlerHome({ gamehubData }, { listData, elemId, numKeysToReplace, textKeysToReplace }) {
     console.info(`=== ${elemId} results ===`, listData);
     let dataTemplate = $(elemId).prop("outerHTML");
     const $list = $(`${elemId} .gas-list`);
-    const $headerDesc = $(`${elemId} .heading-description-wrapper`).children().last();
-    let $headerDescTemplate = $headerDesc.prop("outerHTML");
-    if ($headerDescTemplate) {
-      $headerDescTemplate = $headerDescTemplate.replaceAll(
-        "{|name|}",
-        gamehubData.name
-      );
-      $headerDesc.prop("outerHTML", $headerDescTemplate);
-    }
-    if (listData.length) {
-      const $listHeader = $list.children().first();
-      const $entryTemplate = $(".gas-list-entry", $list).first();
-      $entryTemplate.show();
-      dataTemplate = $entryTemplate.prop("outerHTML");
-      $list.html($listHeader).append($entryTemplate);
-      $entryTemplate.hide();
-      const versionOptClass = "gas-version-option";
-      const $selectOptTemplate = $(`${versionsDropdownId}-options`).children().first();
-      $selectOptTemplate.addClass(versionOptClass);
-      listData.forEach((item, itemIdx) => {
-        const $versionOpt = $selectOptTemplate.clone();
-        const versionOptionSuffix = item.consoles[0] + (item.region ? ` \u2014 ${item.region} ` : "");
-        $versionOpt.data("version-id", item.gameId).data("version-external-id", item.externalGameId).data("platform", item.platform).text(
-          (item.name?.length ? `${item.name} | ` : "") + versionOptionSuffix
-        );
-        $(`${versionsDropdownId}-options`).append($versionOpt);
+    const $emptyList = $(`${elemId} .gas-list-empty`);
+    const $entryTemplate = $(".gas-list-entry", $list).first();
+    $entryTemplate.show();
+    dataTemplate = $entryTemplate.prop("outerHTML");
+    $entryTemplate.hide();
+    if (listData?.length && dataTemplate?.length) {
+      $list.html($entryTemplate);
+      listData.forEach((item, resIdx) => {
         let dataTemplateActual = dataTemplate;
+        dataTemplateActual = dataTemplateActual.replaceAll(`{|idx|}`, resIdx + 1);
         Object.entries(item).forEach(([key, value]) => {
+          if (item.gameIconURL?.length && !isSteamImage(item.gameIconURL)) {
+            const $gameImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
+            if ($gameImg?.length) {
+              dataTemplateActual = showImageFromSrc($gameImg, item.gameIconURL) || dataTemplateActual;
+            }
+          }
+          if ((item.iconURL?.length || item.imageURL?.length) && !isXboxEdsImage(item.imageURL) && !isSteamImage(item.imageURL) && !isSteamImage(item.iconURL)) {
+            const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+            if ($entryImg?.length) {
+              dataTemplateActual = elemId.includes("list-games") ? $entryImg.css("background-image", `url(${item.imageURL})`).parents(".gas-list-entry").prop("outerHTML") : showImageFromSrc($entryImg, item.iconURL || item.imageURL) || dataTemplateActual;
+            }
+          }
           if (textKeysToReplace.includes(key)) {
             dataTemplateActual = dataTemplateActual.replaceAll(
               `{|${key}|}`,
-              value || "?"
+              (key.endsWith("At") ? gaDate2(value) : cleanupDoubleQuotes(value)) || ""
             );
           } else if (numKeysToReplace.includes(key)) {
             dataTemplateActual = dataTemplateActual.replaceAll(
               `{|${key}|}`,
               Math.round(value || 0)
             );
-          } else if (key === "name") {
+          } else if (key === "lastPlayed") {
             dataTemplateActual = dataTemplateActual.replaceAll(
               `{|${key}|}`,
-              // when the name is empty, identify by console & region
-              item.name?.length ? item.name : versionOptionSuffix
+              gaDate2(value)
             );
-          } else if (key === "platform") {
+          } else if (key === "importedFromPlatform" || key === "platform") {
             dataTemplateActual = showPlatform(value, dataTemplateActual);
-          } else if (key === "consoles") {
-            dataTemplateActual = $(".gas-console-tags", dataTemplateActual).html(
-              value.map((csl) => {
-                const csli = csl.toLowerCase();
-                return `<div class="console-${csli.startsWith("ps") ? "playstation" : csli.slice(0, 4)}">${csl}</div>`;
-              })
-            ).parents(".gas-list-entry").prop("outerHTML");
           }
         });
-        listTemplateAppend($list, dataTemplateActual, itemIdx);
+        $list.append(dataTemplateActual);
       });
-      $selectOptTemplate.remove();
-      $(`.${versionOptClass}`).on("click", versionSelectOption);
+    } else {
+      if (listData?.length && !dataTemplate?.length) {
+        console.error(`${elemId} template issue (missing a '.gas-' class?)`);
+      }
+      let $emptyElem = $emptyList.children().first();
+      let $emptyElemTemplate = $emptyElem.prop("outerHTML").replaceAll("{|name|}", gamehubData.name);
+      $emptyElem = $emptyElem.prop("outerHTML", $emptyElemTemplate);
+      $(elemId).html($emptyList);
+      $emptyList.show();
     }
     $list.css("display", "flex");
-    $(`${elemId}-tab .gas-list-empty`).show();
-    $(`${elemId},${elemId}-tab-btn`).css("display", "flex");
   }
-  async function leaderboardsFetcher(elemId, searchTerm2 = "") {
+  async function loadGameLatestThreads(gamehubData) {
+    let listData = [];
+    const elemId = `${elemIdPrefix6}-forum-threads`;
+    if (gamehubData.forumCategoryID) {
+      const resFetch = await fetch(
+        `https://${forumDomain}/api/category/${gamehubData.forumCategoryID}`
+      );
+      if (resFetch.ok) {
+        const resData = (await resFetch.json()).topics;
+        listData = resData.slice(0, 5);
+      }
+      listData = listData.map((e) => ({
+        id: e.cid,
+        title: e.title,
+        topic_id: e.tid,
+        author_name: e.user.username,
+        imageURL: e.user.picture?.toLowerCase().includes("http") ? new DOMParser().parseFromString(e.user.picture, "text/html").documentElement.textContent : "https://uploads-ssl.webflow.com/6455fdc10a7247f51c568c32/64b50ee999d75d5f75a28b08_user%20avatar%20default.svg",
+        category_name: e.category.name,
+        category_id: e.category.cid,
+        views: e.viewcount,
+        upvotes: e.upvotes,
+        replies: e.postcount
+      }));
+    }
+    listResponseHandlerHome(
+      { gamehubData },
+      {
+        listData,
+        elemId,
+        numKeysToReplace: ["replies", "views", "upvotes"],
+        textKeysToReplace: [
+          "title",
+          "author_name",
+          "category_name",
+          "topic_id",
+          "category_id"
+        ]
+      }
+    );
+    $(`${elemId} .ga-loader-container`).hide();
+  }
+
+  // components/GamehubPage/LeaderboardsSection.js
+  var apiDomain2 = document.querySelector("meta[name=domain]")?.content;
+  var platformsTabNames2 = ["all", "playstation", "xbox", "steam"];
+  async function loadLeaderboards(elemId, searchTerm2 = "", { gameId: gameId2 }) {
     let dataTemplate = $(elemId).prop("outerHTML");
-    platformsTabNames.forEach(async (tabName) => {
+    platformsTabNames2.forEach(async (tabName) => {
       const $list = $(`${elemId} .gas-list-${tabName}`);
       let paramPlatformId = 0;
       switch (tabName) {
@@ -1031,7 +1058,7 @@
         default:
           break;
       }
-      const paramsObj = { gameId };
+      const paramsObj = { gameId: gameId2 };
       if (paramPlatformId) {
         paramsObj.type = paramPlatformId;
       }
@@ -1039,9 +1066,10 @@
         paramsObj.q = searchTerm2;
       }
       const resList = await fetch(
-        `https://${apiDomain}/api/leaderboard${Object.keys(paramsObj)?.length ? `?${new URLSearchParams(paramsObj).toString()}` : ""}`
+        `https://${apiDomain2}/api/leaderboard${Object.keys(paramsObj)?.length ? `?${new URLSearchParams(paramsObj).toString()}` : ""}`
       );
       const listData = await resList.json();
+      console.info(`=== ${elemId} results ===`, listData);
       const textKeysToReplace = ["profileId", "name"];
       const numKeysToReplace = ["totalAchievements", "gaPoints"];
       switch (paramPlatformId) {
@@ -1109,51 +1137,51 @@
       }
     });
   }
-  $().ready(async () => {
+
+  // components/GamehubPage/UserReviewsSection.js
+  async function loadUserReviews(elemIdPrefix8, gamehubURL2) {
+    listFetcher(
+      { elemIdPrefix: elemIdPrefix8, gamehubURL: gamehubURL2 },
+      {
+        listName: "reviews",
+        numKeysToReplace: ["id", "likesCount"],
+        textKeysToReplace: [
+          "profileId",
+          "name",
+          "content",
+          "author",
+          "classification",
+          "updatedAt"
+        ],
+        tabs: ["all", "positive", "mixed", "negative"],
+        tabMatcher: "classification"
+      }
+    );
+  }
+
+  // webflow/gamehub.js
+  var apiDomain3 = document.querySelector("meta[name=domain]")?.content;
+  var urlParams = new URLSearchParams(location.search);
+  var gameId = urlParams.get("id") || 1044;
+  var gamehubURL = `https://${apiDomain3}/api/game/${gameId}`;
+  var elemIdPrefix7 = `#gas-gh`;
+  $(".ga-loader-container").show();
+  $("#ga-sections-container").hide();
+  $(async () => {
     await auth0Bootstrap();
-    gamehubData = await fetchGamehub(gamehubURL, gameId, elemIdPrefix);
+    const gamehubData = await fetchGamehub(gamehubURL, gameId);
     if (gamehubData) {
-      loadReviewSection(elemIdPrefix, gamehubURL, token, gamehubData);
-      setupListSearch(`${elemIdPrefix}-leaderboard`, leaderboardsFetcher);
+      loadReviewSection(gamehubURL, token, gamehubData);
+      setupListSearch(`${elemIdPrefix7}-leaderboard`, loadLeaderboards, {
+        gameId
+      });
       await Promise.all([
-        await versionsFetcher(),
-        await leaderboardsFetcher(`${elemIdPrefix}-leaderboard`),
-        await listFetcher({
-          listName: "guides",
-          numKeysToReplace: ["id", "commentsCount", "viewsCount", "likesCount"],
-          textKeysToReplace: [
-            "profileId",
-            "name",
-            "description",
-            "author",
-            "updatedAt"
-          ]
-        }),
-        await listFetcher({
-          listName: "reviews",
-          numKeysToReplace: ["id", "likesCount"],
-          textKeysToReplace: [
-            "profileId",
-            "name",
-            "content",
-            "author",
-            "classification",
-            "updatedAt"
-          ],
-          tabs: ["all", "positive", "mixed", "negative"],
-          tabMatcher: "classification"
-        }),
-        await achieversFetcher({
-          listName: "achievers",
-          numKeysToReplace: ["id", "achievementId"],
-          textKeysToReplace: [
-            "profileId",
-            "achievementName",
-            "playerName",
-            "name"
-          ]
-        }),
-        await fetchGameLatestThreads()
+        await versionsFetcher(gamehubData, gamehubURL),
+        await loadLeaderboards(`${elemIdPrefix7}-leaderboard`, "", { gameId }),
+        await loadGuides(elemIdPrefix7, gamehubURL),
+        await loadUserReviews(elemIdPrefix7, gamehubURL),
+        await loadAchievers(gamehubURL),
+        await loadGameLatestThreads(gamehubData)
       ]);
       $(".ga-loader-container").hide();
       $("#ga-sections-container").show();
