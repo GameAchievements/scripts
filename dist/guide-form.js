@@ -17,22 +17,71 @@
     return metaDivider > 0 ? name.slice(0, metaDivider) : name;
   };
 
-  // webflow/guide-form.js
-  var apiDomain = document.querySelector("meta[name=domain]")?.content;
-  var urlParams = new URLSearchParams(window.location.search);
-  var guideId = Number(urlParams.get("id")) || 0;
-  var isEditing = guideId > 0;
-  var achievementId = Number(urlParams.get("achievementId")) || 0;
-  var guideFetchedData;
-  var elemIdPrefix = `#gas-guide`;
-  var elemId = `${elemIdPrefix}-form`;
-  var formMessageDelay2 = 4e3;
-  var sectionsLimit = 4;
-  var sectionsCount = 2;
-  var $sectionTemp = $(".gas-form-section", elemId).last().clone();
-  var templatePrefix = "section-2";
-  $(".ga-loader-container").show();
-  $("#ga-sections-container").hide();
+  // components/GuideFormPage/utils/detailsResponseHandler.js
+  function detailsResponseHandler(res, elemId2 = `#gas-guide-details`) {
+    const $ghContainer = $(elemId2);
+    let dataTemplateActual = $ghContainer.prop("outerHTML");
+    console.info(`=== ${elemId2} ===`, res);
+    const textKeysToReplace = [
+      "id",
+      "name",
+      "achievementId",
+      "achievementName",
+      "gameId",
+      "gameName"
+    ];
+    const guideImg = res.coverURL || res.imageURL;
+    if (guideImg?.length && elemId2.endsWith("details")) {
+      dataTemplateActual = $ghContainer.css(
+        "background-image",
+        `linear-gradient(rgba(255,255,255,0),#030922),
+          linear-gradient(rgba(70,89,255,.4),rgba(70,89,255,.4)),
+          url(${guideImg})`
+      ).prop("outerHTML");
+    }
+    Object.entries(res).forEach(([key, value]) => {
+      if (key === "achievementName") {
+        dataTemplateActual = dataTemplateActual.replaceAll(
+          `{|${key}|}`,
+          achievementNameSlicer(value)
+        );
+      } else if (textKeysToReplace.includes(key)) {
+        dataTemplateActual = dataTemplateActual.replaceAll(
+          `{|${key}|}`,
+          (key.endsWith("At") ? gaDate(value) : value) || ""
+        );
+      }
+    });
+    $ghContainer.prop("outerHTML", dataTemplateActual);
+  }
+
+  // components/GuideFormPage/AchievementSection.js
+  async function fetchAchievement(apiDomain2, achievementId2) {
+    const resFetch = await fetch(
+      `https://${apiDomain2}/api/achievement/${achievementId2}`
+    );
+    const achievementFetchedData = await resFetch.json();
+    if (Object.keys(achievementFetchedData).length > 0 && achievementFetchedData.id) {
+      document.title = `Achievement ${achievementFetchedData.name?.length ? achievementFetchedData.name : achievementFetchedData.id} | ${document.title}`;
+      achievementFetchedData.achievementName = achievementFetchedData.name;
+      detailsResponseHandler(achievementFetchedData);
+      detailsResponseHandler(achievementFetchedData, `#gas-guide-form`);
+    }
+  }
+
+  // components/GuideFormPage/GuideData.js
+  async function fetchGuide(apiDomain2, guideId2) {
+    const resFetch = await fetch(`https://${apiDomain2}/api/guide/${guideId2}`);
+    guideFetchedData = await resFetch.json();
+    if (Object.keys(guideFetchedData).length > 0 && guideFetchedData.id) {
+      document.title = `${guideFetchedData.name?.length ? guideFetchedData.name : guideFetchedData.id} | ${document.title}`;
+      detailsResponseHandler(guideFetchedData);
+      detailsResponseHandler(guideFetchedData, `#gas-guide-form`);
+    }
+    return guideFetchedData;
+  }
+
+  // components/GuideFormPage/utils/canSubmit.js
   var isRequiredFilled = ($el, hasLen) => {
     if (hasLen) {
       isUserInputActive = true;
@@ -46,19 +95,19 @@
     }
     $el.prev("label").addClass("field-label-missing");
   };
-  var canSubmit = ($elChanged) => {
+  function canSubmit($elChanged, elemId2 = `#gas-guide-form`) {
     let allInputsFilled = false;
     let allTextareasFilled = false;
     if ($elChanged?.length) {
       highlightRequiredLabel($elChanged);
     }
-    for (const inp of $("input[name][required]", elemId)) {
+    for (const inp of $("input[name][required]", elemId2)) {
       allInputsFilled = isRequiredFilled($(inp), $(inp).val()?.length);
       if (!allInputsFilled) {
         break;
       }
     }
-    for (const txt of $(".gas-form-tinymce", elemId)) {
+    for (const txt of $(".gas-form-tinymce", elemId2)) {
       allTextareasFilled = isRequiredFilled(
         $(txt),
         tinyMCE.get($(txt).attr("id")).getContent()?.length
@@ -68,11 +117,28 @@
       }
     }
     if (allInputsFilled && allTextareasFilled) {
-      $(`${elemId}-btn-submit`).removeClass("disabled-button").attr("disabled", false);
+      $(`${elemId2}-btn-submit`).removeClass("disabled-button").attr("disabled", false);
     } else {
-      $(`${elemId}-btn-submit`).addClass("disabled-button").attr("disabled", true);
+      $(`${elemId2}-btn-submit`).addClass("disabled-button").attr("disabled", true);
     }
-  };
+  }
+
+  // webflow/guide-form.js
+  var apiDomain = document.querySelector("meta[name=domain]")?.content;
+  var urlParams = new URLSearchParams(window.location.search);
+  var guideId = Number(urlParams.get("id")) || 0;
+  var isEditing = guideId > 0;
+  var achievementId = Number(urlParams.get("achievementId")) || 0;
+  var guideFetchedData2;
+  var elemIdPrefix = `#gas-guide`;
+  var elemId = `${elemIdPrefix}-form`;
+  var formMessageDelay2 = 4e3;
+  var sectionsLimit = 4;
+  var sectionsCount = 2;
+  var $sectionTemp = $(".gas-form-section", elemId).last().clone();
+  var templatePrefix = "section-2";
+  $(".ga-loader-container").show();
+  $("#ga-sections-container").hide();
   var editorChangeHandlerId;
   var tmceObj = {
     selector: ".gas-form-tinymce",
@@ -133,11 +199,11 @@
   async function setupForm() {
     $(".gas-form-tinymce", $sectionTemp).removeAttr("id");
     await tinymce.init(tmceObj);
-    if (isEditing && guideFetchedData?.id === guideId) {
-      $("[name=guide-title]", elemId).val(guideFetchedData.name);
-      $("[name=guide-description]", elemId).val(guideFetchedData.description);
-      guideFetchedData.sections.forEach(async (sec, secIdx) => {
-        if (secIdx > 1 && secIdx < guideFetchedData.sections.length) {
+    if (isEditing && guideFetchedData2?.id === guideId) {
+      $("[name=guide-title]", elemId).val(guideFetchedData2.name);
+      $("[name=guide-description]", elemId).val(guideFetchedData2.description);
+      guideFetchedData2.sections.forEach(async (sec, secIdx) => {
+        if (secIdx > 1 && secIdx < guideFetchedData2.sections.length) {
           await addSection();
         }
         $(`[name=section-${secIdx + 1}-title]`).val(sec.title);
@@ -193,8 +259,8 @@
       if (isEditing) {
         guideURL += `/${guideId}`;
         method = "PUT";
-        reqData.author = guideFetchedData.author;
-        reqData.profileId = guideFetchedData.profileId;
+        reqData.author = guideFetchedData2.author;
+        reqData.profileId = guideFetchedData2.profileId;
       } else {
         if (!userProfileData) {
           $errEl.show();
@@ -244,69 +310,12 @@
       }, formMessageDelay2);
     });
   }
-  function detailsResponseHandler(res, elemId2 = `${elemIdPrefix}-details`) {
-    const $ghContainer = $(elemId2);
-    let dataTemplateActual = $ghContainer.prop("outerHTML");
-    console.info(`=== ${elemId2} ===`, res);
-    const textKeysToReplace = [
-      "id",
-      "name",
-      "achievementId",
-      "achievementName",
-      "gameId",
-      "gameName"
-    ];
-    const guideImg = res.coverURL || res.imageURL;
-    if (guideImg?.length && elemId2.endsWith("details")) {
-      dataTemplateActual = $ghContainer.css(
-        "background-image",
-        `linear-gradient(rgba(255,255,255,0),#030922),
-          linear-gradient(rgba(70,89,255,.4),rgba(70,89,255,.4)),
-          url(${guideImg})`
-      ).prop("outerHTML");
-    }
-    Object.entries(res).forEach(([key, value]) => {
-      if (key === "achievementName") {
-        dataTemplateActual = dataTemplateActual.replaceAll(
-          `{|${key}|}`,
-          achievementNameSlicer(value)
-        );
-      } else if (textKeysToReplace.includes(key)) {
-        dataTemplateActual = dataTemplateActual.replaceAll(
-          `{|${key}|}`,
-          (key.endsWith("At") ? gaDate(value) : value) || ""
-        );
-      }
-    });
-    $ghContainer.prop("outerHTML", dataTemplateActual);
-  }
-  async function fetchGuide() {
-    const resFetch = await fetch(`https://${apiDomain}/api/guide/${guideId}`);
-    guideFetchedData = await resFetch.json();
-    if (Object.keys(guideFetchedData).length > 0 && guideFetchedData.id) {
-      document.title = `${guideFetchedData.name?.length ? guideFetchedData.name : guideFetchedData.id} | ${document.title}`;
-      detailsResponseHandler(guideFetchedData);
-      detailsResponseHandler(guideFetchedData, `${elemIdPrefix}-form`);
-    }
-  }
-  async function fetchAchievement() {
-    const resFetch = await fetch(
-      `https://${apiDomain}/api/achievement/${achievementId}`
-    );
-    const achievementFetchedData = await resFetch.json();
-    if (Object.keys(achievementFetchedData).length > 0 && achievementFetchedData.id) {
-      document.title = `Achievement ${achievementFetchedData.name?.length ? achievementFetchedData.name : achievementFetchedData.id} | ${document.title}`;
-      achievementFetchedData.achievementName = achievementFetchedData.name;
-      detailsResponseHandler(achievementFetchedData);
-      detailsResponseHandler(achievementFetchedData, `${elemIdPrefix}-form`);
-    }
-  }
   function redirectAway() {
     window.location.replace(
       isEditing ? `/guide?id=${guideId}` : achievementId > 0 ? `/achievement?id=${achievementId}` : "/guides"
     );
   }
-  $().ready(async () => {
+  $(async () => {
     await auth0Bootstrap();
     if (!token) {
       console.log("User not authenticated");
@@ -314,10 +323,10 @@
       return;
     }
     if (isEditing) {
-      await fetchGuide();
-      if (guideFetchedData?.achievementId > 0) {
+      guideFetchedData2 = await fetchGuide(apiDomain, guideId);
+      if (guideFetchedData2?.achievementId > 0) {
         const resFetch = await fetch(
-          `https://${apiDomain}/api/achievement/${guideFetchedData.achievementId}/guide-auth-user-data`,
+          `https://${apiDomain}/api/achievement/${guideFetchedData2.achievementId}/guide-auth-user-data`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (resFetch.status !== 200) {
@@ -333,7 +342,7 @@
         }
       }
     } else if (achievementId > 0) {
-      await fetchAchievement();
+      await fetchAchievement(apiDomain, achievementId);
     } else {
       console.log("no valid parameter provided");
       redirectAway();

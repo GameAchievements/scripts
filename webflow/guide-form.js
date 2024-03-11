@@ -1,5 +1,8 @@
 // <script src="https://cdn.tiny.cloud/1/sj801m9s9ivbndop77c87iww4n5onm4rvgcxo1a63ayhv32s/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
-import { gaDate, achievementNameSlicer } from '../utils';
+
+import { fetchAchievement } from '../components/GuideFormPage/AchievementSection';
+import { fetchGuide } from '../components/GuideFormPage/GuideData';
+import { canSubmit } from '../components/GuideFormPage/utils/canSubmit';
 
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 const urlParams = new URLSearchParams(window.location.search);
@@ -38,39 +41,6 @@ const highlightRequiredLabel = ($el) => {
     return $el.prev('label').removeClass('field-label-missing');
   }
   $el.prev('label').addClass('field-label-missing');
-};
-
-// cycle all fields and verify if they all have content
-const canSubmit = ($elChanged) => {
-  let allInputsFilled = false;
-  let allTextareasFilled = false;
-  if ($elChanged?.length) {
-    highlightRequiredLabel($elChanged);
-  }
-  for (const inp of $('input[name][required]', elemId)) {
-    allInputsFilled = isRequiredFilled($(inp), $(inp).val()?.length);
-    if (!allInputsFilled) {
-      break;
-    }
-  }
-  for (const txt of $('.gas-form-tinymce', elemId)) {
-    allTextareasFilled = isRequiredFilled(
-      $(txt),
-      tinyMCE.get($(txt).attr('id')).getContent()?.length
-    );
-    if (!allTextareasFilled) {
-      break;
-    }
-  }
-  if (allInputsFilled && allTextareasFilled) {
-    $(`${elemId}-btn-submit`)
-      .removeClass('disabled-button')
-      .attr('disabled', false);
-  } else {
-    $(`${elemId}-btn-submit`)
-      .addClass('disabled-button')
-      .attr('disabled', true);
-  }
 };
 
 let editorChangeHandlerId;
@@ -269,79 +239,6 @@ async function setupForm() {
   });
 }
 
-function detailsResponseHandler(res, elemId = `${elemIdPrefix}-details`) {
-  const $ghContainer = $(elemId);
-  let dataTemplateActual = $ghContainer.prop('outerHTML');
-  console.info(`=== ${elemId} ===`, res);
-  const textKeysToReplace = [
-    'id',
-    'name',
-    'achievementId',
-    'achievementName',
-    'gameId',
-    'gameName',
-  ];
-  const guideImg = res.coverURL || res.imageURL;
-  if (guideImg?.length && elemId.endsWith('details')) {
-    dataTemplateActual = $ghContainer
-      .css(
-        'background-image',
-        `linear-gradient(rgba(255,255,255,0),#030922),
-          linear-gradient(rgba(70,89,255,.4),rgba(70,89,255,.4)),
-          url(${guideImg})`
-      )
-      .prop('outerHTML');
-  }
-  Object.entries(res).forEach(([key, value]) => {
-    if (key === 'achievementName') {
-      dataTemplateActual = dataTemplateActual.replaceAll(
-        `{|${key}|}`,
-        achievementNameSlicer(value)
-      );
-    } else if (textKeysToReplace.includes(key)) {
-      dataTemplateActual = dataTemplateActual.replaceAll(
-        `{|${key}|}`,
-        (key.endsWith('At') ? gaDate(value) : value) || ''
-      );
-    }
-  });
-  $ghContainer.prop('outerHTML', dataTemplateActual);
-}
-
-async function fetchGuide() {
-  const resFetch = await fetch(`https://${apiDomain}/api/guide/${guideId}`);
-  guideFetchedData = await resFetch.json();
-  if (Object.keys(guideFetchedData).length > 0 && guideFetchedData.id) {
-    document.title = `${
-      guideFetchedData.name?.length
-        ? guideFetchedData.name
-        : guideFetchedData.id
-    } | ${document.title}`;
-    detailsResponseHandler(guideFetchedData);
-    detailsResponseHandler(guideFetchedData, `${elemIdPrefix}-form`);
-  }
-}
-
-async function fetchAchievement() {
-  const resFetch = await fetch(
-    `https://${apiDomain}/api/achievement/${achievementId}`
-  );
-  const achievementFetchedData = await resFetch.json();
-  if (
-    Object.keys(achievementFetchedData).length > 0 &&
-    achievementFetchedData.id
-  ) {
-    document.title = `Achievement ${
-      achievementFetchedData.name?.length
-        ? achievementFetchedData.name
-        : achievementFetchedData.id
-    } | ${document.title}`;
-    achievementFetchedData.achievementName = achievementFetchedData.name;
-    detailsResponseHandler(achievementFetchedData);
-    detailsResponseHandler(achievementFetchedData, `${elemIdPrefix}-form`);
-  }
-}
-
 function redirectAway() {
   window.location.replace(
     isEditing
@@ -352,7 +249,7 @@ function redirectAway() {
   );
 }
 
-$().ready(async () => {
+$(async () => {
   await auth0Bootstrap();
   if (!token) {
     console.log('User not authenticated');
@@ -360,7 +257,7 @@ $().ready(async () => {
     return;
   }
   if (isEditing) {
-    await fetchGuide();
+    guideFetchedData = await fetchGuide(apiDomain, guideId);
     if (guideFetchedData?.achievementId > 0) {
       const resFetch = await fetch(
         `https://${apiDomain}/api/achievement/${guideFetchedData.achievementId}/guide-auth-user-data`,
@@ -379,7 +276,7 @@ $().ready(async () => {
       }
     }
   } else if (achievementId > 0) {
-    await fetchAchievement();
+    await fetchAchievement(apiDomain, achievementId);
   } else {
     console.log('no valid parameter provided');
     redirectAway();
