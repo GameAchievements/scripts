@@ -46,31 +46,30 @@
   var showImageFromSrc = ($img, url, parentSelector = ".gas-list-entry") => $img.removeAttr("srcset").removeAttr("sizes").attr("src", url).parents(parentSelector).prop("outerHTML");
 
   // utils/templateReplacers/setupListSearch.js
-  var setupListSearch = (elemId, fetchFn, extraParams = {}) => {
-    $(`${elemId} form.search`).on("submit", async function(evt) {
+  var setupListSearch = (elemId2, fetchFn, extraParams = {}) => {
+    $(`${elemId2} form.search`).on("submit", async function(evt) {
       evt.preventDefault();
       searchTerm = new URLSearchParams($(this).serialize()).get("query");
       if (searchTerm?.length) {
-        $(".ga-loader-container", elemId).show();
-        $(".gas-list,.gas-list-results-info", elemId).hide();
-        await fetchFn(elemId, searchTerm, extraParams);
-        $(".gas-list-results-info", elemId).show();
+        $(".ga-loader-container", elemId2).show();
+        $(".gas-list,.gas-list-results-info", elemId2).hide();
+        await fetchFn(elemId2, searchTerm, extraParams);
+        $(".gas-list-results-info", elemId2).show();
         $(".ga-loader-container").hide();
       }
     });
   };
 
-  // webflow/guides.js
-  var apiDomain = document.querySelector("meta[name=domain]")?.content;
+  // components/GuidesPage/ListHandler.js
   function listResponseHandler({
     listData,
-    elemId,
+    elemId: elemId2,
     numKeysToReplace,
     textKeysToReplace
   }) {
-    let dataTemplate = $(elemId).prop("outerHTML");
-    const $list = $(`${elemId} .gas-list`);
-    const $emptyList = $(`${elemId} .gas-list-empty`);
+    let dataTemplate = $(elemId2).prop("outerHTML");
+    const $list = $(`${elemId2} .gas-list`);
+    const $emptyList = $(`${elemId2} .gas-list-empty`);
     if (listData?.length) {
       const $entryTemplate = $(".gas-list-entry", $list).first();
       $entryTemplate.show();
@@ -116,12 +115,15 @@
         $list.append(dataTemplateActual);
       });
     } else {
-      $(elemId).html($emptyList);
+      $(elemId2).html($emptyList);
       $emptyList.show();
     }
     $list.css("display", "flex");
   }
-  async function fetchGuides(elemId, searchTerm2 = "") {
+
+  // components/GuidesPage/GuidesData.js
+  var apiDomain = document.querySelector("meta[name=domain]")?.content;
+  async function fetchGuides(elemId2, searchTerm2 = "") {
     const paramsObj = {};
     if (searchTerm2.length) {
       paramsObj.q = searchTerm2;
@@ -130,12 +132,12 @@
       `https://${apiDomain}/api/guide/list${Object.keys(paramsObj)?.length ? `?${new URLSearchParams(paramsObj).toString()}` : ""}`
     );
     const fetchData = await resGuides.json();
-    $(`${elemId} .gas-list-results-info`).text(
+    $(`${elemId2} .gas-list-results-info`).text(
       (fetchData?.count || 0) + " result(s)"
     );
     listResponseHandler({
       listData: fetchData.results,
-      elemId,
+      elemId: elemId2,
       numKeysToReplace: ["likes", "comments"],
       textKeysToReplace: [
         "id",
@@ -148,9 +150,11 @@
       ]
     });
   }
-  $().ready(async () => {
+
+  // webflow/guides.js
+  var elemId = "#gas-list-guides";
+  $(async () => {
     await auth0Bootstrap();
-    const elemId = "#gas-list-guides";
     setupListSearch(elemId, fetchGuides);
     await fetchGuides(elemId);
     $(".ga-loader-container").hide();
