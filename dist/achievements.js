@@ -116,7 +116,7 @@
     $list.css("display", "flex");
   }
   async function fetchAchievements(elemId, searchTerm2 = "") {
-    filterTxt = $(".gas-filters-sw-li.active").first().text();
+    const filterTxt = $(".gas-filters-sw-li.active").first().text();
     const paramsObj = {};
     if (filterTxt !== "All") {
       paramsObj.startsWith = filterTxt;
@@ -124,7 +124,6 @@
     if (searchTerm2.length) {
       paramsObj.q = searchTerm2;
     }
-    console.log("paramsObj", paramsObj);
     const resAchievements = await fetch(
       `https://${apiDomain}/api/achievement/list${Object.keys(paramsObj)?.length ? `?${new URLSearchParams(paramsObj).toString()}` : ""}`
     );

@@ -1,12 +1,12 @@
 import {
-  cleanupDoubleQuotes,
-  gaDate,
-  showImageFromSrc,
   showPlatform,
+  showImageFromSrc,
+  gaDate,
+  cleanupDoubleQuotes,
+  isSteamImage,
 } from '../../utils';
 
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
-
 let $entryTemplate, $listHeader, $emptyList;
 
 function listResponseHandler({
@@ -30,18 +30,13 @@ function listResponseHandler({
     listData.forEach((item, resIdx) => {
       let dataTemplateActual = dataTemplate;
       Object.entries(item).forEach(([key, value]) => {
-        const $gameImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
-        if ($gameImg?.length && item.gameIconURL?.length) {
-          // TODO: why is WF adding gas-list-entry-cover to this element?
-          $gameImg.removeClass('gas-list-entry-cover');
-          dataTemplateActual =
-            showImageFromSrc($gameImg, item.gameIconURL) || dataTemplateActual;
-        }
-        const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
         const imageURL = item.iconURL || item.imageURL;
-        if ($entryImg?.length && imageURL?.length) {
-          dataTemplateActual =
-            showImageFromSrc($entryImg, imageURL) || dataTemplateActual;
+        if (imageURL?.length && !isSteamImage(imageURL)) {
+          const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+          if ($entryImg?.length) {
+            dataTemplateActual =
+              showImageFromSrc($entryImg, imageURL) || dataTemplateActual;
+          }
         }
         if (textKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
@@ -56,18 +51,22 @@ function listResponseHandler({
           );
         } else if (key === 'importedFromPlatform') {
           dataTemplateActual = showPlatform(value, dataTemplateActual);
-        } else if (key === 'rarityClass') {
-          dataTemplateActual = dataTemplateActual.replaceAll(
-            `{|${key}|}`,
-            value || ''
-          );
-          if (value.toLowerCase() !== 'common') {
-            const classValue = value.replace(' ', '-')?.toLowerCase();
-            dataTemplateActual = $(`.gas-rarity-tag`, dataTemplateActual)
-              .removeClass('gas-rarity-tag')
-              .addClass(`gas-rarity-tag-${classValue}`)
-              .children('.p1')
-              .addClass(classValue)
+        } else if (
+          key === 'consoles' &&
+          value?.length &&
+          !value.includes('PC')
+        ) {
+          const $tags = $(`.gas-tags-${key}`, dataTemplateActual);
+          if ($tags?.length) {
+            dataTemplateActual = $tags
+              .html(
+                value
+                  .map(
+                    (tag) =>
+                      `<div class="console-tag" title="${tag}"><div class="gas-text-overflow">${tag}</div></div>`
+                  )
+                  .join('\n')
+              )
               .parents('.gas-list-entry')
               .prop('outerHTML');
           }
@@ -87,7 +86,7 @@ function listResponseHandler({
   $list.css('display', 'flex');
 }
 
-export async function fetchAchievements(elemId, searchTerm = '') {
+export async function fetchGames(elemId, searchTerm = '') {
   const filterTxt = $('.gas-filters-sw-li.active').first().text();
   const paramsObj = {};
   if (filterTxt !== 'All') {
@@ -96,35 +95,23 @@ export async function fetchAchievements(elemId, searchTerm = '') {
   if (searchTerm.length) {
     paramsObj.q = searchTerm;
   }
-  const resAchievements = await fetch(
-    `https://${apiDomain}/api/achievement/list${
+  console.log('paramsObj', paramsObj);
+  const resGames = await fetch(
+    `https://${apiDomain}/api/game/list${
       Object.keys(paramsObj)?.length
         ? `?${new URLSearchParams(paramsObj).toString()}`
         : ''
     }`
   );
-  const fetchData = await resAchievements.json();
+  const fetchData = await resGames.json();
   $(`${elemId} .gas-list-results-info`).text(
     (fetchData?.length || 0) + ' result(s)'
   );
+
   listResponseHandler({
     listData: fetchData,
     elemId,
-    numKeysToReplace: [
-      'id',
-      'gameId',
-      'points',
-      'playersCount',
-      'achieversCount',
-      'completion',
-      'gameTotalAchievements',
-    ],
-    textKeysToReplace: [
-      'name',
-      'gameName',
-      'description',
-      'updatedAt',
-      'platformOriginalAchievementId',
-    ],
+    numKeysToReplace: ['completion', 'achievementsCount'],
+    textKeysToReplace: ['id', 'name', 'description', 'updatedAt'],
   });
 }

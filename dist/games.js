@@ -51,22 +51,11 @@
     });
   };
 
-  // webflow/games.js
+  // components/GamesPage/GamesData.js
   var apiDomain = document.querySelector("meta[name=domain]")?.content;
-  var filterTxt = "All";
   var $entryTemplate;
   var $listHeader;
   var $emptyList;
-  async function filterByLetter(elemId, event) {
-    $(".gas-filters-sw-li", $(elemId)).removeClass("active");
-    $(event.target).addClass("active");
-    $(".ga-loader-container", $(elemId)).show();
-    $(".gas-list,.gas-list-results-info", elemId).hide();
-    filterTxt = $(event.target).text();
-    await fetchGames(elemId);
-    $(".gas-list-results-info", elemId).show();
-    $(".ga-loader-container").hide();
-  }
   function listResponseHandler({
     listData,
     elemId,
@@ -127,6 +116,7 @@
     $list.css("display", "flex");
   }
   async function fetchGames(elemId, searchTerm2 = "") {
+    const filterTxt = $(".gas-filters-sw-li.active").first().text();
     const paramsObj = {};
     if (filterTxt !== "All") {
       paramsObj.startsWith = filterTxt;
@@ -134,6 +124,7 @@
     if (searchTerm2.length) {
       paramsObj.q = searchTerm2;
     }
+    console.log("paramsObj", paramsObj);
     const resGames = await fetch(
       `https://${apiDomain}/api/game/list${Object.keys(paramsObj)?.length ? `?${new URLSearchParams(paramsObj).toString()}` : ""}`
     );
@@ -148,7 +139,20 @@
       textKeysToReplace: ["id", "name", "description", "updatedAt"]
     });
   }
-  $().ready(async () => {
+
+  // components/GamesPage/FilterByLetter.js
+  async function filterByLetter(elemId, event) {
+    $(".gas-filters-sw-li", $(elemId)).removeClass("active");
+    $(event.target).addClass("active");
+    $(".ga-loader-container", $(elemId)).show();
+    $(".gas-list,.gas-list-results-info", elemId).hide();
+    await fetchGames(elemId);
+    $(".gas-list-results-info", elemId).show();
+    $(".ga-loader-container").hide();
+  }
+
+  // webflow/games.js
+  $(async () => {
     await auth0Bootstrap();
     const gamesElemId = "#gas-list-games";
     $(`${gamesElemId} .gas-filters-sw-li`).on(
