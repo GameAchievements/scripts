@@ -59,18 +59,77 @@
   // utils/templateReplacers/showImageFromSrc.js
   var showImageFromSrc = ($img, url, parentSelector = ".gas-list-entry") => $img.removeAttr("srcset").removeAttr("sizes").attr("src", url).parents(parentSelector).prop("outerHTML");
 
-  // webflow/guide.js
-  var apiDomain = document.querySelector("meta[name=domain]")?.content;
-  var urlParams = new URLSearchParams(location.search);
-  var guideId = urlParams.get("id") || 1;
-  var achievementId = 0;
-  var hasLike;
-  var elemIdPrefix = `#gas-guide`;
-  $(".ga-loader-container").show();
-  $("#ga-sections-container").hide();
+  // components/GuidePage/CommentsSection.js
+  var elemIdPrefix2 = `#gas-guide`;
+  function listResponseHandler({ listData, elemId, textKeysToReplace }) {
+    console.info(`=== ${elemId} results ===`, listData);
+    let dataTemplate = $(elemId).prop("outerHTML");
+    const $list = $(`${elemId} .gas-list`);
+    const $emptyList = $(`.gas-list-empty`, $list);
+    if (listData.count > 0 && listData.results?.length) {
+      const $listHeader = $list.children().first();
+      const $entryTemplate = $(".gas-list-entry", $list).first();
+      $entryTemplate.show();
+      dataTemplate = $entryTemplate.prop("outerHTML");
+      $list.html($listHeader).append($entryTemplate);
+      $entryTemplate.hide();
+      listData.results.forEach((item, resIdx) => {
+        let dataTemplateActual = dataTemplate;
+        Object.entries(item).forEach(([key, value]) => {
+          const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+          if ($entryImg.length && item.imageUrl?.length) {
+            dataTemplateActual = showImageFromSrc($entryImg, item.imageURL) || dataTemplateActual;
+          }
+          if (textKeysToReplace.includes(key)) {
+            dataTemplateActual = dataTemplateActual.replaceAll(
+              `{|${key}|}`,
+              value || ""
+            );
+          } else if (key === "date") {
+            const { date, time } = gaDateTime(value);
+            dataTemplateActual = dataTemplateActual.replaceAll(
+              `{|${key}|}`,
+              `${date} at ${time}`
+            );
+          }
+        });
+        $list.append(dataTemplateActual).children().last().removeClass(["bg-light", "bg-dark"]).addClass(`bg-${resIdx % 2 > 0 ? "light" : "dark"}`);
+      });
+    } else {
+      $list.html($emptyList);
+      $emptyList.show();
+    }
+    $list.show();
+  }
+  async function listFetcher({ apiDomain: apiDomain3, guideId: guideId3 }, { listName, textKeysToReplace }) {
+    const elemId = `${elemIdPrefix2}-${listName}`;
+    const resList = await fetch(
+      `https://${apiDomain3}/api/guide/${guideId3}/${listName}`
+    );
+    const listData = await resList.json();
+    $(`.gas-guide-${listName}-count`).text(listData.count || "");
+    listResponseHandler({
+      listData,
+      elemId,
+      textKeysToReplace
+    });
+  }
+  async function loadComments(apiDomain3, guideId3) {
+    await listFetcher(
+      { apiDomain: apiDomain3, guideId: guideId3 },
+      {
+        listName: "comments",
+        numKeysToReplace: [],
+        textKeysToReplace: ["profileId", "author", "comment"]
+      }
+    );
+  }
+
+  // components/GuidePage/GuideData.js
+  var elemIdPrefix3 = `#gas-guide`;
   function loadSections(sections) {
-    const $nav = $(`${elemIdPrefix}-nav`);
-    const $secs = $(`${elemIdPrefix}-sections`);
+    const $nav = $(`${elemIdPrefix3}-nav`);
+    const $secs = $(`${elemIdPrefix3}-sections`);
     const $navTemp = $(`.gas-nav-btn`, $nav).first();
     const $secTemp = $(`.gas-section`, $secs).first();
     for (let secIdx = sections.length - 1; secIdx >= 0; secIdx--) {
@@ -79,7 +138,7 @@
       $newNavBtn.attr("title", sec.title);
       $newNavBtn.children().first().text($newNavBtn.text().replace(`{|title|}`, sec.title));
       const secNum = secIdx + 1;
-      $nav.prepend($newNavBtn.attr("href", `${elemIdPrefix}-section-${secNum}`));
+      $nav.prepend($newNavBtn.attr("href", `${elemIdPrefix3}-section-${secNum}`));
       const $newSec = $secTemp.clone();
       const $secTitle = $(".gas-section-title", $newSec);
       $secTitle.text(
@@ -88,14 +147,14 @@
       const $secContent = $(".gas-section-content", $newSec);
       $secContent.html($secContent.text().replace(`{|content|}`, sec.content));
       $secs.prepend(
-        $newSec.attr("id", `${elemIdPrefix.slice(1)}-section-${secNum}`)
+        $newSec.attr("id", `${elemIdPrefix3.slice(1)}-section-${secNum}`)
       );
     }
     $navTemp.remove();
     $secTemp.remove();
   }
   function guideResponseHandler(res) {
-    const elemId = `${elemIdPrefix}-details`;
+    const elemId = `${elemIdPrefix3}-details`;
     const $ghContainer = $(elemId);
     let dataTemplateActual = $ghContainer.prop("outerHTML");
     console.info(`=== ${elemId} ===`, res);
@@ -144,8 +203,8 @@
     $ghContainer.prop("outerHTML", dataTemplateActual);
     loadSections(res.sections);
   }
-  async function fetchGuide() {
-    const resFetch = await fetch(`https://${apiDomain}/api/guide/${guideId}`);
+  async function fetchGuide(apiDomain3, guideId3) {
+    const resFetch = await fetch(`https://${apiDomain3}/api/guide/${guideId3}`);
     if (resFetch.status !== 200) {
       return;
     }
@@ -158,59 +217,10 @@
     }
     return resData;
   }
-  function listResponseHandler({ listData, elemId, textKeysToReplace }) {
-    console.info(`=== ${elemId} results ===`, listData);
-    let dataTemplate = $(elemId).prop("outerHTML");
-    const $list = $(`${elemId} .gas-list`);
-    const $emptyList = $(`.gas-list-empty`, $list);
-    if (listData.count > 0 && listData.results?.length) {
-      const $listHeader = $list.children().first();
-      const $entryTemplate = $(".gas-list-entry", $list).first();
-      $entryTemplate.show();
-      dataTemplate = $entryTemplate.prop("outerHTML");
-      $list.html($listHeader).append($entryTemplate);
-      $entryTemplate.hide();
-      listData.results.forEach((item, resIdx) => {
-        let dataTemplateActual = dataTemplate;
-        Object.entries(item).forEach(([key, value]) => {
-          const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
-          if ($entryImg.length && item.imageUrl?.length) {
-            dataTemplateActual = showImageFromSrc($entryImg, item.imageURL) || dataTemplateActual;
-          }
-          if (textKeysToReplace.includes(key)) {
-            dataTemplateActual = dataTemplateActual.replaceAll(
-              `{|${key}|}`,
-              value || ""
-            );
-          } else if (key === "date") {
-            const { date, time } = gaDateTime(value);
-            dataTemplateActual = dataTemplateActual.replaceAll(
-              `{|${key}|}`,
-              `${date} at ${time}`
-            );
-          }
-        });
-        $list.append(dataTemplateActual).children().last().removeClass(["bg-light", "bg-dark"]).addClass(`bg-${resIdx % 2 > 0 ? "light" : "dark"}`);
-      });
-    } else {
-      $list.html($emptyList);
-      $emptyList.show();
-    }
-    $list.show();
-  }
-  async function listFetcher({ listName, textKeysToReplace }) {
-    const elemId = `${elemIdPrefix}-${listName}`;
-    const resList = await fetch(
-      `https://${apiDomain}/api/guide/${guideId}/${listName}`
-    );
-    const listData = await resList.json();
-    $(`.gas-guide-${listName}-count`).text(listData.count || "");
-    listResponseHandler({
-      listData,
-      elemId,
-      textKeysToReplace
-    });
-  }
+
+  // components/GuidePage/VerifyAuthUserGuideData.js
+  var achievementId2 = 0;
+  var hasLike;
   function setupLike(hasLikeFromFetch) {
     hasLike = hasLikeFromFetch;
     const $btnLike = $(`${elemIdPrefix}-btn-like`);
@@ -313,11 +323,11 @@
     });
   };
   async function verifyAuthenticatedUserGuideData() {
-    if (!token || !achievementId) {
+    if (!token || !achievementId2) {
       return;
     }
     const resFetch = await fetch(
-      `https://${apiDomain}/api/achievement/${achievementId}/guide-auth-user-data?id=${guideId}`,
+      `https://${apiDomain}/api/achievement/${achievementId2}/guide-auth-user-data?id=${guideId}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     if (resFetch.status !== 200) {
@@ -335,15 +345,18 @@
     setupLike(revData.hasLike);
     setupCommentForm(revData.hasComment);
   }
+
+  // webflow/guide.js
+  var apiDomain2 = document.querySelector("meta[name=domain]")?.content;
+  var urlParams = new URLSearchParams(location.search);
+  var guideId2 = urlParams.get("id") || 1;
+  $(".ga-loader-container").show();
+  $("#ga-sections-container").hide();
   $().ready(async () => {
     await auth0Bootstrap();
-    if (await fetchGuide()) {
+    if (await fetchGuide(apiDomain2, guideId2)) {
       await verifyAuthenticatedUserGuideData();
-      await listFetcher({
-        listName: "comments",
-        numKeysToReplace: [],
-        textKeysToReplace: ["profileId", "author", "comment"]
-      });
+      await loadComments(apiDomain2, guideId2);
       $(".ga-loader-container").hide();
       $("#ga-sections-container").show();
       $("#gas-wf-tab-activator").click();
