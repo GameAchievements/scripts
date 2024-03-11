@@ -23,26 +23,6 @@ const templatePrefix = 'section-2';
 $('.ga-loader-container').show();
 $('#ga-sections-container').hide();
 
-const isRequiredFilled = ($el, hasLen) => {
-  if (hasLen) {
-    isUserInputActive = true;
-    return true;
-  }
-  return false;
-};
-
-const highlightRequiredLabel = ($el) => {
-  if (
-    ($el.hasClass('gas-form-tinymce')
-      ? tinyMCE.get($el.attr('id')).getContent()
-      : $el.val()
-    )?.length
-  ) {
-    return $el.prev('label').removeClass('field-label-missing');
-  }
-  $el.prev('label').addClass('field-label-missing');
-};
-
 let editorChangeHandlerId;
 const tmceObj = {
   selector: '.gas-form-tinymce',

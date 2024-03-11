@@ -1,3 +1,5 @@
+//currently using guide-form
+
 import { gaDate, achievementNameSlicer } from '../utils';
 
 const apiDomain = document.querySelector('meta[name=domain]')?.content,
