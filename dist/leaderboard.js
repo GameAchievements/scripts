@@ -36,28 +36,10 @@
     });
   };
 
-  // webflow/leaderboard.js
-  var apiDomain = document.querySelector("meta[name=domain]")?.content;
-  var featureName = "leaderboard";
+  // components/LeaderboardsPage/ListHandler.js
   var $entryTemplate;
   var $listHeader;
   var $emptyList;
-  $(".ga-loader-container").show();
-  $("#ga-sections-container").hide();
-  var paramPlatformId = 0;
-  switch (window.location.pathname) {
-    case `/playstation-${featureName}`:
-      paramPlatformId = 1;
-      break;
-    case `/xbox-${featureName}`:
-      paramPlatformId = 2;
-      break;
-    case `/steam-${featureName}`:
-      paramPlatformId = 3;
-      break;
-    default:
-      break;
-  }
   function listResponseHandler({
     listData,
     elemId,
@@ -86,7 +68,7 @@
               dataTemplateActual = showImageFromSrc($profileImg, value) || dataTemplateActual;
             }
           } else if (key === "recentlyPlayed") {
-            if (!paramPlatformId && value?.platform?.length) {
+            if (!getPlatformId() && value?.platform?.length) {
               dataTemplateActual = showPlatform(
                 value?.platform,
                 dataTemplateActual
@@ -116,20 +98,35 @@
     }
     $list.css("display", "flex");
   }
+
+  // components/LeaderboardsPage/LeaderboardsData.js
+  var apiDomain = document.querySelector("meta[name=domain]")?.content;
+  var getPlatformId = () => {
+    switch (window.location.pathname) {
+      case `/playstation-leaderboard`:
+        return 1;
+      case `/xbox-leaderboard`:
+        return 2;
+      case `/steam-leaderboard`:
+        return 3;
+      default:
+        return;
+    }
+  };
   async function fetchLeaderboard(elemId, searchTerm2 = "") {
     const paramsObj = {};
-    if (paramPlatformId) {
-      paramsObj.type = paramPlatformId;
+    if (getPlatformId()) {
+      paramsObj.type = getPlatformId();
     }
     if (searchTerm2.length) {
       paramsObj.q = searchTerm2;
     }
     const resList = await fetch(
-      `https://${apiDomain}/api/${featureName}${Object.keys(paramsObj)?.length ? `?${new URLSearchParams(paramsObj).toString()}` : ""}`
+      `https://${apiDomain}/api/leaderboard${Object.keys(paramsObj)?.length ? `?${new URLSearchParams(paramsObj).toString()}` : ""}`
     );
     const resData = await resList.json();
     const numKeysToReplace = ["totalAchievements", "gaPoints"];
-    switch (paramPlatformId) {
+    switch (getPlatformId()) {
       case 1:
         numKeysToReplace.push("silver", "bronze", "gold", "platinum");
         break;
@@ -147,9 +144,13 @@
       textKeysToReplace: ["profileId", "name"]
     });
   }
-  $().ready(async () => {
+
+  // webflow/leaderboard.js
+  $(".ga-loader-container").show();
+  $("#ga-sections-container").hide();
+  $(async () => {
+    const elemId = `#gas-leaderboard`;
     await auth0Bootstrap();
-    const elemId = `#gas-${featureName}`;
     setupListSearch(elemId, fetchLeaderboard);
     await fetchLeaderboard(elemId);
     $(".ga-loader-container").hide();
