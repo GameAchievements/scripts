@@ -48,22 +48,11 @@
     });
   };
 
-  // webflow/achievements.js
+  // components/AchievementsPage/AchievementsData.js
   var apiDomain = document.querySelector("meta[name=domain]")?.content;
-  var filterTxt = "All";
   var $entryTemplate;
   var $listHeader;
   var $emptyList;
-  async function filterByLetter(elemId, event) {
-    $(".gas-filters-sw-li", $(elemId)).removeClass("active");
-    $(event.target).addClass("active");
-    $(".ga-loader-container", $(elemId)).show();
-    $(".gas-list,.gas-list-results-info", elemId).hide();
-    filterTxt = $(event.target).text();
-    await fetchAchievements(elemId);
-    $(".gas-list-results-info", elemId).show();
-    $(".ga-loader-container").hide();
-  }
   function listResponseHandler({
     listData,
     elemId,
@@ -127,6 +116,7 @@
     $list.css("display", "flex");
   }
   async function fetchAchievements(elemId, searchTerm2 = "") {
+    filterTxt = $(".gas-filters-sw-li.active").first().text();
     const paramsObj = {};
     if (filterTxt !== "All") {
       paramsObj.startsWith = filterTxt;
@@ -134,6 +124,7 @@
     if (searchTerm2.length) {
       paramsObj.q = searchTerm2;
     }
+    console.log("paramsObj", paramsObj);
     const resAchievements = await fetch(
       `https://${apiDomain}/api/achievement/list${Object.keys(paramsObj)?.length ? `?${new URLSearchParams(paramsObj).toString()}` : ""}`
     );
@@ -162,7 +153,20 @@
       ]
     });
   }
-  $().ready(async () => {
+
+  // components/AchievementsPage/FilterByLetter.js
+  async function filterByLetter(elemId, event) {
+    $(".gas-filters-sw-li", $(elemId)).removeClass("active");
+    $(event.target).addClass("active");
+    $(".ga-loader-container", $(elemId)).show();
+    $(".gas-list,.gas-list-results-info", elemId).hide();
+    await fetchAchievements(elemId);
+    $(".gas-list-results-info", elemId).show();
+    $(".ga-loader-container").hide();
+  }
+
+  // webflow/achievements.js
+  $(async () => {
     await auth0Bootstrap();
     const achievementsElemId = "#gas-list-achievements";
     $(`${achievementsElemId} .gas-filters-sw-li`).on(
