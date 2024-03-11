@@ -37,10 +37,7 @@
   // utils/templateReplacers/showImageFromSrc.js
   var showImageFromSrc = ($img, url, parentSelector = ".gas-list-entry") => $img.removeAttr("srcset").removeAttr("sizes").attr("src", url).parents(parentSelector).prop("outerHTML");
 
-  // webflow/home.js
-  var apiDomain = document.querySelector("meta[name=domain]")?.content;
-  var forumDomain = document.querySelector("meta[name=forum-domain]")?.content;
-  var elemIdPrefix = `#gas-home`;
+  // components/HomePage/utils/listResponseHandler.js
   function listResponseHandler({
     listData,
     elemId,
@@ -118,14 +115,40 @@
     }
     $list.css("display", "flex");
   }
-  async function fetchGames(type) {
-    const resFetch = await fetch(`https://${apiDomain}/api/game/list/${type}`);
+
+  // components/HomePage/AchievementsData.js
+  async function fetchAchievements(elemIdPrefix2, apiDomain2) {
+    const resFetch = await fetch(
+      `https://${apiDomain2}/api/achievement/list/latest`
+    );
+    let listData = [];
+    if (resFetch.ok) {
+      const resData = await resFetch.json();
+      listData = resData.slice(0, 4);
+    }
+    const elemId = `${elemIdPrefix2}-list-achievements-latest`;
+    listResponseHandler({
+      listData,
+      elemId,
+      numKeysToReplace: ["id"],
+      textKeysToReplace: ["name", "description"],
+      drillDown: {
+        key: "gameVersionData",
+        keysToReplace: ["completion", "platform", "totalAchievements"]
+      }
+    });
+    $(`${elemId} .ga-loader-container`).hide();
+  }
+
+  // components/HomePage/GamesData.js
+  async function fetchGames(type, apiDomain2, elemIdPrefix2) {
+    const resFetch = await fetch(`https://${apiDomain2}/api/game/list/${type}`);
     let listData = [];
     if (resFetch.ok) {
       const resData = await resFetch.json();
       listData = resData?.slice(0, 4);
     }
-    const elemId = `${elemIdPrefix}-list-games-${type}`;
+    const elemId = `${elemIdPrefix2}-list-games-${type}`;
     listResponseHandler({
       listData,
       elemId,
@@ -146,8 +169,30 @@
     });
     $(`${elemId} .ga-loader-container`).hide();
   }
-  async function homeMetricsMetricsHandler() {
-    const resFetch = await fetch(`https://${apiDomain}/api/game/stats`);
+
+  // components/HomePage/GuidesData.js
+  async function fetchGuides(elemIdPrefix2, apiDomain2) {
+    const resFetch = await fetch(
+      `https://${apiDomain2}/api/guide/list?perPage=5&orderBy=createdAt:desc`
+    );
+    let listData = [];
+    if (resFetch.ok) {
+      const resData = await resFetch.json();
+      listData = resData.results?.slice(0, 4);
+    }
+    const elemId = `${elemIdPrefix2}-list-guides`;
+    listResponseHandler({
+      listData,
+      elemId,
+      numKeysToReplace: ["id", "comments", "likes"],
+      textKeysToReplace: ["name", "author", "description", "profileId"]
+    });
+    $(`${elemId} .ga-loader-container`).hide();
+  }
+
+  // components/HomePage/HomeMetrics.js
+  async function homeMetricsHandler(apiDomain2) {
+    const resFetch = await fetch(`https://${apiDomain2}/api/game/stats`);
     const resData = await resFetch.json();
     const $ghContainer = $("#top-page");
     let dataTemplateActual = $ghContainer.prop("outerHTML");
@@ -174,47 +219,10 @@
     });
     $ghContainer.prop("outerHTML", dataTemplateActual);
   }
-  async function fetchGuides() {
-    const resFetch = await fetch(
-      `https://${apiDomain}/api/guide/list?perPage=5&orderBy=createdAt:desc`
-    );
-    let listData = [];
-    if (resFetch.ok) {
-      const resData = await resFetch.json();
-      listData = resData.results?.slice(0, 4);
-    }
-    const elemId = `${elemIdPrefix}-list-guides`;
-    listResponseHandler({
-      listData,
-      elemId,
-      numKeysToReplace: ["id", "comments", "likes"],
-      textKeysToReplace: ["name", "author", "description", "profileId"]
-    });
-    $(`${elemId} .ga-loader-container`).hide();
-  }
-  async function fetchAchievements() {
-    const resFetch = await fetch(
-      `https://${apiDomain}/api/achievement/list/latest`
-    );
-    let listData = [];
-    if (resFetch.ok) {
-      const resData = await resFetch.json();
-      listData = resData.slice(0, 4);
-    }
-    const elemId = `${elemIdPrefix}-list-achievements-latest`;
-    listResponseHandler({
-      listData,
-      elemId,
-      numKeysToReplace: ["id"],
-      textKeysToReplace: ["name", "description"],
-      drillDown: {
-        key: "gameVersionData",
-        keysToReplace: ["completion", "platform", "totalAchievements"]
-      }
-    });
-    $(`${elemId} .ga-loader-container`).hide();
-  }
-  async function fetchLatestThreads() {
+
+  // components/HomePage/LastestThreadsData.js
+  var forumDomain = document.querySelector("meta[name=forum-domain]")?.content;
+  async function fetchLatestThreads(elemIdPrefix2) {
     const resFetch = await fetch(`https://${forumDomain}/api/recent`);
     let listData = [];
     if (resFetch.ok) {
@@ -233,7 +241,7 @@
       upvotes: e.upvotes,
       replies: e.postcount
     }));
-    const elemId = `${elemIdPrefix}-forum-threads`;
+    const elemId = `${elemIdPrefix2}-forum-threads`;
     listResponseHandler({
       listData,
       elemId,
@@ -248,15 +256,21 @@
     });
     $(`${elemId} .ga-loader-container`).hide();
   }
-  $().ready(async () => {
+
+  // webflow/home.js
+  var apiDomain = document.querySelector("meta[name=domain]")?.content;
+  var elemIdPrefix = `#gas-home`;
+  $(async () => {
     $(`.ga-loader-container`).show();
     await auth0Bootstrap();
     await Promise.all(
-      ["recent", "top"].map(async (type) => await fetchGames(type))
+      ["recent", "top"].map(
+        async (type) => await fetchGames(type, apiDomain, elemIdPrefix)
+      )
     );
-    await homeMetricsMetricsHandler();
-    await fetchGuides();
-    await fetchAchievements();
-    await fetchLatestThreads();
+    await homeMetricsHandler(apiDomain);
+    await fetchGuides(elemIdPrefix, apiDomain);
+    await fetchAchievements(elemIdPrefix, apiDomain);
+    await fetchLatestThreads(elemIdPrefix);
   });
 })();
