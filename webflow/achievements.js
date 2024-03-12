@@ -1,5 +1,5 @@
-import { fetchAchievements } from '../components/AchievementsPage/AchievementsData';
-import { filterByLetter } from '../components/AchievementsPage/FilterByLetter';
+import { fetchAchievements } from '../wrappers/AchievementsPage/AchievementsData';
+import { filterByLetter } from '../wrappers/AchievementsPage/FilterByLetter';
 import { setupListSearch } from '../utils';
 
 $(async () => {

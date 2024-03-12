@@ -1,4 +1,4 @@
-import { fetchGuides } from '../components/GuidesPage/GuidesData';
+import { fetchGuides } from '../wrappers/GuidesPage/GuidesData';
 import { setupListSearch } from '../utils';
 
 const elemId = '#gas-list-guides';

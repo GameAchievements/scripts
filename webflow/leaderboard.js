@@ -1,4 +1,4 @@
-import { fetchLeaderboard } from '../components/LeaderboardsPage/LeaderboardsData';
+import { fetchLeaderboard } from '../wrappers/LeaderboardsPage/LeaderboardsData';
 import { setupListSearch } from '../utils';
 
 $('.ga-loader-container').show();

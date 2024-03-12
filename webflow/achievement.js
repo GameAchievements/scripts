@@ -1,7 +1,7 @@
-import { verifyAuthenticatedUserGuideData } from '../components/AchievementPage/VerifyAuthUserGuideData';
-import { loadAchieversSection } from '../components/AchievementPage/AchieversSection';
-import { loadGuidesSection } from '../components/AchievementPage/GuidesSection';
-import { fetchAchievement } from '../components/AchievementPage/AchievementData';
+import { verifyAuthenticatedUserGuideData } from '../wrappers/AchievementPage/VerifyAuthUserGuideData';
+import { loadAchieversSection } from '../wrappers/AchievementPage/AchieversSection';
+import { loadGuidesSection } from '../wrappers/AchievementPage/GuidesSection';
+import { fetchAchievement } from '../wrappers/AchievementPage/AchievementData';
 
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 const urlParams = new URLSearchParams(window.location.search);

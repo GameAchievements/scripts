@@ -1,1 +1,4 @@
-(()=>{$(()=>auth0Bootstrap());})();
+(() => {
+  // webflow/about-us.js
+  $(() => auth0Bootstrap());
+})();

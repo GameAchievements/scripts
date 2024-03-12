@@ -1,9 +1,9 @@
-import { loadAchievements } from '../components/ProfilePage/AchievementsData';
-import { deleteProfile } from '../components/ProfilePage/DeleteProfile';
-import { loadGames } from '../components/ProfilePage/GamesData';
-import { loadGuides } from '../components/ProfilePage/GuidesData';
-import { loadReviews } from '../components/ProfilePage/ReviewsData';
-import { fetchGAUserData } from '../components/ProfilePage/UserData';
+import { loadAchievements } from '../wrappers/ProfilePage/AchievementsData';
+import { deleteProfile } from '../wrappers/ProfilePage/DeleteProfile';
+import { loadGames } from '../wrappers/ProfilePage/GamesData';
+import { loadGuides } from '../wrappers/ProfilePage/GuidesData';
+import { loadReviews } from '../wrappers/ProfilePage/ReviewsData';
+import { fetchGAUserData } from '../wrappers/ProfilePage/UserData';
 import { scrollToURLHash } from '../utils';
 
 const apiDomain = document.querySelector('meta[name=domain]')?.content;

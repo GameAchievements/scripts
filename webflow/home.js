@@ -1,8 +1,8 @@
-import { fetchAchievements } from '../components/HomePage/AchievementsData';
-import { fetchGames } from '../components/HomePage/GamesData';
-import { fetchGuides } from '../components/HomePage/GuidesData';
-import { homeMetricsHandler } from '../components/HomePage/HomeMetrics';
-import { fetchLatestThreads } from '../components/HomePage/LastestThreadsData';
+import { fetchAchievements } from '../wrappers/HomePage/AchievementsData';
+import { fetchGames } from '../wrappers/HomePage/GamesData';
+import { fetchGuides } from '../wrappers/HomePage/GuidesData';
+import { homeMetricsHandler } from '../wrappers/HomePage/HomeMetrics';
+import { fetchLatestThreads } from '../wrappers/HomePage/LastestThreadsData';
 
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 

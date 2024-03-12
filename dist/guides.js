@@ -1,1 +1,162 @@
-(()=>{var h=e=>{let t=o=>`0${o}`.slice(-2),r=new Date(e);return`${r.getFullYear()} . ${t(r.getMonth()+1)} . ${t(r.getDate())}`};var u=e=>e?.length?e.replace(/"(\w)/g,"\u201C$1").replace(/(\w)"/g,"$1\u201D").replaceAll('"',"'"):e;var g=e=>e?.includes("steamstatic")||e?.includes("steampowered");var f=e=>{if(!e)return"N.A.";let t=e.lastIndexOf(" | ");return t>0?e.slice(0,t):e};var d=(e,t,r=".gas-list-entry")=>{let o={ps:{rgx:/playstation/gi},xbox:{rgx:/xbox/gi},steam:{rgx:/steam|pc|windows|mac|linux/gi}};return o.ps.rgx.test(e)&&(t=$(".gas-platform-psn",t).css("display","inherit").parents(r).prop("outerHTML")),o.steam.rgx.test(e)&&(t=$(".gas-platform-steam",t).css("display","inherit").parents(r).prop("outerHTML")),o.xbox.rgx.test(e)&&(t=$(".gas-platform-xbox",t).css("display","inherit").parents(r).prop("outerHTML")),t};var m=(e,t,r=".gas-list-entry")=>e.removeAttr("srcset").removeAttr("sizes").attr("src",t).parents(r).prop("outerHTML");var x=(e,t,r={})=>{$(`${e} form.search`).on("submit",async function(o){o.preventDefault(),searchTerm=new URLSearchParams($(this).serialize()).get("query"),searchTerm?.length&&($(".ga-loader-container",e).show(),$(".gas-list,.gas-list-results-info",e).hide(),await t(e,searchTerm,r),$(".gas-list-results-info",e).show(),$(".ga-loader-container").hide())})};function b({listData:e,elemId:t,numKeysToReplace:r,textKeysToReplace:o}){let n=$(t).prop("outerHTML"),c=$(`${t} .gas-list`),y=$(`${t} .gas-list-empty`);if(e?.length){let l=$(".gas-list-entry",c).first();l.show(),n=l.prop("outerHTML"),l.hide(),c.html(l),e.forEach((a,L)=>{let s=n;s=s.replaceAll("{|idx|}",L+1),Object.entries(a).forEach(([i,p])=>{if(a.gameIconURL?.length&&!g(a.gameIconURL)){let C=$(".gas-list-entry-cover-game",s);if(C.length){let v=`For achievement: ${f(a.achievementName)}`;s=m(C.attr("alt",v).attr("title",v),a.gameIconURL)||s}}a.iconURL?.length&&!g(a.iconURL)&&($entryImg=$(".gas-list-entry-cover",s),$entryImg.length&&a.iconURL?.length&&(s=m($entryImg,a.iconURL)||s)),o.includes(i)?s=s.replaceAll(`{|${i}|}`,(i.endsWith("At")?h(p):u(p))||""):r.includes(i)?s=s.replaceAll(`{|${i}|}`,Math.round(p||0)):i==="platform"&&(s=d(p,s))}),c.append(s)})}else $(t).html(y),y.show();c.css("display","flex")}var D=document.querySelector("meta[name=domain]")?.content;async function w(e,t=""){let r={};t.length&&(r.q=t);let n=await(await fetch(`https://${D}/api/guide/list${Object.keys(r)?.length?`?${new URLSearchParams(r).toString()}`:""}`)).json();$(`${e} .gas-list-results-info`).text((n?.count||0)+" result(s)"),b({listData:n.results,elemId:e,numKeysToReplace:["likes","comments"],textKeysToReplace:["id","name","author","description","achievementId","achievementName","profileId"]})}var F="#gas-list-guides";$(async()=>{await auth0Bootstrap(),x(F,w),await w(F),$(".ga-loader-container").hide()});})();
+(() => {
+  // utils/dateTIme.js
+  var gaDate = (isoDate) => {
+    const pad = (v) => `0${v}`.slice(-2);
+    const dateObj = new Date(isoDate);
+    return `${dateObj.getFullYear()} . ${pad(dateObj.getMonth() + 1)} . ${pad(
+      dateObj.getDate()
+    )}`;
+  };
+
+  // utils/cleanupDoubleQuotes.js
+  var cleanupDoubleQuotes = (content) => content?.length ? content.replace(/"(\w)/g, "\u201C$1").replace(/(\w)"/g, "$1\u201D").replaceAll('"', "'") : content;
+
+  // utils/checkImageType.js
+  var isSteamImage = (imgURL) => imgURL?.includes("steamstatic") || imgURL?.includes("steampowered");
+
+  // utils/achievementNameSlicer.js
+  var achievementNameSlicer = (name) => {
+    if (!name) {
+      return "N.A.";
+    }
+    const metaDivider = name.lastIndexOf(" | ");
+    return metaDivider > 0 ? name.slice(0, metaDivider) : name;
+  };
+
+  // utils/templateReplacers/showPlatform.js
+  var showPlatform = (platformName, dataTemplateActual, parentSelector = ".gas-list-entry") => {
+    const platformVerifier = {
+      ps: { rgx: /playstation/gi },
+      xbox: { rgx: /xbox/gi },
+      steam: { rgx: /steam|pc|windows|mac|linux/gi }
+    };
+    if (platformVerifier.ps.rgx.test(platformName)) {
+      dataTemplateActual = $(`.gas-platform-psn`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+    }
+    if (platformVerifier.steam.rgx.test(platformName)) {
+      dataTemplateActual = $(`.gas-platform-steam`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+    }
+    if (platformVerifier.xbox.rgx.test(platformName)) {
+      dataTemplateActual = $(`.gas-platform-xbox`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+    }
+    return dataTemplateActual;
+  };
+
+  // utils/templateReplacers/showImageFromSrc.js
+  var showImageFromSrc = ($img, url, parentSelector = ".gas-list-entry") => $img.removeAttr("srcset").removeAttr("sizes").attr("src", url).parents(parentSelector).prop("outerHTML");
+
+  // utils/templateReplacers/setupListSearch.js
+  var setupListSearch = (elemId2, fetchFn, extraParams = {}) => {
+    $(`${elemId2} form.search`).on("submit", async function(evt) {
+      evt.preventDefault();
+      searchTerm = new URLSearchParams($(this).serialize()).get("query");
+      if (searchTerm?.length) {
+        $(".ga-loader-container", elemId2).show();
+        $(".gas-list,.gas-list-results-info", elemId2).hide();
+        await fetchFn(elemId2, searchTerm, extraParams);
+        $(".gas-list-results-info", elemId2).show();
+        $(".ga-loader-container").hide();
+      }
+    });
+  };
+
+  // wrappers/GuidesPage/ListHandler.js
+  function listResponseHandler({
+    listData,
+    elemId: elemId2,
+    numKeysToReplace,
+    textKeysToReplace
+  }) {
+    let dataTemplate = $(elemId2).prop("outerHTML");
+    const $list = $(`${elemId2} .gas-list`);
+    const $emptyList = $(`${elemId2} .gas-list-empty`);
+    if (listData?.length) {
+      const $entryTemplate = $(".gas-list-entry", $list).first();
+      $entryTemplate.show();
+      dataTemplate = $entryTemplate.prop("outerHTML");
+      $entryTemplate.hide();
+      $list.html($entryTemplate);
+      listData.forEach((item, resIdx) => {
+        let dataTemplateActual = dataTemplate;
+        dataTemplateActual = dataTemplateActual.replaceAll(`{|idx|}`, resIdx + 1);
+        Object.entries(item).forEach(([key, value]) => {
+          if (item.gameIconURL?.length && !isSteamImage(item.gameIconURL)) {
+            let $entryImg2 = $(`.gas-list-entry-cover-game`, dataTemplateActual);
+            if ($entryImg2.length) {
+              const imgCaption = `For achievement: ${achievementNameSlicer(
+                item.achievementName
+              )}`;
+              dataTemplateActual = showImageFromSrc(
+                $entryImg2.attr("alt", imgCaption).attr("title", imgCaption),
+                item.gameIconURL
+              ) || dataTemplateActual;
+            }
+          }
+          if (item.iconURL?.length && !isSteamImage(item.iconURL)) {
+            $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+            if ($entryImg.length && item.iconURL?.length) {
+              dataTemplateActual = showImageFromSrc($entryImg, item.iconURL) || dataTemplateActual;
+            }
+          }
+          if (textKeysToReplace.includes(key)) {
+            dataTemplateActual = dataTemplateActual.replaceAll(
+              `{|${key}|}`,
+              (key.endsWith("At") ? gaDate(value) : cleanupDoubleQuotes(value)) || ""
+            );
+          } else if (numKeysToReplace.includes(key)) {
+            dataTemplateActual = dataTemplateActual.replaceAll(
+              `{|${key}|}`,
+              Math.round(value || 0)
+            );
+          } else if (key === "platform") {
+            dataTemplateActual = showPlatform(value, dataTemplateActual);
+          }
+        });
+        $list.append(dataTemplateActual);
+      });
+    } else {
+      $(elemId2).html($emptyList);
+      $emptyList.show();
+    }
+    $list.css("display", "flex");
+  }
+
+  // wrappers/GuidesPage/GuidesData.js
+  var apiDomain = document.querySelector("meta[name=domain]")?.content;
+  async function fetchGuides(elemId2, searchTerm2 = "") {
+    const paramsObj = {};
+    if (searchTerm2.length) {
+      paramsObj.q = searchTerm2;
+    }
+    const resGuides = await fetch(
+      `https://${apiDomain}/api/guide/list${Object.keys(paramsObj)?.length ? `?${new URLSearchParams(paramsObj).toString()}` : ""}`
+    );
+    const fetchData = await resGuides.json();
+    $(`${elemId2} .gas-list-results-info`).text(
+      (fetchData?.count || 0) + " result(s)"
+    );
+    listResponseHandler({
+      listData: fetchData.results,
+      elemId: elemId2,
+      numKeysToReplace: ["likes", "comments"],
+      textKeysToReplace: [
+        "id",
+        "name",
+        "author",
+        "description",
+        "achievementId",
+        "achievementName",
+        "profileId"
+      ]
+    });
+  }
+
+  // webflow/guides.js
+  var elemId = "#gas-list-guides";
+  $(async () => {
+    await auth0Bootstrap();
+    setupListSearch(elemId, fetchGuides);
+    await fetchGuides(elemId);
+    $(".ga-loader-container").hide();
+  });
+})();

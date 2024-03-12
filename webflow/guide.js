@@ -1,6 +1,6 @@
-import { loadComments } from '../components/GuidePage/CommentsSection';
-import { fetchGuide } from '../components/GuidePage/GuideData';
-import { verifyAuthenticatedUserGuideData } from '../components/GuidePage/VerifyAuthUserGuideData';
+import { loadComments } from '../wrappers/GuidePage/CommentsSection';
+import { fetchGuide } from '../wrappers/GuidePage/GuideData';
+import { verifyAuthenticatedUserGuideData } from '../wrappers/GuidePage/VerifyAuthUserGuideData';
 import { showImageFromSrc, gaDateTime } from '../utils';
 
 const apiDomain = document.querySelector('meta[name=domain]')?.content;

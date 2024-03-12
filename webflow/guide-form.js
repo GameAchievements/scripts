@@ -1,8 +1,8 @@
 // <script src="https://cdn.tiny.cloud/1/sj801m9s9ivbndop77c87iww4n5onm4rvgcxo1a63ayhv32s/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 
-import { fetchAchievement } from '../components/GuideFormPage/AchievementSection';
-import { fetchGuide } from '../components/GuideFormPage/GuideData';
-import { canSubmit } from '../components/GuideFormPage/utils/canSubmit';
+import { fetchAchievement } from '../wrappers/GuideFormPage/AchievementSection';
+import { fetchGuide } from '../wrappers/GuideFormPage/GuideData';
+import { canSubmit } from '../wrappers/GuideFormPage/utils/canSubmit';
 
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 const urlParams = new URLSearchParams(window.location.search);

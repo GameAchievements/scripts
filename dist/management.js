@@ -1,1 +1,90 @@
-(()=>{var b=document.querySelector("meta[name=domain]")?.content,o="#gas-management-igdb-form",r=4e3,g=t=>{let a=$(".submit-button",o);if(!$(t).val()?.length)$(t).prev("label").addClass("field-label-missing"),a.addClass("disabled-button").attr("disabled",!0);else{$(t).prev("label").removeClass("field-label-missing");let s=!0;$(t).siblings("input").each((l,e)=>{$(e).val().length||(s=!1)}),s&&a.removeClass("disabled-button").attr("disabled",!1)}},f=()=>{let t=$(".submit-button",o);t.attr("disabled",!0);let a=$("[name=game]",o),s=$("[name=igdb]",o),l=t.text(),e=$(".gas-form-error",o),n=$("div",e),c=e.text(),d=$(".gas-form-success",o);a.on("focusout keyup",i=>g(i.target)),s.on("focusout keyup",i=>g(i.target)),t.on("click",async i=>{if(i.preventDefault(),!a.val().length||!s.val().length){e.show(),n.text("Please add both numeric IDs above"),setTimeout(()=>{e.hide(),n.text(c)},r);return}isUserInputActive=!1,t.text(t.data("wait"));let m=await fetch(`https://${b}/api/game/igdb-link-to-game`,{method:"PUT",headers:{Authorization:`Bearer ${token}`,Accept:"application/json","Content-Type":"application/json"},body:JSON.stringify({igdbId:s.val(),gameId:a.val()})}),u=await m.json();if(m.status!==201){e.show(),n.text(u?.message),setTimeout(()=>{e.hide(),n.text(c),t.text(l)},r*2);return}d.attr("title",u?.message).show(),setTimeout(()=>{d.hide()},r)})};$(async()=>{if(await auth0Bootstrap(),userProfileData?.role?.toLowerCase()!=="manager"){location.replace("/");return}f()});})();
+(() => {
+  // webflow/management.js
+  var apiDomain = document.querySelector("meta[name=domain]")?.content;
+  var igdbFormId = "#gas-management-igdb-form";
+  var formMessageDelay = 4e3;
+  var fieldFocus = (fieldEl) => {
+    const $submitBtn = $(`.submit-button`, igdbFormId);
+    if (!$(fieldEl).val()?.length) {
+      $(fieldEl).prev("label").addClass("field-label-missing");
+      $submitBtn.addClass("disabled-button").attr("disabled", true);
+    } else {
+      $(fieldEl).prev("label").removeClass("field-label-missing");
+      let allFilled = true;
+      $(fieldEl).siblings("input").each((idx, sibEl) => {
+        if (!$(sibEl).val().length) {
+          allFilled = false;
+        }
+      });
+      if (allFilled) {
+        $submitBtn.removeClass("disabled-button").attr("disabled", false);
+      }
+    }
+  };
+  var setupIGDBForm = () => {
+    const $submitBtn = $(`.submit-button`, igdbFormId);
+    $submitBtn.attr("disabled", true);
+    const $gameField = $(`[name=game]`, igdbFormId);
+    const $igdbField = $(`[name=igdb]`, igdbFormId);
+    const submitText = $submitBtn.text();
+    const $errEl = $(".gas-form-error", igdbFormId);
+    const $errorDiv = $("div", $errEl);
+    const txtError = $errEl.text();
+    const $successEl = $(".gas-form-success", igdbFormId);
+    $gameField.on("focusout keyup", (ev) => fieldFocus(ev.target));
+    $igdbField.on("focusout keyup", (ev) => fieldFocus(ev.target));
+    $submitBtn.on("click", async (e) => {
+      e.preventDefault();
+      if (!$gameField.val().length || !$igdbField.val().length) {
+        $errEl.show();
+        $errorDiv.text("Please add both numeric IDs above");
+        setTimeout(() => {
+          $errEl.hide();
+          $errorDiv.text(txtError);
+        }, formMessageDelay);
+        return;
+      }
+      isUserInputActive = false;
+      $submitBtn.text($submitBtn.data("wait"));
+      const resFetch = await fetch(
+        `https://${apiDomain}/api/game/igdb-link-to-game`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            igdbId: $igdbField.val(),
+            gameId: $gameField.val()
+          })
+        }
+      );
+      const revData = await resFetch.json();
+      if (resFetch.status !== 201) {
+        $errEl.show();
+        $errorDiv.text(revData?.message);
+        setTimeout(() => {
+          $errEl.hide();
+          $errorDiv.text(txtError);
+          $submitBtn.text(submitText);
+        }, formMessageDelay * 2);
+        return;
+      }
+      $successEl.attr("title", revData?.message).show();
+      setTimeout(() => {
+        $successEl.hide();
+      }, formMessageDelay);
+    });
+  };
+  $(async () => {
+    await auth0Bootstrap();
+    const roleName = userProfileData?.role?.toLowerCase();
+    if (roleName !== "manager") {
+      location.replace("/");
+      return;
+    }
+    setupIGDBForm();
+  });
+})();

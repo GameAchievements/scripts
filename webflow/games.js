@@ -1,5 +1,5 @@
-import { filterByLetter } from '../components/GamesPage/FilterByLetter';
-import { fetchGames } from '../components/GamesPage/GamesData';
+import { filterByLetter } from '../wrappers/GamesPage/FilterByLetter';
+import { fetchGames } from '../wrappers/GamesPage/GamesData';
 import { setupListSearch } from '../utils';
 
 $(async () => {

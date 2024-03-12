@@ -1,11 +1,11 @@
-import { loadAchievers } from '../components/GamehubPage/AchieversSection';
-import { versionsFetcher } from '../components/GamehubPage/AvailableVersionsSection';
-import { fetchGamehub } from '../components/GamehubPage/GameHubData';
-import { loadGuides } from '../components/GamehubPage/GuidesSection';
-import { loadGameLatestThreads } from '../components/GamehubPage/LatestThreadsSection';
-import { loadLeaderboards } from '../components/GamehubPage/LeaderboardsSection';
-import { loadReviewSection } from '../components/GamehubPage/ReviewSection';
-import { loadUserReviews } from '../components/GamehubPage/UserReviewsSection';
+import { loadAchievers } from '../wrappers/GamehubPage/AchieversSection';
+import { versionsFetcher } from '../wrappers/GamehubPage/AvailableVersionsSection';
+import { fetchGamehub } from '../wrappers/GamehubPage/GameHubData';
+import { loadGuides } from '../wrappers/GamehubPage/GuidesSection';
+import { loadGameLatestThreads } from '../wrappers/GamehubPage/LatestThreadsSection';
+import { loadLeaderboards } from '../wrappers/GamehubPage/LeaderboardsSection';
+import { loadReviewSection } from '../wrappers/GamehubPage/ReviewSection';
+import { loadUserReviews } from '../wrappers/GamehubPage/UserReviewsSection';
 import { setupListSearch } from '../utils';
 
 const apiDomain = document.querySelector('meta[name=domain]')?.content;

@@ -1,1 +1,6 @@
-(()=>{$(async()=>{await auth0Bootstrap()});})();
+(() => {
+  // webflow/news.js
+  $(async () => {
+    await auth0Bootstrap();
+  });
+})();
