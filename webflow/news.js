@@ -1,3 +1,3 @@
-$().ready(async () => {
+$(async () => {
   await auth0Bootstrap();
 });
