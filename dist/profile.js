@@ -8,24 +8,11 @@
     )}`;
   };
 
-  // utils/platformNameIdMap.js
-  var platformNameIdMap = (platformName) => {
-    switch (platformName) {
-      case "playstation":
-        return 1;
-      case "xbox":
-        return 2;
-      case "steam":
-      default:
-        return 3;
-    }
-  };
-
   // utils/cleanupDoubleQuotes.js
   var cleanupDoubleQuotes = (content) => content?.length ? content.replace(/"(\w)/g, "\u201C$1").replace(/(\w)"/g, "$1\u201D").replaceAll('"', "'") : content;
 
   // utils/displayMessage.js
-  var displayMessage = ($msgEl, msgText, type = "success", posAction = () => {
+  var displayMessage2 = ($msgEl, msgText, type = "success", posAction = () => {
   }) => {
     $msgEl.addClass(`${type}-message`).css("display", "flex");
     $("div:first-child", $msgEl).text(msgText);
@@ -119,281 +106,7 @@
     return controllerSVG(`class="bg-review-score" fill="${ratingColor(rate)}"`);
   }
 
-  // webflow/profile.js
-  var apiDomain = document.querySelector("meta[name=domain]")?.content;
-  var urlParams = new URLSearchParams(location.search);
-  var profileId = urlParams.get("id");
-  var elemIdPrefix = "#gas-profile";
-  var fetchURLPrefix = `https://${apiDomain}/api/profile`;
-  var noProfileRedirectURL = "/";
-  var formMessageDelay2 = 4e3;
-  $(".ga-loader-container").show();
-  $(
-    `.action-message-wrapper,#ga-sections-container,.gas-role-non-regular,.gas-role-regular,[id^=ga-pa-linked],[id^=ga-pa-to-link],[id^=${elemIdPrefix.slice(
-      1
-    )}-btn-avatar],[id^=${elemIdPrefix.slice(1)}-msg]`
-  ).hide();
-  var platformsToLink = Array.from(["playstation", "xbox", "steam"]);
-  var unlinkPlatform = ({ platform, accountId, accountName }) => {
-    const platformName = platform.toLowerCase();
-    platformsToLink = platformsToLink.filter((pTL) => pTL !== platformName);
-    const $cardLinked = $(`#ga-pa-linked-${platformName}`);
-    $(`.gas-pa-name`, $cardLinked).text(accountId).attr("title", `name: ${accountName}`);
-    $cardLinked.show();
-    $(`.gas-unlink-pa-btn`, $cardLinked).click(async (e) => {
-      e.preventDefault();
-      if (confirm(
-        `Your ${platform} account will no longer belong to your profile. Are you sure?`
-      )) {
-        await fetch(`${fetchURLPrefix}/unlink-pa`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            platform: platformNameIdMap(platformName)
-          })
-        });
-        $cardLinked.children().hide();
-        $cardLinked.append(
-          `<p id="ga-unlink-message" class="platform-heading">Unlinking your ${platformName} account\u2026</p>`
-        ).css({
-          flexGrow: 1,
-          maxWidth: "25%",
-          justifyContent: "center"
-        });
-        setTimeout(() => {
-          $cardLinked.hide();
-          $cardLinked.children().show();
-          $("#ga-unlink-message", $cardLinked).remove();
-          linkPlatform(platformName);
-          sessionStorage.removeItem("prof");
-          location.reload();
-        }, formMessageDelay2);
-      }
-    });
-  };
-  var linkPlatform = (platformName) => {
-    const $toLinkCard = $(`#ga-pa-to-link-${platformName}`);
-    $toLinkCard.show();
-    const $linkField = $(`input[name=external]`, $toLinkCard);
-    const $submitBtn = $(`input[type=submit]`, $toLinkCard);
-    const $cardForm = $(`.gas-link-pa-form`, $toLinkCard);
-    const $errEl = $(".gas-link-pa-error", $toLinkCard);
-    $submitBtn.click(async (e) => {
-      e.preventDefault();
-      if (!$linkField.val()?.length) {
-        $cardForm.hide();
-        $errEl.css("display", "flex");
-        console.error("Please fill-in the input field with an id");
-        setTimeout(() => {
-          $errEl.hide();
-          $cardForm.css("display", "flex");
-        }, formMessageDelay2);
-        return;
-      }
-      $(`input`, $toLinkCard).attr("disabled", true);
-      const reqData = {
-        platform: platformNameIdMap(platformName),
-        external: $linkField.val()
-      };
-      const resFecth = await fetch(`${fetchURLPrefix}/link-pa`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(reqData)
-      });
-      const paData = await resFecth.json();
-      if (resFecth.status !== 201) {
-        $errEl.css("display", "flex");
-        $cardForm.hide();
-        console.error(paData?.message);
-        setTimeout(() => {
-          $errEl.hide();
-          $(`input`, $toLinkCard).attr("disabled", false);
-          $cardForm.css("display", "flex");
-        }, formMessageDelay2);
-        return;
-      }
-      $cardForm.hide();
-      $(".gas-link-pa-success", $toLinkCard).attr("title", paData?.message).css("display", "flex");
-      setTimeout(() => {
-        $toLinkCard.hide();
-        unlinkPlatform({
-          platform: platformName,
-          accountId: paData?.platformAccount?.playerId,
-          accountName: paData?.platformAccount?.playerName
-        });
-        sessionStorage.removeItem("prof");
-        location.reload();
-      }, formMessageDelay2);
-    });
-  };
-  var setupLinkForms = (platformsLinked = []) => {
-    $(`${elemIdPrefix}-pa-code-copied-msg`).hide();
-    if (userProfileData.platformVerifierCode?.length) {
-      $(`${elemIdPrefix}-pa-code`).text(userProfileData.platformVerifierCode);
-      $(`${elemIdPrefix}-pa-code-btn`).on("click", async () => {
-        await navigator.clipboard.writeText(userProfileData.platformVerifierCode);
-        $(`${elemIdPrefix}-pa-code-copied-msg`).show();
-        setTimeout(() => {
-          $(`${elemIdPrefix}-pa-code-copied-msg`).hide();
-        }, formMessageDelay2);
-      });
-    } else {
-      $(`${elemIdPrefix}-pa-code-btn`).hide();
-    }
-    platformsLinked.forEach(unlinkPlatform);
-    platformsToLink.map(linkPlatform);
-  };
-  var profileAvatarUpdater = async (platformsLinked) => {
-    const $msgEl = $(`${elemIdPrefix}-msg-avatar`);
-    if (!platformsLinked.length) {
-      displayMessage(
-        $msgEl,
-        "Please link first a platform account in order to choose your avatar.",
-        "unstyled",
-        () => {
-          $msgEl.css("display", "flex");
-        }
-      );
-    }
-    platformsLinked.map(({ platform }) => {
-      const platformName = platform.toLowerCase();
-      $(`${elemIdPrefix}-btn-avatar-${platformName}`).show().click(async function() {
-        const resFetch = await fetch(`${fetchURLPrefix}/avatar`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ platformId: platformNameIdMap(platformName) })
-        });
-        if (resFetch.status !== 201) {
-          displayMessage(
-            $msgEl,
-            "Oops! Issue changing avatar\u2026 Please try later.",
-            "error"
-          );
-          return;
-        }
-        const resData2 = await resFetch.json();
-        if (resData2.imageURL?.length) {
-          $(".gas-profile-avatar").removeAttr("srcset").removeAttr("sizes").attr("src", resData2.imageURL);
-          displayMessage($msgEl, "Avatar successfully changed!");
-        }
-      });
-    });
-  };
-  function profileResponseHandler(res) {
-    const elemId = `${elemIdPrefix}-details`;
-    let dataTemplateActual = $(`${elemId}`).prop("outerHTML");
-    console.info(`=== ${elemId} ===`, res);
-    const textKeysToReplace = [
-      "name",
-      "description",
-      "gaPoints",
-      "guidesCount",
-      "gamesCount",
-      "completedCount",
-      "completion",
-      "achievedCount"
-    ];
-    Object.entries(res).forEach(([key, value]) => {
-      if (textKeysToReplace.includes(key)) {
-        dataTemplateActual = dataTemplateActual.replaceAll(`{|${key}|}`, value);
-      } else if (key === "ranking") {
-        Object.entries(value).forEach(([rankKey, rankVal]) => {
-          dataTemplateActual = dataTemplateActual.replaceAll(
-            `{|${rankKey}|}`,
-            rankVal
-          );
-        });
-      } else if (key === "platforms") {
-        value.forEach(({ platform, accountName }) => {
-          dataTemplateActual = dataTemplateActual.replaceAll(
-            `{|${platform.toLowerCase()}Name|}`,
-            accountName
-          );
-          dataTemplateActual = showPlatform(platform, dataTemplateActual, elemId);
-        });
-      }
-    });
-    $(`${elemId}`).prop("outerHTML", dataTemplateActual);
-    if (!userAuth0Data?.sub?.length) {
-      return;
-    }
-    profileAvatarUpdater(res.platforms);
-    setupLinkForms(res.platforms);
-    if (res.role?.length) {
-      const isRegularRole = res.role.toLowerCase() === "regular";
-      $(`.gas-role${isRegularRole ? "" : "-non"}-regular`).show();
-      if (!isRegularRole) {
-        const $toggleCheckbox = $(`#gas-ads-toggle`);
-        if (userProfileData.adsOff) {
-          $toggleCheckbox.prop("checked", true);
-        }
-        $toggleCheckbox.on("change", async (evt) => {
-          const fetchURL = `${fetchURLPrefix}/ads`;
-          const resFetch = await fetch(fetchURL, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json"
-            }
-          });
-          if (resFetch.status !== 201) {
-            $toggleCheckbox.prop("checked", userProfileData.adsOff);
-          }
-          resData = await resFetch.json();
-          if (resFetch.status === 201) {
-            userProfileData.adsOff = !userProfileData.adsOff;
-            sessionStorage.setItem("prof", JSON.stringify(userProfileData));
-            if (resData?.message?.includes("deactivated")) {
-              $(".ads-section").hide();
-            } else {
-              $(".ads-section").show();
-            }
-          }
-          const msgType = resFetch.status === 201 ? "success" : "error";
-          displayMessage(
-            $(`#gas-ads-form .gas-form-${msgType}`),
-            resData?.message,
-            msgType
-          );
-        });
-      }
-    }
-  }
-  var fetchGAUserData = async () => {
-    let resData2;
-    if (profileId?.length) {
-      const fetchURL = `${fetchURLPrefix}/id/${profileId}`;
-      const resFetch = await fetch(fetchURL);
-      if (resFetch.status !== 200) {
-        return false;
-      }
-      resData2 = await resFetch.json();
-    } else if (userProfileData) {
-      resData2 = userProfileData;
-    } else {
-      return false;
-    }
-    if (!resData2.visible) {
-      return false;
-    }
-    if (resData2.id?.length > 0) {
-      document.title = `${resData2.name?.length ? resData2.name : resData2.id} | ${document.title}`;
-      profileResponseHandler(resData2);
-    }
-    return true;
-  };
+  // components/ProfilePage/utils/listFetcher.js
   function listResponseHandler({
     listData,
     elemId,
@@ -487,20 +200,14 @@
       }
     });
   }
-  async function listFetcher({
-    listName,
-    numKeysToReplace,
-    textKeysToReplace,
-    tabs,
-    tabMatcher
-  }) {
-    const elemId = `${elemIdPrefix}-${listName}`;
+  async function listFetcher({ elemIdPrefix: elemIdPrefix4, profileId: profileId2, fetchURLPrefix: fetchURLPrefix3 }, { listName, numKeysToReplace, textKeysToReplace, tabs, tabMatcher }) {
+    const elemId = `${elemIdPrefix4}-${listName}`;
     let resFetch;
-    if (profileId?.length) {
-      const fetchURL = `${fetchURLPrefix}/id/${profileId}/${listName}`;
+    if (profileId2?.length) {
+      const fetchURL = `${fetchURLPrefix3}/id/${profileId2}/${listName}`;
       resFetch = await fetch(fetchURL);
     } else if (userAuth0Data?.sub?.length) {
-      resFetch = await fetch(`${fetchURLPrefix}/my/${listName}`, {
+      resFetch = await fetch(`${fetchURLPrefix3}/my/${listName}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -551,91 +258,411 @@
     $(`${elemId}`).html($emptyList);
     $emptyList.show();
   }
-  $().ready(async () => {
-    await auth0Bootstrap();
-    if (profileId?.length) {
-      $("#user-settings, #ga-user-settings-tab").hide();
+
+  // components/ProfilePage/AchievementsData.js
+  async function loadAchievements(elemIdPrefix4, profileId2, fetchURLPrefix3) {
+    await listFetcher(
+      { elemIdPrefix: elemIdPrefix4, profileId: profileId2, fetchURLPrefix: fetchURLPrefix3 },
+      {
+        listName: "achievements",
+        numKeysToReplace: ["id", "score", "achieversCount", "gAPoints"],
+        textKeysToReplace: ["name", "description", "updatedAt"]
+      }
+    );
+  }
+
+  // components/ProfilePage/DeleteProfile.js
+  async function deleteProfile() {
+    if (confirm(
+      "This will unlink all your platforms from your profile and remove your profile. Are you sure?"
+    )) {
+      const fetchURL = `https://${apiDomain}/api/user`;
+      const resFetch = await fetch(fetchURL, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+      const $msgEl = $(`${elemIdPrefix}-msg-delete`);
+      $(this).hide();
+      if (resFetch.status !== 204) {
+        displayMessage2(
+          $msgEl,
+          "Account could not be deleted\u2026 Please try later.",
+          "error",
+          () => {
+            $(this).show();
+          }
+        );
+        return;
+      }
+      displayMessage2(
+        $msgEl,
+        "Account is successfully being deleted\u2026 Logging out.",
+        "success",
+        logout
+      );
     }
-    if (await fetchGAUserData()) {
-      await Promise.all([
-        await listFetcher({
-          listName: "games",
-          numKeysToReplace: [
-            "id",
-            "completion",
-            "achievementsCount",
-            "hoursPlayed"
-          ],
-          textKeysToReplace: ["name", "description", "updatedAt", "playedAt"]
-        }),
-        await listFetcher({
-          listName: "achievements",
-          numKeysToReplace: ["id", "score", "achieversCount", "gAPoints"],
-          textKeysToReplace: ["name", "description", "updatedAt"]
-        }),
-        await listFetcher({
-          listName: "guides",
-          numKeysToReplace: ["commentsCount", "viewsCount", "likesCount"],
-          textKeysToReplace: [
-            "id",
-            "profileId",
-            "name",
-            "achievementId",
-            "achievementName",
-            "achievementDescription",
-            "updatedAt"
-          ]
-        }),
-        await listFetcher({
-          listName: "reviews",
-          numKeysToReplace: ["id", "likesCount", "gameId"],
-          textKeysToReplace: [
-            "profileId",
-            "name",
-            "content",
-            "gameName",
-            "classification",
-            "updatedAt"
-          ],
-          tabs: ["all", "positive", "mixed", "negative"],
-          tabMatcher: "classification"
-        })
-      ]);
-      $(".ga-loader-container").hide();
-      $("#ga-sections-container").show();
-      $(`${elemIdPrefix}-btn-delete`).on("click", async function() {
-        if (confirm(
-          "This will unlink all your platforms from your profile and remove your profile. Are you sure?"
-        )) {
-          const fetchURL = `https://${apiDomain}/api/user`;
+  }
+
+  // components/ProfilePage/GamesData.js
+  async function loadGames(elemIdPrefix4, profileId2, fetchURLPrefix3) {
+    await listFetcher(
+      { elemIdPrefix: elemIdPrefix4, profileId: profileId2, fetchURLPrefix: fetchURLPrefix3 },
+      {
+        listName: "games",
+        numKeysToReplace: [
+          "id",
+          "completion",
+          "achievementsCount",
+          "hoursPlayed"
+        ],
+        textKeysToReplace: ["name", "description", "updatedAt", "playedAt"]
+      }
+    );
+  }
+
+  // components/ProfilePage/GuidesData.js
+  async function loadGuides(elemIdPrefix4, profileId2, fetchURLPrefix3) {
+    await listFetcher(
+      { elemIdPrefix: elemIdPrefix4, profileId: profileId2, fetchURLPrefix: fetchURLPrefix3 },
+      {
+        listName: "guides",
+        numKeysToReplace: ["commentsCount", "viewsCount", "likesCount"],
+        textKeysToReplace: [
+          "id",
+          "profileId",
+          "name",
+          "achievementId",
+          "achievementName",
+          "achievementDescription",
+          "updatedAt"
+        ]
+      }
+    );
+  }
+
+  // components/ProfilePage/ReviewsData.js
+  async function loadReviews(elemIdPrefix4, profileId2, fetchURLPrefix3) {
+    await listFetcher(
+      { elemIdPrefix: elemIdPrefix4, profileId: profileId2, fetchURLPrefix: fetchURLPrefix3 },
+      {
+        listName: "reviews",
+        numKeysToReplace: ["id", "likesCount", "gameId"],
+        textKeysToReplace: [
+          "profileId",
+          "name",
+          "content",
+          "gameName",
+          "classification",
+          "updatedAt"
+        ],
+        tabs: ["all", "positive", "mixed", "negative"],
+        tabMatcher: "classification"
+      }
+    );
+  }
+
+  // components/ProfilePage/utils/linkPlatform.js
+  async function linkPlatform2(platformName, formMessageDelay3) {
+    const $toLinkCard = $(`#ga-pa-to-link-${platformName}`);
+    $toLinkCard.show();
+    const $linkField = $(`input[name=external]`, $toLinkCard);
+    const $submitBtn = $(`input[type=submit]`, $toLinkCard);
+    const $cardForm = $(`.gas-link-pa-form`, $toLinkCard);
+    const $errEl = $(".gas-link-pa-error", $toLinkCard);
+    $submitBtn.click(async (e) => {
+      e.preventDefault();
+      if (!$linkField.val()?.length) {
+        $cardForm.hide();
+        $errEl.css("display", "flex");
+        console.error("Please fill-in the input field with an id");
+        setTimeout(() => {
+          $errEl.hide();
+          $cardForm.css("display", "flex");
+        }, formMessageDelay3);
+        return;
+      }
+      $(`input`, $toLinkCard).attr("disabled", true);
+      const reqData = {
+        platform: platformNameIdMap(platformName),
+        external: $linkField.val()
+      };
+      const resFecth = await fetch(`${fetchURLPrefix}/link-pa`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(reqData)
+      });
+      const paData = await resFecth.json();
+      if (resFecth.status !== 201) {
+        $errEl.css("display", "flex");
+        $cardForm.hide();
+        console.error(paData?.message);
+        setTimeout(() => {
+          $errEl.hide();
+          $(`input`, $toLinkCard).attr("disabled", false);
+          $cardForm.css("display", "flex");
+        }, formMessageDelay3);
+        return;
+      }
+      $cardForm.hide();
+      $(".gas-link-pa-success", $toLinkCard).attr("title", paData?.message).css("display", "flex");
+      setTimeout(() => {
+        $toLinkCard.hide();
+        unlinkPlatform({
+          platform: platformName,
+          accountId: paData?.platformAccount?.playerId,
+          accountName: paData?.platformAccount?.playerName
+        });
+        sessionStorage.removeItem("prof");
+        location.reload();
+      }, formMessageDelay3);
+    });
+  }
+
+  // components/ProfilePage/utils/unlinkPlatform.js
+  async function unlinkPlatform2({ platform, accountId, accountName }, platformsToLink2, formMessageDelay3) {
+    const platformName = platform.toLowerCase();
+    platformsToLink2 = platformsToLink2.filter((pTL) => pTL !== platformName);
+    const $cardLinked = $(`#ga-pa-linked-${platformName}`);
+    $(`.gas-pa-name`, $cardLinked).text(accountId).attr("title", `name: ${accountName}`);
+    $cardLinked.show();
+    $(`.gas-unlink-pa-btn`, $cardLinked).click(async (e) => {
+      e.preventDefault();
+      if (confirm(
+        `Your ${platform} account will no longer belong to your profile. Are you sure?`
+      )) {
+        await fetch(`${fetchURLPrefix}/unlink-pa`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            platform: platformNameIdMap(platformName)
+          })
+        });
+        $cardLinked.children().hide();
+        $cardLinked.append(
+          `<p id="ga-unlink-message" class="platform-heading">Unlinking your ${platformName} account\u2026</p>`
+        ).css({
+          flexGrow: 1,
+          maxWidth: "25%",
+          justifyContent: "center"
+        });
+        setTimeout(() => {
+          $cardLinked.hide();
+          $cardLinked.children().show();
+          $("#ga-unlink-message", $cardLinked).remove();
+          linkPlatform(platformName);
+          sessionStorage.removeItem("prof");
+          location.reload();
+        }, formMessageDelay3);
+      }
+    });
+  }
+
+  // components/ProfilePage/UserData.js
+  var formMessageDelay2 = 4e3;
+  var elemIdPrefix2 = "#gas-profile";
+  var platformsToLink = Array.from(["playstation", "xbox", "steam"]);
+  var setupLinkForms = (platformsLinked = []) => {
+    $(`${elemIdPrefix2}-pa-code-copied-msg`).hide();
+    if (userProfileData.platformVerifierCode?.length) {
+      $(`${elemIdPrefix2}-pa-code`).text(userProfileData.platformVerifierCode);
+      $(`${elemIdPrefix2}-pa-code-btn`).on("click", async () => {
+        await navigator.clipboard.writeText(userProfileData.platformVerifierCode);
+        $(`${elemIdPrefix2}-pa-code-copied-msg`).show();
+        setTimeout(() => {
+          $(`${elemIdPrefix2}-pa-code-copied-msg`).hide();
+        }, formMessageDelay2);
+      });
+    } else {
+      $(`${elemIdPrefix2}-pa-code-btn`).hide();
+    }
+    platformsLinked.forEach(
+      (el) => unlinkPlatform2(el, platformsToLink, formMessageDelay2)
+    );
+    platformsToLink.map((el) => linkPlatform2(el, formMessageDelay2));
+  };
+  var profileAvatarUpdater = async (platformsLinked) => {
+    const $msgEl = $(`${elemIdPrefix2}-msg-avatar`);
+    if (!platformsLinked.length) {
+      displayMessage(
+        $msgEl,
+        "Please link first a platform account in order to choose your avatar.",
+        "unstyled",
+        () => {
+          $msgEl.css("display", "flex");
+        }
+      );
+    }
+    platformsLinked.map(({ platform }) => {
+      const platformName = platform.toLowerCase();
+      $(`${elemIdPrefix2}-btn-avatar-${platformName}`).show().click(async function() {
+        const resFetch = await fetch(`${fetchURLPrefix}/avatar`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ platformId: platformNameIdMap(platformName) })
+        });
+        if (resFetch.status !== 201) {
+          displayMessage(
+            $msgEl,
+            "Oops! Issue changing avatar\u2026 Please try later.",
+            "error"
+          );
+          return;
+        }
+        const resData2 = await resFetch.json();
+        if (resData2.imageURL?.length) {
+          $(".gas-profile-avatar").removeAttr("srcset").removeAttr("sizes").attr("src", resData2.imageURL);
+          displayMessage($msgEl, "Avatar successfully changed!");
+        }
+      });
+    });
+  };
+  function profileResponseHandler(res) {
+    const elemId = `${elemIdPrefix2}-details`;
+    let dataTemplateActual = $(`${elemId}`).prop("outerHTML");
+    console.info(`=== ${elemId} ===`, res);
+    const textKeysToReplace = [
+      "name",
+      "description",
+      "gaPoints",
+      "guidesCount",
+      "gamesCount",
+      "completedCount",
+      "completion",
+      "achievedCount"
+    ];
+    Object.entries(res).forEach(([key, value]) => {
+      if (textKeysToReplace.includes(key)) {
+        dataTemplateActual = dataTemplateActual.replaceAll(`{|${key}|}`, value);
+      } else if (key === "ranking") {
+        Object.entries(value).forEach(([rankKey, rankVal]) => {
+          dataTemplateActual = dataTemplateActual.replaceAll(
+            `{|${rankKey}|}`,
+            rankVal
+          );
+        });
+      } else if (key === "platforms") {
+        value.forEach(({ platform, accountName }) => {
+          dataTemplateActual = dataTemplateActual.replaceAll(
+            `{|${platform.toLowerCase()}Name|}`,
+            accountName
+          );
+          dataTemplateActual = showPlatform(platform, dataTemplateActual, elemId);
+        });
+      }
+    });
+    $(`${elemId}`).prop("outerHTML", dataTemplateActual);
+    if (!userAuth0Data?.sub?.length) {
+      return;
+    }
+    profileAvatarUpdater(res.platforms);
+    setupLinkForms(res.platforms);
+    if (res.role?.length) {
+      const isRegularRole = res.role.toLowerCase() === "regular";
+      $(`.gas-role${isRegularRole ? "" : "-non"}-regular`).show();
+      if (!isRegularRole) {
+        const $toggleCheckbox = $(`#gas-ads-toggle`);
+        if (userProfileData.adsOff) {
+          $toggleCheckbox.prop("checked", true);
+        }
+        $toggleCheckbox.on("change", async (evt) => {
+          const fetchURL = `${fetchURLPrefix}/ads`;
           const resFetch = await fetch(fetchURL, {
-            method: "DELETE",
+            method: "POST",
             headers: {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json"
             }
           });
-          const $msgEl = $(`${elemIdPrefix}-msg-delete`);
-          $(this).hide();
-          if (resFetch.status !== 204) {
-            displayMessage(
-              $msgEl,
-              "Account could not be deleted\u2026 Please try later.",
-              "error",
-              () => {
-                $(this).show();
-              }
-            );
-            return;
+          if (resFetch.status !== 201) {
+            $toggleCheckbox.prop("checked", userProfileData.adsOff);
           }
+          resData = await resFetch.json();
+          if (resFetch.status === 201) {
+            userProfileData.adsOff = !userProfileData.adsOff;
+            sessionStorage.setItem("prof", JSON.stringify(userProfileData));
+            if (resData?.message?.includes("deactivated")) {
+              $(".ads-section").hide();
+            } else {
+              $(".ads-section").show();
+            }
+          }
+          const msgType = resFetch.status === 201 ? "success" : "error";
           displayMessage(
-            $msgEl,
-            "Account is successfully being deleted\u2026 Logging out.",
-            "success",
-            logout
+            $(`#gas-ads-form .gas-form-${msgType}`),
+            resData?.message,
+            msgType
           );
-        }
-      });
+        });
+      }
+    }
+  }
+  async function fetchGAUserData(fetchURLPrefix3, profileId2) {
+    let resData2;
+    if (profileId2?.length) {
+      const fetchURL = `${fetchURLPrefix3}/id/${profileId2}`;
+      const resFetch = await fetch(fetchURL);
+      if (resFetch.status !== 200) {
+        return false;
+      }
+      resData2 = await resFetch.json();
+    } else if (userProfileData) {
+      resData2 = userProfileData;
+    } else {
+      return false;
+    }
+    if (!resData2.visible) {
+      return false;
+    }
+    if (resData2.id?.length > 0) {
+      document.title = `${resData2.name?.length ? resData2.name : resData2.id} | ${document.title}`;
+      profileResponseHandler(resData2);
+    }
+    return true;
+  }
+
+  // webflow/profile.js
+  var apiDomain2 = document.querySelector("meta[name=domain]")?.content;
+  var urlParams = new URLSearchParams(location.search);
+  var profileId = urlParams.get("id");
+  var elemIdPrefix3 = "#gas-profile";
+  var fetchURLPrefix2 = `https://${apiDomain2}/api/profile`;
+  var noProfileRedirectURL = "/";
+  $(".ga-loader-container").show();
+  $(
+    `.action-message-wrapper,#ga-sections-container,.gas-role-non-regular,.gas-role-regular,[id^=ga-pa-linked],[id^=ga-pa-to-link],[id^=${elemIdPrefix3.slice(
+      1
+    )}-btn-avatar],[id^=${elemIdPrefix3.slice(1)}-msg]`
+  ).hide();
+  $(async () => {
+    await auth0Bootstrap();
+    if (profileId?.length) {
+      $("#user-settings, #ga-user-settings-tab").hide();
+    }
+    if (await fetchGAUserData(fetchURLPrefix2, profileId)) {
+      await Promise.all([
+        await loadGames(elemIdPrefix3, profileId, fetchURLPrefix2),
+        await loadAchievements(elemIdPrefix3, profileId, fetchURLPrefix2),
+        await loadGuides(elemIdPrefix3, profileId, fetchURLPrefix2),
+        await loadReviews(elemIdPrefix3, profileId, fetchURLPrefix2)
+      ]);
+      $(".ga-loader-container").hide();
+      $("#ga-sections-container").show();
+      $(`${elemIdPrefix3}-btn-delete`).on("click", deleteProfile);
       scrollToURLHash();
       $("#gas-wf-tab-activator").click();
       return;
