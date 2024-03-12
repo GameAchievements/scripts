@@ -1,3 +1,7 @@
+//currently using guide-form
+
+import { gaDate, achievementNameSlicer } from '../utils';
+
 const apiDomain = document.querySelector('meta[name=domain]')?.content,
   urlParams = new URLSearchParams(window.location.search),
   guideId = Number(urlParams.get('id')) || 0,

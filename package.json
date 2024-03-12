@@ -5,11 +5,19 @@
   "repository": "https://github.com/GameAchievements/scripts.git",
   "author": "Edgar Ferreira <eferreira@imaginarycloud.com>",
   "license": "MIT",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "serve": "serve"
+    "dev": "serve",
+    "watch": "esbuild $(find ./webflow \\( -name '*.js' -o -name '*.jsx' \\)) --bundle --watch --outdir=dist",
+    "watch-minify": "esbuild $(find ./webflow \\( -name '*.js' -o -name '*.jsx' \\)) --bundle --minify --watch --outdir=dist",
+    "build": "esbuild $(find ./webflow \\( -name '*.js' -o -name '*.jsx' \\)) --bundle --outdir=dist",
+    "build-minify": "esbuild $(find ./webflow \\( -name '*.js' -o -name '*.jsx' \\)) --bundle --minify --outdir=dist"
   },
   "dependencies": {
+    "esbuild": "^0.20.1"
+  },
+  "devDependencies": {
+    "@types/jquery": "^3.5.29",
     "serve": "^14.2.1"
   }
 }
