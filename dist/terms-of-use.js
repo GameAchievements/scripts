@@ -1,4 +1,1 @@
-(() => {
-  // webflow/terms-of-use.js
-  $().ready(() => auth0Bootstrap());
-})();
+(()=>{$().ready(()=>auth0Bootstrap());})();
