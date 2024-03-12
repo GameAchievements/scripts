@@ -95,7 +95,6 @@ export async function fetchGames(elemId, searchTerm = '') {
   if (searchTerm.length) {
     paramsObj.q = searchTerm;
   }
-  console.log('paramsObj', paramsObj);
   const resGames = await fetch(
     `https://${apiDomain}/api/game/list${
       Object.keys(paramsObj)?.length

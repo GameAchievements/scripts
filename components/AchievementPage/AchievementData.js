@@ -45,7 +45,6 @@ function achievementResponseHandler(elemIdPrefix, res) {
     } else if (key === 'platform') {
       dataTemplateActual = showPlatform(value, dataTemplateActual, elemId);
     } else if (key === 'rarity') {
-      console.log('value', value);
       dataTemplateActual = showRarityTagAchievement(value, dataTemplateActual);
     }
   });
