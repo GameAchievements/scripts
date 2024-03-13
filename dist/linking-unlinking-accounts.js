@@ -1,4 +1,1 @@
-(() => {
-  // webflow/linking-unlinking-accounts.js
-  $(() => auth0Bootstrap());
-})();
+(()=>{$(()=>auth0Bootstrap());})();
