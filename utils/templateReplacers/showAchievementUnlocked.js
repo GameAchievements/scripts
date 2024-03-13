@@ -5,21 +5,22 @@ export const showAchievementUnlocked = (
   dataTemplateActual,
   parent = '.gh-row'
 ) => {
+  let templateTemp = dataTemplateActual;
   const unlocked = userProgress?.unlocked;
   if (unlocked) {
-    dataTemplateActual = dataTemplateActual.replaceAll(
-      `{|unlockedAt|}`,
+    templateTemp = templateTemp.replaceAll(
+      '{|unlockedAt|}',
       `${gaTime(userProgress.unlockedAt)}<br />${gaDate(
         userProgress.unlockedAt
       )}`
     );
   }
 
-  dataTemplateActual = $(`.status-wrapper`, dataTemplateActual)
+  templateTemp = $('.status-wrapper', templateTemp)
     .children(`:not(.${unlocked ? 'unlocked' : 'locked'}-status)`)
     .hide()
     .parents(parent)
     .prop('outerHTML');
 
-  return dataTemplateActual;
+  return templateTemp;
 };

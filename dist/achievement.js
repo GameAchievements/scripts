@@ -36,7 +36,7 @@
       "Nov",
       "Dec"
     ];
-    const date = dateObj.getDate() + " " + month[dateObj.getMonth()] + ", " + dateObj.getFullYear();
+    const date = `${dateObj.getDate()} ${month[dateObj.getMonth()]}, ${dateObj.getFullYear()}`;
     const time = dateObj.toLocaleTimeString().toLowerCase();
     return { date, time };
   };
@@ -48,35 +48,40 @@
   var rarityClassCalc2 = (percent) => {
     if (percent < 25) {
       return "common";
-    } else if (percent < 50) {
+    }
+    if (percent < 50) {
       return "rare";
-    } else if (percent < 75) {
+    }
+    if (percent < 75) {
       return "very-rare";
-    } else if (percent >= 75) {
+    }
+    if (percent >= 75) {
       return "ultra-rare";
     }
   };
   var showRarityTagAchievement = (percentageNumber, dataTemplateActual, parent = ".hero-section-achievement") => {
+    let templateTemp = dataTemplateActual;
     const classValue = rarityClassCalc2(percentageNumber);
-    dataTemplateActual = $(`.rarity-tag-wrapper`, dataTemplateActual).children(`:not(.gas-rarity-tag-${classValue})`).hide().parents(parent).prop("outerHTML");
-    return dataTemplateActual;
+    templateTemp = $(".rarity-tag-wrapper", templateTemp).children(`:not(.gas-rarity-tag-${classValue})`).hide().parents(parent).prop("outerHTML");
+    return templateTemp;
   };
 
   // utils/templateReplacers/showPlatform.js
   var showPlatform = (platformName, dataTemplateActual, parentSelector = ".gas-list-entry") => {
+    let templateTemp = dataTemplateActual;
     const platformVerifier = {
       ps: { rgx: /playstation/gi },
       xbox: { rgx: /xbox/gi },
       steam: { rgx: /steam|pc|windows|mac|linux/gi }
     };
     if (platformVerifier.ps.rgx.test(platformName)) {
-      dataTemplateActual = $(`.gas-platform-psn`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+      templateTemp = $(".gas-platform-psn", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
     if (platformVerifier.steam.rgx.test(platformName)) {
-      dataTemplateActual = $(`.gas-platform-steam`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+      templateTemp = $(".gas-platform-steam", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
     if (platformVerifier.xbox.rgx.test(platformName)) {
-      dataTemplateActual = $(`.gas-platform-xbox`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+      templateTemp = $(".gas-platform-xbox", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
     return dataTemplateActual;
   };
@@ -94,7 +99,7 @@
     console.info(`=== ${elemId} results ===`, listsData);
     const $list = $(elemId);
     let dataTemplate = $list.prop("outerHTML");
-    const $emptyList = $(`.gas-list-empty`, $list);
+    const $emptyList = $(".gas-list-empty", $list);
     const $listHeader = $list.children().first();
     const $entryTemplate = $(".gas-list-entry", $list).first();
     $list.html($listHeader);
@@ -106,19 +111,19 @@
       $entryTemplate.hide();
       listDataToRead.forEach((item, itemIdx) => {
         let dataTemplateActual = dataTemplate;
-        Object.entries(item).forEach(([key, value]) => {
-          const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+        for (const [key, value] of Object.entries(item)) {
+          const $entryImg = $(".gas-list-entry-cover", dataTemplateActual);
           if ($entryImg?.length && item.iconURL?.length) {
             dataTemplateActual = showImageFromSrc($entryImg, item.iconURL) || dataTemplateActual;
           }
           dataTemplateActual = dataTemplateActual.replaceAll(
-            `{|idx|}`,
+            "{|idx|}",
             itemIdx + 1
           );
           if (key === "unlockedAt") {
             const { date, time } = gaDateTime(value);
             dataTemplateActual = dataTemplateActual.replaceAll(
-              `{|unlockedDt|}`,
+              "{|unlockedDt|}",
               date || "N.A."
             );
             dataTemplateActual = dataTemplateActual.replaceAll(
@@ -131,7 +136,7 @@
               value || ""
             );
           }
-        });
+        }
         $list.append(dataTemplateActual).children().last().removeClass(["bg-light", "bg-dark"]).addClass(`bg-${itemIdx % 2 > 0 ? "light" : "dark"}`);
       });
     } else {
@@ -183,7 +188,7 @@
     console.info(`=== ${elemId} results ===`, listData);
     let dataTemplate = $(elemId).prop("outerHTML");
     const $list = $(`${elemId} .gas-list`);
-    const $emptyList = $(`.gas-list-empty`, $list);
+    const $emptyList = $(".gas-list-empty", $list);
     if (listData.count > 0 && listData[listResultsKey]?.length) {
       const $listHeader = $list.children().first();
       const $entryTemplate = $(".gas-list-entry", $list).first();
@@ -193,8 +198,8 @@
       $entryTemplate.hide();
       listData[listResultsKey].forEach((item, resIdx) => {
         let dataTemplateActual = dataTemplate;
-        Object.entries(item).forEach(([key, value]) => {
-          const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+        for (const [key, value] of Object.entries(item)) {
+          const $entryImg = $(".gas-list-entry-cover", dataTemplateActual);
           if ($entryImg?.length && item.iconURL?.length) {
             dataTemplateActual = showImageFromSrc($entryImg, item.iconURL) || dataTemplateActual;
           }
@@ -209,7 +214,7 @@
               Math.round(value || 0)
             );
           }
-        });
+        }
         $list.append(dataTemplateActual).children().last().removeClass(["bg-light", "bg-dark"]).addClass(`bg-${resIdx % 2 > 0 ? "light" : "dark"}`);
       });
     } else {
@@ -270,7 +275,7 @@
         dataTemplateActual = showImageFromSrc($(elm), res.imageURL, elemId) || dataTemplateActual;
       }
     });
-    Object.entries(res).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(res)) {
       if (textKeysToReplace.includes(key)) {
         dataTemplateActual = dataTemplateActual.replaceAll(`{|${key}|}`, value);
       } else if (numKeysToReplace.includes(key)) {
@@ -283,7 +288,7 @@
       } else if (key === "rarity") {
         dataTemplateActual = showRarityTagAchievement(value, dataTemplateActual);
       }
-    });
+    }
     $ghContainer.prop("outerHTML", dataTemplateActual);
   }
   async function fetchAchievement(elemIdPrefix2, apiDomain2, achievementId2) {
@@ -305,7 +310,7 @@
   var apiDomain = document.querySelector("meta[name=domain]")?.content;
   var urlParams = new URLSearchParams(window.location.search);
   var achievementId = urlParams.get("id") || 1044;
-  var elemIdPrefix = `#gas-achievement`;
+  var elemIdPrefix = "#gas-achievement";
   $(".ga-loader-container").show();
   $("#ga-sections-container").hide();
   $(async () => {

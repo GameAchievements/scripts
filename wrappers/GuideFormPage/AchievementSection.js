@@ -16,6 +16,6 @@ export async function fetchAchievement(apiDomain, achievementId) {
     } | ${document.title}`;
     achievementFetchedData.achievementName = achievementFetchedData.name;
     detailsResponseHandler(achievementFetchedData);
-    detailsResponseHandler(achievementFetchedData, `#gas-guide-form`);
+    detailsResponseHandler(achievementFetchedData, '#gas-guide-form');
   }
 }

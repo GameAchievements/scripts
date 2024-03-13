@@ -10,7 +10,7 @@ function listResponseHandler({
   console.info(`=== ${elemId} results ===`, listData);
   let dataTemplate = $(elemId).prop('outerHTML');
   const $list = $(`${elemId} .gas-list`);
-  const $emptyList = $(`.gas-list-empty`, $list);
+  const $emptyList = $('.gas-list-empty', $list);
   if (listData.count > 0 && listData[listResultsKey]?.length) {
     const $listHeader = $list.children().first();
     const $entryTemplate = $('.gas-list-entry', $list).first();
@@ -20,8 +20,8 @@ function listResponseHandler({
     $entryTemplate.hide();
     listData[listResultsKey].forEach((item, resIdx) => {
       let dataTemplateActual = dataTemplate;
-      Object.entries(item).forEach(([key, value]) => {
-        const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+      for (const [key, value] of Object.entries(item)) {
+        const $entryImg = $('.gas-list-entry-cover', dataTemplateActual);
         if ($entryImg?.length && item.iconURL?.length) {
           dataTemplateActual =
             showImageFromSrc($entryImg, item.iconURL) || dataTemplateActual;
@@ -37,7 +37,7 @@ function listResponseHandler({
             Math.round(value || 0)
           );
         }
-      });
+      }
       $list
         .append(dataTemplateActual)
         .children()

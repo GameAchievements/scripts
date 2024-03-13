@@ -7,7 +7,7 @@ import {
   showPlatform,
 } from '../../utils';
 
-const elemIdPrefix = `#gas-gh`;
+const elemIdPrefix = '#gas-gh';
 const forumDomain = document.querySelector('meta[name=forum-domain]')?.content;
 
 function listResponseHandlerHome(
@@ -26,10 +26,10 @@ function listResponseHandlerHome(
     $list.html($entryTemplate);
     listData.forEach((item, resIdx) => {
       let dataTemplateActual = dataTemplate;
-      dataTemplateActual = dataTemplateActual.replaceAll(`{|idx|}`, resIdx + 1);
-      Object.entries(item).forEach(([key, value]) => {
+      dataTemplateActual = dataTemplateActual.replaceAll('{|idx|}', resIdx + 1);
+      for (const [key, value] of Object.entries(item)) {
         if (item.gameIconURL?.length && !isSteamImage(item.gameIconURL)) {
-          const $gameImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
+          const $gameImg = $('.gas-list-entry-cover-game', dataTemplateActual);
           if ($gameImg?.length) {
             dataTemplateActual =
               showImageFromSrc($gameImg, item.gameIconURL) ||
@@ -42,7 +42,7 @@ function listResponseHandlerHome(
           !isSteamImage(item.imageURL) &&
           !isSteamImage(item.iconURL)
         ) {
-          const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+          const $entryImg = $('.gas-list-entry-cover', dataTemplateActual);
           if ($entryImg?.length) {
             dataTemplateActual = elemId.includes('list-games')
               ? $entryImg
@@ -72,7 +72,7 @@ function listResponseHandlerHome(
         } else if (key === 'importedFromPlatform' || key === 'platform') {
           dataTemplateActual = showPlatform(value, dataTemplateActual);
         }
-      });
+      }
       $list.append(dataTemplateActual);
     });
   } else {
@@ -81,7 +81,7 @@ function listResponseHandlerHome(
     }
 
     let $emptyElem = $emptyList.children().first();
-    let $emptyElemTemplate = $emptyElem
+    const $emptyElemTemplate = $emptyElem
       .prop('outerHTML')
       .replaceAll('{|name|}', gamehubData.name);
 

@@ -5,13 +5,13 @@ import {
   showPlatform,
 } from '../../utils';
 
-const elemIdPrefix = `#gas-guide`;
+const elemIdPrefix = '#gas-guide';
 
 function loadSections(sections) {
   const $nav = $(`${elemIdPrefix}-nav`);
   const $secs = $(`${elemIdPrefix}-sections`);
-  const $navTemp = $(`.gas-nav-btn`, $nav).first();
-  const $secTemp = $(`.gas-section`, $secs).first();
+  const $navTemp = $('.gas-nav-btn', $nav).first();
+  const $secTemp = $('.gas-section', $secs).first();
   for (let secIdx = sections.length - 1; secIdx >= 0; secIdx--) {
     const sec = sections[secIdx];
     const $newNavBtn = $navTemp.clone();
@@ -19,16 +19,16 @@ function loadSections(sections) {
     $newNavBtn
       .children()
       .first()
-      .text($newNavBtn.text().replace(`{|title|}`, sec.title));
+      .text($newNavBtn.text().replace('{|title|}', sec.title));
     const secNum = secIdx + 1;
     $nav.prepend($newNavBtn.attr('href', `${elemIdPrefix}-section-${secNum}`));
     const $newSec = $secTemp.clone();
     const $secTitle = $('.gas-section-title', $newSec);
     $secTitle.text(
-      $secTitle.text().replace(`{|title|}`, `${secNum} › ${sec.title}`)
+      $secTitle.text().replace('{|title|}', `${secNum} › ${sec.title}`)
     );
     const $secContent = $('.gas-section-content', $newSec);
-    $secContent.html($secContent.text().replace(`{|content|}`, sec.content));
+    $secContent.html($secContent.text().replace('{|content|}', sec.content));
     $secs.prepend(
       $newSec.attr('id', `${elemIdPrefix.slice(1)}-section-${secNum}`)
     );
@@ -67,12 +67,12 @@ function guideResponseHandler(res) {
       )
       .prop('outerHTML');
   }
-  const $authorImg = $(`.gas-author-cover`, dataTemplateActual);
+  const $authorImg = $('.gas-author-cover', dataTemplateActual);
   if ($authorImg?.length && res.avatar?.length) {
     dataTemplateActual =
       showImageFromSrc($authorImg, res.avatar, elemId) || dataTemplateActual;
   }
-  Object.entries(res).forEach(([key, value]) => {
+  for (const [key, value] of Object.entries(res)) {
     if (textKeysToReplace.includes(key)) {
       dataTemplateActual = dataTemplateActual.replaceAll(
         `{|${key}|}`,
@@ -86,7 +86,7 @@ function guideResponseHandler(res) {
     } else if (key === 'platform') {
       dataTemplateActual = showPlatform(value, dataTemplateActual, elemId);
     }
-  });
+  }
   $ghContainer.prop('outerHTML', dataTemplateActual);
   loadSections(res.sections);
 }

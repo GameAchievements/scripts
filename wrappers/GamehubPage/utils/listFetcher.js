@@ -12,20 +12,20 @@ export async function listFetcher(
     let tabCounts;
     if (Array.isArray(tabs)) {
       tabCounts = {};
-      tabs.forEach((tabName) => {
+      for (const tabName of tabs) {
         tabCounts[tabName] =
           tabName === 'all'
             ? listData.length
             : listData.filter(
                 (item) => item[tabMatcher]?.toLowerCase() === tabName
               )?.length;
-      });
+      }
     }
     switch (listName) {
       case 'reviews':
         reviewsBarsHandler({ listData, elemId });
 
-        $(`.gas-count-reviews`).each((idx, revEl) => {
+        $('.gas-count-reviews').each((idx, revEl) => {
           $(revEl).text(
             $(revEl).text().replace('{|reviewsCnt|}', listData.length)
           );

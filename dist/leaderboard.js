@@ -1,19 +1,20 @@
 (() => {
   // utils/templateReplacers/showPlatform.js
   var showPlatform = (platformName, dataTemplateActual, parentSelector = ".gas-list-entry") => {
+    let templateTemp = dataTemplateActual;
     const platformVerifier = {
       ps: { rgx: /playstation/gi },
       xbox: { rgx: /xbox/gi },
       steam: { rgx: /steam|pc|windows|mac|linux/gi }
     };
     if (platformVerifier.ps.rgx.test(platformName)) {
-      dataTemplateActual = $(`.gas-platform-psn`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+      templateTemp = $(".gas-platform-psn", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
     if (platformVerifier.steam.rgx.test(platformName)) {
-      dataTemplateActual = $(`.gas-platform-steam`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+      templateTemp = $(".gas-platform-steam", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
     if (platformVerifier.xbox.rgx.test(platformName)) {
-      dataTemplateActual = $(`.gas-platform-xbox`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+      templateTemp = $(".gas-platform-xbox", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
     return dataTemplateActual;
   };
@@ -50,7 +51,7 @@
     let dataTemplate = $(elemId).prop("outerHTML");
     const $list = $(`${elemId} .gas-list`);
     if (!$entryTemplate) {
-      $emptyList = $(`.gas-list-empty`, $list);
+      $emptyList = $(".gas-list-empty", $list);
       $listHeader = $list.children().first();
       $entryTemplate = $(".gas-list-entry", $list).first().clone();
       $(".gas-list-entry", $list).first().remove();
@@ -60,10 +61,10 @@
       $list.html($listHeader);
       listData.forEach((item, resIdx) => {
         let dataTemplateActual = dataTemplate;
-        dataTemplateActual = dataTemplateActual.replaceAll(`{|idx|}`, resIdx + 1);
-        Object.entries(item).forEach(([key, value]) => {
+        dataTemplateActual = dataTemplateActual.replaceAll("{|idx|}", resIdx + 1);
+        for (const [key, value] of Object.entries(item)) {
           if (key === "iconURL") {
-            const $profileImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+            const $profileImg = $(".gas-list-entry-cover", dataTemplateActual);
             if ($profileImg?.length && value?.length) {
               dataTemplateActual = showImageFromSrc($profileImg, value) || dataTemplateActual;
             }
@@ -74,7 +75,7 @@
                 dataTemplateActual
               );
             }
-            const $gameImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
+            const $gameImg = $(".gas-list-entry-cover-game", dataTemplateActual);
             if ($gameImg?.length && value?.iconURL?.length) {
               dataTemplateActual = showImageFromSrc($gameImg, value.iconURL) || dataTemplateActual;
             }
@@ -89,7 +90,7 @@
               Math.round(value || 0)
             );
           }
-        });
+        }
         $list.append(dataTemplateActual).children().last().removeClass(["bg-light", "bg-dark"]).addClass(`bg-${resIdx % 2 > 0 ? "light" : "dark"}`);
       });
     } else {
@@ -103,11 +104,11 @@
   var apiDomain = document.querySelector("meta[name=domain]")?.content;
   var getPlatformId = () => {
     switch (window.location.pathname) {
-      case `/playstation-leaderboard`:
+      case "/playstation-leaderboard":
         return 1;
-      case `/xbox-leaderboard`:
+      case "/xbox-leaderboard":
         return 2;
-      case `/steam-leaderboard`:
+      case "/steam-leaderboard":
         return 3;
       default:
         return;
@@ -149,7 +150,7 @@
   $(".ga-loader-container").show();
   $("#ga-sections-container").hide();
   $(async () => {
-    const elemId = `#gas-leaderboard`;
+    const elemId = "#gas-leaderboard";
     await auth0Bootstrap();
     setupListSearch(elemId, fetchLeaderboard);
     await fetchLeaderboard(elemId);

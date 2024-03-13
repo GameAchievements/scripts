@@ -1,6 +1,6 @@
 import { ratingSVG, ratingScale } from '../../utils';
 
-const elemIdPrefix = `#gas-gh`;
+const elemIdPrefix = '#gas-gh';
 
 function setupGAReview(gamehubData) {
   $('#official-review-game-title').text(gamehubData.name);
@@ -39,11 +39,11 @@ async function setupReviewForm(gamehubURL, token) {
     $(formWrapperId).remove();
     return;
   }
-  const $submitBtn = $(`.submit-button`, formWrapperId);
+  const $submitBtn = $('.submit-button', formWrapperId);
   $submitBtn.attr('disabled', true);
-  const $titleField = $(`[name=title]`, formWrapperId);
-  const $contentField = $(`[name=content]`, formWrapperId);
-  const $requiredFields = $(`[name][required]`, formWrapperId);
+  const $titleField = $('[name=title]', formWrapperId);
+  const $contentField = $('[name=content]', formWrapperId);
+  const $requiredFields = $('[name][required]', formWrapperId);
   const submitText = $submitBtn.val();
   const $errEl = $('.gas-form-error', formWrapperId);
   const $errorDiv = $('div', $errEl);
@@ -59,7 +59,7 @@ async function setupReviewForm(gamehubURL, token) {
     }
   };
 
-  $requiredFields.on('focusout keyup', function () {
+  $requiredFields.on('focusout keyup', () => {
     $requiredFields.each(function () {
       if (!$(this).val()?.length) {
         requiredFilled = false;
@@ -72,7 +72,7 @@ async function setupReviewForm(gamehubURL, token) {
     });
     canSubmit();
   });
-  $('li', $ratingScale).one('click', function () {
+  $('li', $ratingScale).one('click', () => {
     $ratingScale.parent().prev('label').removeClass('field-label-missing');
     canSubmit();
   });
@@ -90,7 +90,7 @@ async function setupReviewForm(gamehubURL, token) {
     }
     // disable show popup on leave page (site-settings)
     isUserInputActive = false;
-    $(`input`, formWrapperId).attr('disabled', true);
+    $('input', formWrapperId).attr('disabled', true);
     $submitBtn.val($submitBtn.data('wait'));
     const reqData = {
       title: $titleField.val(),
@@ -113,12 +113,12 @@ async function setupReviewForm(gamehubURL, token) {
       setTimeout(() => {
         $errEl.hide();
         $errorDiv.text(txtError);
-        $(`input`, formWrapperId).attr('disabled', false);
+        $('input', formWrapperId).attr('disabled', false);
         $submitBtn.val(submitText);
       }, formMessageDelay);
       return;
     }
-    $(`form`, formWrapperId).hide();
+    $('form', formWrapperId).hide();
     $successEl.attr('title', revData?.message).show();
     setTimeout(() => {
       location.reload();
@@ -132,11 +132,11 @@ export function loadReviewSection(gamehubURL, token, gamehubData) {
 }
 
 export function reviewsBarsHandler({ listData, elemId }) {
-  const $barsContainer = $(elemId + '-bars');
+  const $barsContainer = $(`${elemId}-bars`);
   let barItems = [];
   const bars = ['positive', 'mixed', 'negative'];
   if (listData.length) {
-    bars.forEach((barName) => {
+    for (const barName of bars) {
       barItems = listData.filter(
         (item) => item.classification?.toLowerCase() === barName
       );
@@ -149,22 +149,22 @@ export function reviewsBarsHandler({ listData, elemId }) {
       if ($barText.length) {
         $barText.text(barItems?.length);
       }
-    });
+    }
 
     const avgRating = Math.round(
       listData
         .map((li) => li.rating)
         .reduce((prevLi, currLi) => prevLi + currLi) / listData.length
     );
-    $(`.gas-avg-rate-wrapper`).each((idx, rateEl) => {
+    $('.gas-avg-rate-wrapper').each((idx, rateEl) => {
       $(rateEl).prepend(ratingSVG(avgRating));
       $('.gas-avg-rate-text', rateEl).text(avgRating);
     });
   } else {
-    bars.forEach((barName) => {
+    for (const barName of bars) {
       $(`.gas-bar-${barName}`, $barsContainer).css('width', '1%');
-    });
-    $(`.gas-avg-rate-wrapper`).each((idx, rateEl) => {
+    }
+    $('.gas-avg-rate-wrapper').each((idx, rateEl) => {
       $(rateEl).prepend(ratingSVG(0));
       $('.gas-avg-rate-text', rateEl).text('-');
     });

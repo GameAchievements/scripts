@@ -41,14 +41,14 @@ export async function versionAchievementsFetcher(versionGameId, platformId) {
   const $listHeader = $list.children().first();
   const $entryTemplate = $('.gh-row', $list).first();
   $entryTemplate.show();
-  let dataTemplate = $entryTemplate.prop('outerHTML');
+  const dataTemplate = $entryTemplate.prop('outerHTML');
   $list.html($listHeader).append($entryTemplate);
   if (listData.length > 0) {
     $entryTemplate.hide();
     listData.forEach((item, itemIdx) => {
       let dataTemplateActual = dataTemplate;
-      Object.entries(item).forEach(([key, value]) => {
-        const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+      for (const [key, value] of Object.entries(item)) {
+        const $entryImg = $('.gas-list-entry-cover', dataTemplateActual);
         if ($entryImg && item.iconURL?.length) {
           dataTemplateActual =
             showImageFromSrc($entryImg, item.iconURL, '.gh-row') ||
@@ -56,7 +56,7 @@ export async function versionAchievementsFetcher(versionGameId, platformId) {
         }
         if (key === 'name') {
           dataTemplateActual = dataTemplateActual.replaceAll(
-            `{|name|}`,
+            '{|name|}',
             achievementNameSlicer(value) || 'N.A.'
           );
         } else if (textKeysToReplace.includes(key)) {
@@ -83,7 +83,7 @@ export async function versionAchievementsFetcher(versionGameId, platformId) {
             dataTemplateActual
           );
         }
-      });
+      }
       listTemplateAppend(
         $list,
         dataTemplateActual,

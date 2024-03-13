@@ -1,9 +1,11 @@
+import { unlinkPlatform } from './unlinkPlatform';
+
 export async function linkPlatform(platformName, formMessageDelay) {
   const $toLinkCard = $(`#ga-pa-to-link-${platformName}`);
   $toLinkCard.show();
-  const $linkField = $(`input[name=external]`, $toLinkCard);
-  const $submitBtn = $(`input[type=submit]`, $toLinkCard);
-  const $cardForm = $(`.gas-link-pa-form`, $toLinkCard);
+  const $linkField = $('input[name=external]', $toLinkCard);
+  const $submitBtn = $('input[type=submit]', $toLinkCard);
+  const $cardForm = $('.gas-link-pa-form', $toLinkCard);
   const $errEl = $('.gas-link-pa-error', $toLinkCard);
   $submitBtn.click(async (e) => {
     e.preventDefault();
@@ -17,7 +19,7 @@ export async function linkPlatform(platformName, formMessageDelay) {
       }, formMessageDelay);
       return;
     }
-    $(`input`, $toLinkCard).attr('disabled', true);
+    $('input', $toLinkCard).attr('disabled', true);
     const reqData = {
       platform: platformNameIdMap(platformName),
       external: $linkField.val(),
@@ -38,7 +40,7 @@ export async function linkPlatform(platformName, formMessageDelay) {
       console.error(paData?.message);
       setTimeout(() => {
         $errEl.hide();
-        $(`input`, $toLinkCard).attr('disabled', false);
+        $('input', $toLinkCard).attr('disabled', false);
         $cardForm.css('display', 'flex');
       }, formMessageDelay);
       return;

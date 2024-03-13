@@ -3,14 +3,17 @@ export async function unlinkPlatform(
   platformsToLink,
   formMessageDelay
 ) {
+  let platformsToLinkTemp = platformsToLink;
   const platformName = platform.toLowerCase();
-  platformsToLink = platformsToLink.filter((pTL) => pTL !== platformName);
+  platformsToLinkTemp = platformsToLinkTemp.filter(
+    (pTL) => pTL !== platformName
+  );
   const $cardLinked = $(`#ga-pa-linked-${platformName}`);
-  $(`.gas-pa-name`, $cardLinked)
+  $('.gas-pa-name', $cardLinked)
     .text(accountId)
     .attr('title', `name: ${accountName}`);
   $cardLinked.show();
-  $(`.gas-unlink-pa-btn`, $cardLinked).click(async (e) => {
+  $('.gas-unlink-pa-btn', $cardLinked).click(async (e) => {
     e.preventDefault();
     if (
       confirm(

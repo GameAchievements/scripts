@@ -7,19 +7,20 @@ import {
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 const platformsTabNames = ['all', 'playstation', 'xbox', 'steam'];
 
+// biome-ignore lint/style/useDefaultParameterLast: <explanation>
 export async function loadLeaderboards(elemId, searchTerm = '', { gameId }) {
   let dataTemplate = $(elemId).prop('outerHTML');
-  platformsTabNames.forEach(async (tabName) => {
+  for (const tabName of platformsTabNames) {
     const $list = $(`${elemId} .gas-list-${tabName}`);
     let paramPlatformId = 0;
     switch (tabName) {
-      case `playstation`:
+      case 'playstation':
         paramPlatformId = 1;
         break;
-      case `xbox`:
+      case 'xbox':
         paramPlatformId = 2;
         break;
-      case `steam`:
+      case 'steam':
         paramPlatformId = 3;
         break;
       default:
@@ -54,7 +55,7 @@ export async function loadLeaderboards(elemId, searchTerm = '', { gameId }) {
         numKeysToReplace.push('games');
         break;
     }
-    const $emptyList = $(`.gas-list-empty`, $list);
+    const $emptyList = $('.gas-list-empty', $list);
     if (listData.count > 0 && listData.results?.length) {
       const $listHeader = $list.children().first();
       const $entryTemplate = $('.gas-list-entry', $list).first();
@@ -65,12 +66,12 @@ export async function loadLeaderboards(elemId, searchTerm = '', { gameId }) {
       listData.results.forEach((item, itemIdx) => {
         let dataTemplateActual = dataTemplate;
         dataTemplateActual = dataTemplateActual.replaceAll(
-          `{|idx|}`,
+          '{|idx|}',
           itemIdx + 1
         );
-        Object.entries(item).forEach(([key, value]) => {
+        for (const [key, value] of Object.entries(item)) {
           if (key === 'iconURL') {
-            const $profileImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+            const $profileImg = $('.gas-list-entry-cover', dataTemplateActual);
             if ($profileImg?.length && value?.length) {
               dataTemplateActual =
                 showImageFromSrc($profileImg, value) || dataTemplateActual;
@@ -84,7 +85,7 @@ export async function loadLeaderboards(elemId, searchTerm = '', { gameId }) {
               );
             }
             const $gameImg = $(
-              `.gas-list-entry-cover-game`,
+              '.gas-list-entry-cover-game',
               dataTemplateActual
             );
             if ($gameImg?.length && value?.iconURL?.length) {
@@ -102,12 +103,12 @@ export async function loadLeaderboards(elemId, searchTerm = '', { gameId }) {
               Math.round(value || 0)
             );
           }
-        });
+        }
         listTemplateAppend($list, dataTemplateActual, itemIdx);
       });
     } else {
       $list.html($emptyList);
       $emptyList.show();
     }
-  });
+  }
 }

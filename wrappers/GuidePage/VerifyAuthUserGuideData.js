@@ -1,4 +1,4 @@
-let achievementId = 0;
+const achievementId = 0;
 let hasLike;
 
 function setupLike(hasLikeFromFetch) {
@@ -44,9 +44,9 @@ const setupCommentForm = (hasComment) => {
     return;
   }
   const formMessageDelay = 4000;
-  const $submitBtn = $(`.submit-button`, formWrapperId);
+  const $submitBtn = $('.submit-button', formWrapperId);
   $submitBtn.attr('disabled', true);
-  const $contentField = $(`[name=comment]`, formWrapperId);
+  const $contentField = $('[name=comment]', formWrapperId);
   const submitText = $submitBtn.text();
   const $errEl = $('.gas-form-error', formWrapperId);
   const $errorDiv = $('div', $errEl);
@@ -75,7 +75,7 @@ const setupCommentForm = (hasComment) => {
     }
     // disable show popup on leave page (site-settings)
     isUserInputActive = false;
-    $(`input`, formWrapperId).attr('disabled', true);
+    $('input', formWrapperId).attr('disabled', true);
     $submitBtn.text($submitBtn.data('wait'));
     const resFetch = await fetch(
       `https://${apiDomain}/api/guide/${guideId}/comment`,
@@ -96,12 +96,12 @@ const setupCommentForm = (hasComment) => {
       setTimeout(() => {
         $errEl.hide();
         $errorDiv.text(txtError);
-        $(`input`, formWrapperId).attr('disabled', false);
+        $('input', formWrapperId).attr('disabled', false);
         $submitBtn.text(submitText);
       }, formMessageDelay);
       return;
     }
-    $(`form`, formWrapperId).hide();
+    $('form', formWrapperId).hide();
     $successEl.attr('title', revData?.message).show();
     setTimeout(() => {
       location.reload();

@@ -5,7 +5,7 @@ $('.ga-loader-container').show();
 $('#ga-sections-container').hide();
 
 $(async () => {
-  const elemId = `#gas-leaderboard`;
+  const elemId = '#gas-leaderboard';
   await auth0Bootstrap();
   setupListSearch(elemId, fetchLeaderboard);
   await fetchLeaderboard(elemId);

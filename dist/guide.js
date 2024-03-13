@@ -23,7 +23,7 @@
       "Nov",
       "Dec"
     ];
-    const date = dateObj.getDate() + " " + month[dateObj.getMonth()] + ", " + dateObj.getFullYear();
+    const date = `${dateObj.getDate()} ${month[dateObj.getMonth()]}, ${dateObj.getFullYear()}`;
     const time = dateObj.toLocaleTimeString().toLowerCase();
     return { date, time };
   };
@@ -39,19 +39,20 @@
 
   // utils/templateReplacers/showPlatform.js
   var showPlatform = (platformName, dataTemplateActual, parentSelector = ".gas-list-entry") => {
+    let templateTemp = dataTemplateActual;
     const platformVerifier = {
       ps: { rgx: /playstation/gi },
       xbox: { rgx: /xbox/gi },
       steam: { rgx: /steam|pc|windows|mac|linux/gi }
     };
     if (platformVerifier.ps.rgx.test(platformName)) {
-      dataTemplateActual = $(`.gas-platform-psn`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+      templateTemp = $(".gas-platform-psn", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
     if (platformVerifier.steam.rgx.test(platformName)) {
-      dataTemplateActual = $(`.gas-platform-steam`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+      templateTemp = $(".gas-platform-steam", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
     if (platformVerifier.xbox.rgx.test(platformName)) {
-      dataTemplateActual = $(`.gas-platform-xbox`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+      templateTemp = $(".gas-platform-xbox", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
     return dataTemplateActual;
   };
@@ -60,12 +61,12 @@
   var showImageFromSrc = ($img, url, parentSelector = ".gas-list-entry") => $img.removeAttr("srcset").removeAttr("sizes").attr("src", url).parents(parentSelector).prop("outerHTML");
 
   // wrappers/GuidePage/CommentsSection.js
-  var elemIdPrefix2 = `#gas-guide`;
+  var elemIdPrefix2 = "#gas-guide";
   function listResponseHandler({ listData, elemId, textKeysToReplace }) {
     console.info(`=== ${elemId} results ===`, listData);
     let dataTemplate = $(elemId).prop("outerHTML");
     const $list = $(`${elemId} .gas-list`);
-    const $emptyList = $(`.gas-list-empty`, $list);
+    const $emptyList = $(".gas-list-empty", $list);
     if (listData.count > 0 && listData.results?.length) {
       const $listHeader = $list.children().first();
       const $entryTemplate = $(".gas-list-entry", $list).first();
@@ -75,8 +76,8 @@
       $entryTemplate.hide();
       listData.results.forEach((item, resIdx) => {
         let dataTemplateActual = dataTemplate;
-        Object.entries(item).forEach(([key, value]) => {
-          const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+        for (const [key, value] of Object.entries(item)) {
+          const $entryImg = $(".gas-list-entry-cover", dataTemplateActual);
           if ($entryImg.length && item.imageUrl?.length) {
             dataTemplateActual = showImageFromSrc($entryImg, item.imageURL) || dataTemplateActual;
           }
@@ -92,7 +93,7 @@
               `${date} at ${time}`
             );
           }
-        });
+        }
         $list.append(dataTemplateActual).children().last().removeClass(["bg-light", "bg-dark"]).addClass(`bg-${resIdx % 2 > 0 ? "light" : "dark"}`);
       });
     } else {
@@ -126,26 +127,26 @@
   }
 
   // wrappers/GuidePage/GuideData.js
-  var elemIdPrefix3 = `#gas-guide`;
+  var elemIdPrefix3 = "#gas-guide";
   function loadSections(sections) {
     const $nav = $(`${elemIdPrefix3}-nav`);
     const $secs = $(`${elemIdPrefix3}-sections`);
-    const $navTemp = $(`.gas-nav-btn`, $nav).first();
-    const $secTemp = $(`.gas-section`, $secs).first();
+    const $navTemp = $(".gas-nav-btn", $nav).first();
+    const $secTemp = $(".gas-section", $secs).first();
     for (let secIdx = sections.length - 1; secIdx >= 0; secIdx--) {
       const sec = sections[secIdx];
       const $newNavBtn = $navTemp.clone();
       $newNavBtn.attr("title", sec.title);
-      $newNavBtn.children().first().text($newNavBtn.text().replace(`{|title|}`, sec.title));
+      $newNavBtn.children().first().text($newNavBtn.text().replace("{|title|}", sec.title));
       const secNum = secIdx + 1;
       $nav.prepend($newNavBtn.attr("href", `${elemIdPrefix3}-section-${secNum}`));
       const $newSec = $secTemp.clone();
       const $secTitle = $(".gas-section-title", $newSec);
       $secTitle.text(
-        $secTitle.text().replace(`{|title|}`, `${secNum} \u203A ${sec.title}`)
+        $secTitle.text().replace("{|title|}", `${secNum} \u203A ${sec.title}`)
       );
       const $secContent = $(".gas-section-content", $newSec);
-      $secContent.html($secContent.text().replace(`{|content|}`, sec.content));
+      $secContent.html($secContent.text().replace("{|content|}", sec.content));
       $secs.prepend(
         $newSec.attr("id", `${elemIdPrefix3.slice(1)}-section-${secNum}`)
       );
@@ -181,11 +182,11 @@
           url(${guideImg})`
       ).prop("outerHTML");
     }
-    const $authorImg = $(`.gas-author-cover`, dataTemplateActual);
+    const $authorImg = $(".gas-author-cover", dataTemplateActual);
     if ($authorImg?.length && res.avatar?.length) {
       dataTemplateActual = showImageFromSrc($authorImg, res.avatar, elemId) || dataTemplateActual;
     }
-    Object.entries(res).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(res)) {
       if (textKeysToReplace.includes(key)) {
         dataTemplateActual = dataTemplateActual.replaceAll(
           `{|${key}|}`,
@@ -199,7 +200,7 @@
       } else if (key === "platform") {
         dataTemplateActual = showPlatform(value, dataTemplateActual, elemId);
       }
-    });
+    }
     $ghContainer.prop("outerHTML", dataTemplateActual);
     loadSections(res.sections);
   }
@@ -259,10 +260,10 @@
       $(formWrapperId).parent().hide();
       return;
     }
-    const formMessageDelay2 = 4e3;
-    const $submitBtn = $(`.submit-button`, formWrapperId);
+    const formMessageDelay = 4e3;
+    const $submitBtn = $(".submit-button", formWrapperId);
     $submitBtn.attr("disabled", true);
-    const $contentField = $(`[name=comment]`, formWrapperId);
+    const $contentField = $("[name=comment]", formWrapperId);
     const submitText = $submitBtn.text();
     const $errEl = $(".gas-form-error", formWrapperId);
     const $errorDiv = $("div", $errEl);
@@ -285,11 +286,11 @@
         setTimeout(() => {
           $errEl.hide();
           $errorDiv.text(txtError);
-        }, formMessageDelay2);
+        }, formMessageDelay);
         return;
       }
       isUserInputActive = false;
-      $(`input`, formWrapperId).attr("disabled", true);
+      $("input", formWrapperId).attr("disabled", true);
       $submitBtn.text($submitBtn.data("wait"));
       const resFetch = await fetch(
         `https://${apiDomain}/api/guide/${guideId}/comment`,
@@ -310,16 +311,16 @@
         setTimeout(() => {
           $errEl.hide();
           $errorDiv.text(txtError);
-          $(`input`, formWrapperId).attr("disabled", false);
+          $("input", formWrapperId).attr("disabled", false);
           $submitBtn.text(submitText);
-        }, formMessageDelay2);
+        }, formMessageDelay);
         return;
       }
-      $(`form`, formWrapperId).hide();
+      $("form", formWrapperId).hide();
       $successEl.attr("title", revData?.message).show();
       setTimeout(() => {
         location.reload();
-      }, formMessageDelay2);
+      }, formMessageDelay);
     });
   };
   async function verifyAuthenticatedUserGuideData() {

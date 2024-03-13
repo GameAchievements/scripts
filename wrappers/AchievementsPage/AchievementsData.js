@@ -7,7 +7,9 @@ import {
 
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 
-let $entryTemplate, $listHeader, $emptyList;
+let $entryTemplate;
+let $listHeader;
+let $emptyList;
 
 function listResponseHandler({
   listData,
@@ -19,7 +21,7 @@ function listResponseHandler({
   let dataTemplate = $(elemId).prop('outerHTML');
   const $list = $(`${elemId} .gas-list`);
   if (!$entryTemplate) {
-    $emptyList = $(`.gas-list-empty`, $list);
+    $emptyList = $('.gas-list-empty', $list);
     $listHeader = $list.children().first();
     $entryTemplate = $('.gas-list-entry', $list).first().clone();
     $('.gas-list-entry', $list).first().remove();
@@ -29,15 +31,15 @@ function listResponseHandler({
     $list.html($listHeader);
     listData.forEach((item, resIdx) => {
       let dataTemplateActual = dataTemplate;
-      Object.entries(item).forEach(([key, value]) => {
-        const $gameImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
+      for (const [key, value] of Object.entries(item)) {
+        const $gameImg = $('.gas-list-entry-cover-game', dataTemplateActual);
         if ($gameImg?.length && item.gameIconURL?.length) {
           // TODO: why is WF adding gas-list-entry-cover to this element?
           $gameImg.removeClass('gas-list-entry-cover');
           dataTemplateActual =
             showImageFromSrc($gameImg, item.gameIconURL) || dataTemplateActual;
         }
-        const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+        const $entryImg = $('.gas-list-entry-cover', dataTemplateActual);
         const imageURL = item.iconURL || item.imageURL;
         if ($entryImg?.length && imageURL?.length) {
           dataTemplateActual =
@@ -63,7 +65,7 @@ function listResponseHandler({
           );
           if (value.toLowerCase() !== 'common') {
             const classValue = value.replace(' ', '-')?.toLowerCase();
-            dataTemplateActual = $(`.gas-rarity-tag`, dataTemplateActual)
+            dataTemplateActual = $('.gas-rarity-tag', dataTemplateActual)
               .removeClass('gas-rarity-tag')
               .addClass(`gas-rarity-tag-${classValue}`)
               .children('.p1')
@@ -72,7 +74,7 @@ function listResponseHandler({
               .prop('outerHTML');
           }
         }
-      });
+      }
       $list
         .append(dataTemplateActual)
         .children()
@@ -105,7 +107,7 @@ export async function fetchAchievements(elemId, searchTerm = '') {
   );
   const fetchData = await resAchievements.json();
   $(`${elemId} .gas-list-results-info`).text(
-    (fetchData?.length || 0) + ' result(s)'
+    `${fetchData?.length || 0} result(s)`
   );
   listResponseHandler({
     listData: fetchData,

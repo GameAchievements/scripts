@@ -1,6 +1,6 @@
 import { gaDateTime, listTemplateAppend, showImageFromSrc } from '../../utils';
 
-const elemIdPrefix = `#gas-gh`;
+const elemIdPrefix = '#gas-gh';
 
 function achieversHandler({
   listsData,
@@ -15,7 +15,7 @@ function achieversHandler({
   $achieversLists.each((listIdx, listEl) => {
     const $list = $(listEl);
     let dataTemplate = $list.prop('outerHTML');
-    const $emptyList = $(`.gas-list-empty`, $list);
+    const $emptyList = $('.gas-list-empty', $list);
     const $listHeader = $list.children().first();
     const $entryTemplate = $('.gas-list-entry', $list).first();
     $list.html($listHeader);
@@ -28,20 +28,20 @@ function achieversHandler({
       $entryTemplate.hide();
       listDataToRead.forEach((item, itemIdx) => {
         let dataTemplateActual = dataTemplate;
-        Object.entries(item).forEach(([key, value]) => {
-          const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+        for (const [key, value] of Object.entries(item)) {
+          const $entryImg = $('.gas-list-entry-cover', dataTemplateActual);
           if ($entryImg && item.iconURL?.length) {
             dataTemplateActual =
               showImageFromSrc($entryImg, item.avatar) || dataTemplateActual;
           }
           dataTemplateActual = dataTemplateActual.replaceAll(
-            `{|idx|}`,
+            '{|idx|}',
             itemIdx + 1
           );
           if (key === 'unlockedAt') {
             const { date, time } = gaDateTime(value);
             dataTemplateActual = dataTemplateActual.replaceAll(
-              `{|unlockedDt|}`,
+              '{|unlockedDt|}',
               date || 'N.A.'
             );
             dataTemplateActual = dataTemplateActual.replaceAll(
@@ -59,7 +59,7 @@ function achieversHandler({
               Math.round(value || 0)
             );
           }
-        });
+        }
         listTemplateAppend($list, dataTemplateActual, itemIdx);
       });
     } else {

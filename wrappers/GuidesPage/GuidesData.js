@@ -16,7 +16,7 @@ export async function fetchGuides(elemId, searchTerm = '') {
   );
   const fetchData = await resGuides.json();
   $(`${elemId} .gas-list-results-info`).text(
-    (fetchData?.count || 0) + ' result(s)'
+    `${fetchData?.count || 0} result(s)`
   );
 
   listResponseHandler({

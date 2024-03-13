@@ -18,7 +18,7 @@
   };
 
   // wrappers/GuideFormPage/utils/detailsResponseHandler.js
-  function detailsResponseHandler(res, elemId2 = `#gas-guide-details`) {
+  function detailsResponseHandler(res, elemId2 = "#gas-guide-details") {
     const $ghContainer = $(elemId2);
     let dataTemplateActual = $ghContainer.prop("outerHTML");
     console.info(`=== ${elemId2} ===`, res);
@@ -39,7 +39,7 @@
           url(${guideImg})`
       ).prop("outerHTML");
     }
-    Object.entries(res).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(res)) {
       if (key === "achievementName") {
         dataTemplateActual = dataTemplateActual.replaceAll(
           `{|${key}|}`,
@@ -51,7 +51,7 @@
           (key.endsWith("At") ? gaDate(value) : value) || ""
         );
       }
-    });
+    }
     $ghContainer.prop("outerHTML", dataTemplateActual);
   }
 
@@ -65,7 +65,7 @@
       document.title = `Achievement ${achievementFetchedData.name?.length ? achievementFetchedData.name : achievementFetchedData.id} | ${document.title}`;
       achievementFetchedData.achievementName = achievementFetchedData.name;
       detailsResponseHandler(achievementFetchedData);
-      detailsResponseHandler(achievementFetchedData, `#gas-guide-form`);
+      detailsResponseHandler(achievementFetchedData, "#gas-guide-form");
     }
   }
 
@@ -76,7 +76,7 @@
     if (Object.keys(guideFetchedData).length > 0 && guideFetchedData.id) {
       document.title = `${guideFetchedData.name?.length ? guideFetchedData.name : guideFetchedData.id} | ${document.title}`;
       detailsResponseHandler(guideFetchedData);
-      detailsResponseHandler(guideFetchedData, `#gas-guide-form`);
+      detailsResponseHandler(guideFetchedData, "#gas-guide-form");
     }
     return guideFetchedData;
   }
@@ -95,7 +95,7 @@
     }
     $el.prev("label").addClass("field-label-missing");
   };
-  function canSubmit($elChanged, elemId2 = `#gas-guide-form`) {
+  function canSubmit($elChanged, elemId2 = "#gas-guide-form") {
     let allInputsFilled = false;
     let allTextareasFilled = false;
     if ($elChanged?.length) {
@@ -130,9 +130,9 @@
   var isEditing = guideId > 0;
   var achievementId = Number(urlParams.get("achievementId")) || 0;
   var guideFetchedData2;
-  var elemIdPrefix = `#gas-guide`;
+  var elemIdPrefix = "#gas-guide";
   var elemId = `${elemIdPrefix}-form`;
-  var formMessageDelay2 = 4e3;
+  var formMessageDelay = 4e3;
   var sectionsLimit = 4;
   var sectionsCount = 2;
   var $sectionTemp = $(".gas-form-section", elemId).last().clone();
@@ -165,7 +165,7 @@
       tinyMCE.get($(".gas-form-tinymce", $sec).attr("id")).remove();
       $sec.remove();
       sectionsCount--;
-      $(`.gas-form-section label[for$=-title]`, elemId).each(
+      $(".gas-form-section label[for$=-title]", elemId).each(
         (secIdx, el) => $(el).text(`${secIdx + 1}${$(el).text().slice(1)}`)
       );
       if (sectionsCount <= sectionsLimit) {
@@ -214,13 +214,13 @@
     $(".gas-form-section-del", elemId).on("click", delSection);
     $(`${elemId}-btn-cancel`, elemId).on("click", (evt) => {
       evt.preventDefault();
-      const $popupWrapper = $(`#gas-popup-leave-confirmation`);
+      const $popupWrapper = $("#gas-popup-leave-confirmation");
       $popupWrapper.css({ opacity: 1, display: "flex" });
-      $(`.gas-popup-btn-close`, $popupWrapper).one("click", (evt2) => {
+      $(".gas-popup-btn-close", $popupWrapper).one("click", (evt2) => {
         evt2.preventDefault();
         $popupWrapper.hide();
       });
-      $(`.gas-popup-btn-leave`, $popupWrapper).one("click", (evt2) => {
+      $(".gas-popup-btn-leave", $popupWrapper).one("click", (evt2) => {
         evt2.preventDefault();
         isUserInputActive = false;
         $popupWrapper.hide();
@@ -233,7 +233,7 @@
     const $errorDiv = $("div", $errEl);
     const txtError = $errEl.text();
     const $successEl = $(".gas-form-success", elemId);
-    $(`input[name][required]`, elemId).on("focusout keyup", function() {
+    $("input[name][required]", elemId).on("focusout keyup", function() {
       canSubmit($(this));
     });
     $(`${elemId}-btn-submit`).on("click", async (e) => {
@@ -241,7 +241,7 @@
       $(`${elemId}-btn-submit`).addClass("disabled-button").attr("disabled", true);
       isUserInputActive = false;
       $(`${elemId}-btn-submit`).val($(`${elemId}-btn-submit`).data("wait"));
-      let sections = [];
+      const sections = [];
       $(".gas-form-section", elemId).each(function() {
         sections.push({
           title: $("input[name$=-title]", this).val(),
@@ -271,7 +271,7 @@
           setTimeout(() => {
             $errEl.hide();
             $errorDiv.text(txtError);
-          }, formMessageDelay2);
+          }, formMessageDelay);
           return;
         }
         reqData.profileId = userProfileData.id;
@@ -295,19 +295,19 @@
         setTimeout(() => {
           $errEl.hide();
           $errorDiv.text(txtError);
-        }, formMessageDelay2);
+        }, formMessageDelay);
         return;
       }
       $successEl.show();
       $(`${elemId}-btn-submit`).val(submitText);
       setTimeout(() => {
         $(`${elemId}-fields`).hide();
-      }, formMessageDelay2 / 5);
+      }, formMessageDelay / 5);
       setTimeout(() => {
         isUserInputActive = false;
         $successEl.hide();
         redirectAway();
-      }, formMessageDelay2);
+      }, formMessageDelay);
     });
   }
   function redirectAway() {

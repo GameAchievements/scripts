@@ -19,7 +19,7 @@ const highlightRequiredLabel = ($el) => {
 };
 
 // cycle all fields and verify if they all have content
-export function canSubmit($elChanged, elemId = `#gas-guide-form`) {
+export function canSubmit($elChanged, elemId = '#gas-guide-form') {
   let allInputsFilled = false;
   let allTextareasFilled = false;
   if ($elChanged?.length) {

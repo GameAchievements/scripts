@@ -1,10 +1,11 @@
 import { showPlatform } from '../../utils';
 import { linkPlatform } from './utils/linkPlatform';
+import { profileAvatarUpdater } from './utils/profileAvatarUpdater';
 import { unlinkPlatform } from './utils/unlinkPlatform';
 const formMessageDelay = 4e3;
 
 const elemIdPrefix = '#gas-profile';
-let platformsToLink = Array.from(['playstation', 'xbox', 'steam']);
+const platformsToLink = Array.from(['playstation', 'xbox', 'steam']);
 
 const setupLinkForms = (platformsLinked = []) => {
   $(`${elemIdPrefix}-pa-code-copied-msg`).hide();
@@ -20,59 +21,13 @@ const setupLinkForms = (platformsLinked = []) => {
   } else {
     $(`${elemIdPrefix}-pa-code-btn`).hide();
   }
-  platformsLinked.forEach((el) =>
-    unlinkPlatform(el, platformsToLink, formMessageDelay)
-  );
+  for (const el of platformsLinked) {
+    unlinkPlatform(el, platformsToLink, formMessageDelay);
+  }
   platformsToLink.map((el) => linkPlatform(el, formMessageDelay));
 };
 
-const profileAvatarUpdater = async (platformsLinked) => {
-  const $msgEl = $(`${elemIdPrefix}-msg-avatar`);
-  if (!platformsLinked.length) {
-    displayMessage(
-      $msgEl,
-      'Please link first a platform account in order to choose your avatar.',
-      'unstyled',
-      () => {
-        $msgEl.css('display', 'flex');
-      }
-    );
-  }
-  platformsLinked.map(({ platform }) => {
-    const platformName = platform.toLowerCase();
-    $(`${elemIdPrefix}-btn-avatar-${platformName}`)
-      .show()
-      .click(async function () {
-        const resFetch = await fetch(`${fetchURLPrefix}/avatar`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ platformId: platformNameIdMap(platformName) }),
-        });
-        if (resFetch.status !== 201) {
-          displayMessage(
-            $msgEl,
-            'Oops! Issue changing avatar… Please try later.',
-            'error'
-          );
-          return;
-        }
-        const resData = await resFetch.json();
-        if (resData.imageURL?.length) {
-          $('.gas-profile-avatar')
-            .removeAttr('srcset')
-            .removeAttr('sizes')
-            .attr('src', resData.imageURL);
-          displayMessage($msgEl, 'Avatar successfully changed!');
-        }
-      });
-  });
-};
-
-function profileResponseHandler(res) {
+function profileResponseHandler(res, fetchURLPrefix) {
   const elemId = `${elemIdPrefix}-details`;
   let dataTemplateActual = $(`${elemId}`).prop('outerHTML');
   console.info(`=== ${elemId} ===`, res);
@@ -86,38 +41,40 @@ function profileResponseHandler(res) {
     'completion',
     'achievedCount',
   ];
-  Object.entries(res).forEach(([key, value]) => {
+  console.log('dataTemplateActual', dataTemplateActual);
+  for (const [key, value] of Object.entries(res)) {
     if (textKeysToReplace.includes(key)) {
       dataTemplateActual = dataTemplateActual.replaceAll(`{|${key}|}`, value);
     } else if (key === 'ranking') {
-      Object.entries(value).forEach(([rankKey, rankVal]) => {
+      for (const [rankKey, rankVal] of Object.entries(value)) {
         dataTemplateActual = dataTemplateActual.replaceAll(
           `{|${rankKey}|}`,
           rankVal
         );
-      });
+      }
     } else if (key === 'platforms') {
-      value.forEach(({ platform, accountName }) => {
+      for (const { platform, accountName } of value) {
         dataTemplateActual = dataTemplateActual.replaceAll(
           `{|${platform.toLowerCase()}Name|}`,
           accountName
         );
         dataTemplateActual = showPlatform(platform, dataTemplateActual, elemId);
-      });
+      }
     }
-  });
+  }
+
   $(`${elemId}`).prop('outerHTML', dataTemplateActual);
   // global (all sections) replacers
   if (!userAuth0Data?.sub?.length) {
     return;
   }
-  profileAvatarUpdater(res.platforms);
+  profileAvatarUpdater(res.platforms, elemIdPrefix, fetchURLPrefix);
   setupLinkForms(res.platforms);
   if (res.role?.length) {
     const isRegularRole = res.role.toLowerCase() === 'regular';
     $(`.gas-role${isRegularRole ? '' : '-non'}-regular`).show();
     if (!isRegularRole) {
-      const $toggleCheckbox = $(`#gas-ads-toggle`);
+      const $toggleCheckbox = $('#gas-ads-toggle');
       if (userProfileData.adsOff) {
         $toggleCheckbox.prop('checked', true);
       }
@@ -176,7 +133,7 @@ export async function fetchGAUserData(fetchURLPrefix, profileId) {
     document.title = `${resData.name?.length ? resData.name : resData.id} | ${
       document.title
     }`;
-    profileResponseHandler(resData);
+    profileResponseHandler(resData, fetchURLPrefix);
   }
   return true;
 }

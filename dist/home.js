@@ -17,19 +17,20 @@
 
   // utils/templateReplacers/showPlatform.js
   var showPlatform = (platformName, dataTemplateActual, parentSelector = ".gas-list-entry") => {
+    let templateTemp = dataTemplateActual;
     const platformVerifier = {
       ps: { rgx: /playstation/gi },
       xbox: { rgx: /xbox/gi },
       steam: { rgx: /steam|pc|windows|mac|linux/gi }
     };
     if (platformVerifier.ps.rgx.test(platformName)) {
-      dataTemplateActual = $(`.gas-platform-psn`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+      templateTemp = $(".gas-platform-psn", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
     if (platformVerifier.steam.rgx.test(platformName)) {
-      dataTemplateActual = $(`.gas-platform-steam`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+      templateTemp = $(".gas-platform-steam", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
     if (platformVerifier.xbox.rgx.test(platformName)) {
-      dataTemplateActual = $(`.gas-platform-xbox`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+      templateTemp = $(".gas-platform-xbox", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
     return dataTemplateActual;
   };
@@ -57,16 +58,16 @@
       $list.html($entryTemplate);
       listData.forEach((item, resIdx) => {
         let dataTemplateActual = dataTemplate;
-        dataTemplateActual = dataTemplateActual.replaceAll(`{|idx|}`, resIdx + 1);
-        Object.entries(item).forEach(([key, value]) => {
+        dataTemplateActual = dataTemplateActual.replaceAll("{|idx|}", resIdx + 1);
+        for (const [key, value] of Object.entries(item)) {
           if (item.gameIconURL?.length && !isSteamImage(item.gameIconURL)) {
-            const $gameImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
+            const $gameImg = $(".gas-list-entry-cover-game", dataTemplateActual);
             if ($gameImg?.length) {
               dataTemplateActual = showImageFromSrc($gameImg, item.gameIconURL) || dataTemplateActual;
             }
           }
           if ((item.iconURL?.length || item.imageURL?.length) && !isXboxEdsImage(item.imageURL) && !isSteamImage(item.imageURL) && !isSteamImage(item.iconURL)) {
-            const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+            const $entryImg = $(".gas-list-entry-cover", dataTemplateActual);
             if ($entryImg?.length) {
               dataTemplateActual = elemId.includes("list-games") ? $entryImg.css("background-image", `url(${item.imageURL})`).parents(".gas-list-entry").prop("outerHTML") : showImageFromSrc($entryImg, item.iconURL || item.imageURL) || dataTemplateActual;
             }
@@ -89,7 +90,7 @@
           } else if (key === "importedFromPlatform" || key === "platform" || key === "platforms") {
             dataTemplateActual = showPlatform(value, dataTemplateActual);
           } else if (drillDown.key && key === drillDown.key) {
-            drillDown.keysToReplace.forEach((drillReplaceKey) => {
+            for (const drillReplaceKey of drillDown.keysToReplace) {
               if (drillReplaceKey === "platform") {
                 dataTemplateActual = showPlatform(
                   value[drillReplaceKey],
@@ -101,9 +102,9 @@
                   Math.round(value[drillReplaceKey] || 0)
                 );
               }
-            });
+            }
           }
-        });
+        }
         $list.append(dataTemplateActual);
       });
     } else {
@@ -196,7 +197,7 @@
     const resData = await resFetch.json();
     const $ghContainer = $("#top-page");
     let dataTemplateActual = $ghContainer.prop("outerHTML");
-    console.info(`=== #top-page ===`, resData);
+    console.info("=== #top-page ===", resData);
     const numKeysToReplace = [
       "registeredUsers",
       //label: registered gamers
@@ -209,14 +210,14 @@
       "forumPosts"
       //label: forum posts
     ];
-    Object.entries(resData).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(resData)) {
       if (numKeysToReplace.find((el) => el.toLowerCase() === key.toLowerCase())) {
         dataTemplateActual = dataTemplateActual.replaceAll(
           `{|${key}|}`,
           Math.round(value || 0)
         );
       }
-    });
+    }
     $ghContainer.prop("outerHTML", dataTemplateActual);
   }
 
@@ -259,9 +260,9 @@
 
   // webflow/home.js
   var apiDomain = document.querySelector("meta[name=domain]")?.content;
-  var elemIdPrefix = `#gas-home`;
+  var elemIdPrefix = "#gas-home";
   $(async () => {
-    $(`.ga-loader-container`).show();
+    $(".ga-loader-container").show();
     await auth0Bootstrap();
     await Promise.all(
       ["recent", "top"].map(

@@ -13,19 +13,20 @@
 
   // utils/templateReplacers/showPlatform.js
   var showPlatform = (platformName, dataTemplateActual, parentSelector = ".gas-list-entry") => {
+    let templateTemp = dataTemplateActual;
     const platformVerifier = {
       ps: { rgx: /playstation/gi },
       xbox: { rgx: /xbox/gi },
       steam: { rgx: /steam|pc|windows|mac|linux/gi }
     };
     if (platformVerifier.ps.rgx.test(platformName)) {
-      dataTemplateActual = $(`.gas-platform-psn`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+      templateTemp = $(".gas-platform-psn", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
     if (platformVerifier.steam.rgx.test(platformName)) {
-      dataTemplateActual = $(`.gas-platform-steam`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+      templateTemp = $(".gas-platform-steam", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
     if (platformVerifier.xbox.rgx.test(platformName)) {
-      dataTemplateActual = $(`.gas-platform-xbox`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+      templateTemp = $(".gas-platform-xbox", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
     return dataTemplateActual;
   };
@@ -63,7 +64,7 @@
     let dataTemplate = $(elemId).prop("outerHTML");
     const $list = $(`${elemId} .gas-list`);
     if (!$entryTemplate) {
-      $emptyList = $(`.gas-list-empty`, $list);
+      $emptyList = $(".gas-list-empty", $list);
       $listHeader = $list.children().first();
       $entryTemplate = $(".gas-list-entry", $list).first().clone();
       $(".gas-list-entry", $list).first().remove();
@@ -73,13 +74,13 @@
       $list.html($listHeader);
       listData.forEach((item, resIdx) => {
         let dataTemplateActual = dataTemplate;
-        Object.entries(item).forEach(([key, value]) => {
-          const $gameImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
+        for (const [key, value] of Object.entries(item)) {
+          const $gameImg = $(".gas-list-entry-cover-game", dataTemplateActual);
           if ($gameImg?.length && item.gameIconURL?.length) {
             $gameImg.removeClass("gas-list-entry-cover");
             dataTemplateActual = showImageFromSrc($gameImg, item.gameIconURL) || dataTemplateActual;
           }
-          const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+          const $entryImg = $(".gas-list-entry-cover", dataTemplateActual);
           const imageURL = item.iconURL || item.imageURL;
           if ($entryImg?.length && imageURL?.length) {
             dataTemplateActual = showImageFromSrc($entryImg, imageURL) || dataTemplateActual;
@@ -103,10 +104,10 @@
             );
             if (value.toLowerCase() !== "common") {
               const classValue = value.replace(" ", "-")?.toLowerCase();
-              dataTemplateActual = $(`.gas-rarity-tag`, dataTemplateActual).removeClass("gas-rarity-tag").addClass(`gas-rarity-tag-${classValue}`).children(".p1").addClass(classValue).parents(".gas-list-entry").prop("outerHTML");
+              dataTemplateActual = $(".gas-rarity-tag", dataTemplateActual).removeClass("gas-rarity-tag").addClass(`gas-rarity-tag-${classValue}`).children(".p1").addClass(classValue).parents(".gas-list-entry").prop("outerHTML");
             }
           }
-        });
+        }
         $list.append(dataTemplateActual).children().last().removeClass(["bg-light", "bg-dark"]).addClass(`bg-${resIdx % 2 > 0 ? "light" : "dark"}`);
       });
     } else {
@@ -129,7 +130,7 @@
     );
     const fetchData = await resAchievements.json();
     $(`${elemId} .gas-list-results-info`).text(
-      (fetchData?.length || 0) + " result(s)"
+      `${fetchData?.length || 0} result(s)`
     );
     listResponseHandler({
       listData: fetchData,

@@ -8,18 +8,30 @@
     )}`;
   };
 
+  // utils/platformNameIdMap.js
+  var platformNameIdMap2 = (platformName) => {
+    switch (platformName) {
+      case "playstation":
+        return 1;
+      case "xbox":
+        return 2;
+      default:
+        return 3;
+    }
+  };
+
   // utils/cleanupDoubleQuotes.js
   var cleanupDoubleQuotes = (content) => content?.length ? content.replace(/"(\w)/g, "\u201C$1").replace(/(\w)"/g, "$1\u201D").replaceAll('"', "'") : content;
 
   // utils/displayMessage.js
   var displayMessage2 = ($msgEl, msgText, type = "success", posAction = () => {
-  }) => {
+  }, formMessageDelay2 = 4e3) => {
     $msgEl.addClass(`${type}-message`).css("display", "flex");
     $("div:first-child", $msgEl).text(msgText);
     setTimeout(() => {
       $msgEl.removeClass(`${type}-message`).hide();
       posAction();
-    }, formMessageDelay);
+    }, formMessageDelay2);
   };
 
   // utils/scrollToURLHash.js
@@ -39,30 +51,34 @@
   var rarityClassCalc2 = (percent) => {
     if (percent < 25) {
       return "common";
-    } else if (percent < 50) {
+    }
+    if (percent < 50) {
       return "rare";
-    } else if (percent < 75) {
+    }
+    if (percent < 75) {
       return "very-rare";
-    } else if (percent >= 75) {
+    }
+    if (percent >= 75) {
       return "ultra-rare";
     }
   };
 
   // utils/templateReplacers/showPlatform.js
   var showPlatform = (platformName, dataTemplateActual, parentSelector = ".gas-list-entry") => {
+    let templateTemp = dataTemplateActual;
     const platformVerifier = {
       ps: { rgx: /playstation/gi },
       xbox: { rgx: /xbox/gi },
       steam: { rgx: /steam|pc|windows|mac|linux/gi }
     };
     if (platformVerifier.ps.rgx.test(platformName)) {
-      dataTemplateActual = $(`.gas-platform-psn`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+      templateTemp = $(".gas-platform-psn", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
     if (platformVerifier.steam.rgx.test(platformName)) {
-      dataTemplateActual = $(`.gas-platform-steam`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+      templateTemp = $(".gas-platform-steam", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
     if (platformVerifier.xbox.rgx.test(platformName)) {
-      dataTemplateActual = $(`.gas-platform-xbox`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+      templateTemp = $(".gas-platform-xbox", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
     return dataTemplateActual;
   };
@@ -364,75 +380,17 @@
     );
   }
 
-  // wrappers/ProfilePage/utils/linkPlatform.js
-  async function linkPlatform2(platformName, formMessageDelay3) {
-    const $toLinkCard = $(`#ga-pa-to-link-${platformName}`);
-    $toLinkCard.show();
-    const $linkField = $(`input[name=external]`, $toLinkCard);
-    const $submitBtn = $(`input[type=submit]`, $toLinkCard);
-    const $cardForm = $(`.gas-link-pa-form`, $toLinkCard);
-    const $errEl = $(".gas-link-pa-error", $toLinkCard);
-    $submitBtn.click(async (e) => {
-      e.preventDefault();
-      if (!$linkField.val()?.length) {
-        $cardForm.hide();
-        $errEl.css("display", "flex");
-        console.error("Please fill-in the input field with an id");
-        setTimeout(() => {
-          $errEl.hide();
-          $cardForm.css("display", "flex");
-        }, formMessageDelay3);
-        return;
-      }
-      $(`input`, $toLinkCard).attr("disabled", true);
-      const reqData = {
-        platform: platformNameIdMap(platformName),
-        external: $linkField.val()
-      };
-      const resFecth = await fetch(`${fetchURLPrefix}/link-pa`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(reqData)
-      });
-      const paData = await resFecth.json();
-      if (resFecth.status !== 201) {
-        $errEl.css("display", "flex");
-        $cardForm.hide();
-        console.error(paData?.message);
-        setTimeout(() => {
-          $errEl.hide();
-          $(`input`, $toLinkCard).attr("disabled", false);
-          $cardForm.css("display", "flex");
-        }, formMessageDelay3);
-        return;
-      }
-      $cardForm.hide();
-      $(".gas-link-pa-success", $toLinkCard).attr("title", paData?.message).css("display", "flex");
-      setTimeout(() => {
-        $toLinkCard.hide();
-        unlinkPlatform({
-          platform: platformName,
-          accountId: paData?.platformAccount?.playerId,
-          accountName: paData?.platformAccount?.playerName
-        });
-        sessionStorage.removeItem("prof");
-        location.reload();
-      }, formMessageDelay3);
-    });
-  }
-
   // wrappers/ProfilePage/utils/unlinkPlatform.js
-  async function unlinkPlatform2({ platform, accountId, accountName }, platformsToLink2, formMessageDelay3) {
+  async function unlinkPlatform({ platform, accountId, accountName }, platformsToLink2, formMessageDelay2) {
+    let platformsToLinkTemp = platformsToLink2;
     const platformName = platform.toLowerCase();
-    platformsToLink2 = platformsToLink2.filter((pTL) => pTL !== platformName);
+    platformsToLinkTemp = platformsToLinkTemp.filter(
+      (pTL) => pTL !== platformName
+    );
     const $cardLinked = $(`#ga-pa-linked-${platformName}`);
-    $(`.gas-pa-name`, $cardLinked).text(accountId).attr("title", `name: ${accountName}`);
+    $(".gas-pa-name", $cardLinked).text(accountId).attr("title", `name: ${accountName}`);
     $cardLinked.show();
-    $(`.gas-unlink-pa-btn`, $cardLinked).click(async (e) => {
+    $(".gas-unlink-pa-btn", $cardLinked).click(async (e) => {
       e.preventDefault();
       if (confirm(
         `Your ${platform} account will no longer belong to your profile. Are you sure?`
@@ -463,13 +421,116 @@
           linkPlatform(platformName);
           sessionStorage.removeItem("prof");
           location.reload();
-        }, formMessageDelay3);
+        }, formMessageDelay2);
       }
     });
   }
 
+  // wrappers/ProfilePage/utils/linkPlatform.js
+  async function linkPlatform2(platformName, formMessageDelay2) {
+    const $toLinkCard = $(`#ga-pa-to-link-${platformName}`);
+    $toLinkCard.show();
+    const $linkField = $("input[name=external]", $toLinkCard);
+    const $submitBtn = $("input[type=submit]", $toLinkCard);
+    const $cardForm = $(".gas-link-pa-form", $toLinkCard);
+    const $errEl = $(".gas-link-pa-error", $toLinkCard);
+    $submitBtn.click(async (e) => {
+      e.preventDefault();
+      if (!$linkField.val()?.length) {
+        $cardForm.hide();
+        $errEl.css("display", "flex");
+        console.error("Please fill-in the input field with an id");
+        setTimeout(() => {
+          $errEl.hide();
+          $cardForm.css("display", "flex");
+        }, formMessageDelay2);
+        return;
+      }
+      $("input", $toLinkCard).attr("disabled", true);
+      const reqData = {
+        platform: platformNameIdMap(platformName),
+        external: $linkField.val()
+      };
+      const resFecth = await fetch(`${fetchURLPrefix}/link-pa`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(reqData)
+      });
+      const paData = await resFecth.json();
+      if (resFecth.status !== 201) {
+        $errEl.css("display", "flex");
+        $cardForm.hide();
+        console.error(paData?.message);
+        setTimeout(() => {
+          $errEl.hide();
+          $("input", $toLinkCard).attr("disabled", false);
+          $cardForm.css("display", "flex");
+        }, formMessageDelay2);
+        return;
+      }
+      $cardForm.hide();
+      $(".gas-link-pa-success", $toLinkCard).attr("title", paData?.message).css("display", "flex");
+      setTimeout(() => {
+        $toLinkCard.hide();
+        unlinkPlatform({
+          platform: platformName,
+          accountId: paData?.platformAccount?.playerId,
+          accountName: paData?.platformAccount?.playerName
+        });
+        sessionStorage.removeItem("prof");
+        location.reload();
+      }, formMessageDelay2);
+    });
+  }
+
+  // wrappers/ProfilePage/utils/profileAvatarUpdater.js
+  async function profileAvatarUpdater(platformsLinked, elemIdPrefix4, fetchURLPrefix3) {
+    const $msgEl = $(`${elemIdPrefix4}-msg-avatar`);
+    if (!platformsLinked.length) {
+      displayMessage2(
+        $msgEl,
+        "Please link first a platform account in order to choose your avatar.",
+        "unstyled",
+        () => {
+          $msgEl.css("display", "flex");
+        }
+      );
+    }
+    platformsLinked.map(({ platform }) => {
+      const platformName = platform.toLowerCase();
+      $(`${elemIdPrefix4}-btn-avatar-${platformName}`).show().click(async function() {
+        const resFetch = await fetch(`${fetchURLPrefix3}/avatar`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ platformId: platformNameIdMap2(platformName) })
+        });
+        if (resFetch.status !== 201) {
+          displayMessage2(
+            $msgEl,
+            "Oops! Issue changing avatar\u2026 Please try later.",
+            "error"
+          );
+          return;
+        }
+        const resData2 = await resFetch.json();
+        if (resData2.imageURL?.length) {
+          $(".gas-profile-avatar").removeAttr("srcset").removeAttr("sizes").attr("src", resData2.imageURL);
+          displayMessage2($msgEl, "Avatar successfully changed!");
+        }
+      });
+    });
+  }
+
   // wrappers/ProfilePage/UserData.js
-  var formMessageDelay2 = 4e3;
+  var formMessageDelay = 4e3;
   var elemIdPrefix2 = "#gas-profile";
   var platformsToLink = Array.from(["playstation", "xbox", "steam"]);
   var setupLinkForms = (platformsLinked = []) => {
@@ -481,57 +542,17 @@
         $(`${elemIdPrefix2}-pa-code-copied-msg`).show();
         setTimeout(() => {
           $(`${elemIdPrefix2}-pa-code-copied-msg`).hide();
-        }, formMessageDelay2);
+        }, formMessageDelay);
       });
     } else {
       $(`${elemIdPrefix2}-pa-code-btn`).hide();
     }
-    platformsLinked.forEach(
-      (el) => unlinkPlatform2(el, platformsToLink, formMessageDelay2)
-    );
-    platformsToLink.map((el) => linkPlatform2(el, formMessageDelay2));
-  };
-  var profileAvatarUpdater = async (platformsLinked) => {
-    const $msgEl = $(`${elemIdPrefix2}-msg-avatar`);
-    if (!platformsLinked.length) {
-      displayMessage(
-        $msgEl,
-        "Please link first a platform account in order to choose your avatar.",
-        "unstyled",
-        () => {
-          $msgEl.css("display", "flex");
-        }
-      );
+    for (const el of platformsLinked) {
+      unlinkPlatform(el, platformsToLink, formMessageDelay);
     }
-    platformsLinked.map(({ platform }) => {
-      const platformName = platform.toLowerCase();
-      $(`${elemIdPrefix2}-btn-avatar-${platformName}`).show().click(async function() {
-        const resFetch = await fetch(`${fetchURLPrefix}/avatar`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ platformId: platformNameIdMap(platformName) })
-        });
-        if (resFetch.status !== 201) {
-          displayMessage(
-            $msgEl,
-            "Oops! Issue changing avatar\u2026 Please try later.",
-            "error"
-          );
-          return;
-        }
-        const resData2 = await resFetch.json();
-        if (resData2.imageURL?.length) {
-          $(".gas-profile-avatar").removeAttr("srcset").removeAttr("sizes").attr("src", resData2.imageURL);
-          displayMessage($msgEl, "Avatar successfully changed!");
-        }
-      });
-    });
+    platformsToLink.map((el) => linkPlatform2(el, formMessageDelay));
   };
-  function profileResponseHandler(res) {
+  function profileResponseHandler(res, fetchURLPrefix3) {
     const elemId = `${elemIdPrefix2}-details`;
     let dataTemplateActual = $(`${elemId}`).prop("outerHTML");
     console.info(`=== ${elemId} ===`, res);
@@ -545,42 +566,43 @@
       "completion",
       "achievedCount"
     ];
-    Object.entries(res).forEach(([key, value]) => {
+    console.log("dataTemplateActual", dataTemplateActual);
+    for (const [key, value] of Object.entries(res)) {
       if (textKeysToReplace.includes(key)) {
         dataTemplateActual = dataTemplateActual.replaceAll(`{|${key}|}`, value);
       } else if (key === "ranking") {
-        Object.entries(value).forEach(([rankKey, rankVal]) => {
+        for (const [rankKey, rankVal] of Object.entries(value)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${rankKey}|}`,
             rankVal
           );
-        });
+        }
       } else if (key === "platforms") {
-        value.forEach(({ platform, accountName }) => {
+        for (const { platform, accountName } of value) {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${platform.toLowerCase()}Name|}`,
             accountName
           );
           dataTemplateActual = showPlatform(platform, dataTemplateActual, elemId);
-        });
+        }
       }
-    });
+    }
     $(`${elemId}`).prop("outerHTML", dataTemplateActual);
     if (!userAuth0Data?.sub?.length) {
       return;
     }
-    profileAvatarUpdater(res.platforms);
+    profileAvatarUpdater(res.platforms, elemIdPrefix2, fetchURLPrefix3);
     setupLinkForms(res.platforms);
     if (res.role?.length) {
       const isRegularRole = res.role.toLowerCase() === "regular";
       $(`.gas-role${isRegularRole ? "" : "-non"}-regular`).show();
       if (!isRegularRole) {
-        const $toggleCheckbox = $(`#gas-ads-toggle`);
+        const $toggleCheckbox = $("#gas-ads-toggle");
         if (userProfileData.adsOff) {
           $toggleCheckbox.prop("checked", true);
         }
         $toggleCheckbox.on("change", async (evt) => {
-          const fetchURL = `${fetchURLPrefix}/ads`;
+          const fetchURL = `${fetchURLPrefix3}/ads`;
           const resFetch = await fetch(fetchURL, {
             method: "POST",
             headers: {
@@ -630,7 +652,7 @@
     }
     if (resData2.id?.length > 0) {
       document.title = `${resData2.name?.length ? resData2.name : resData2.id} | ${document.title}`;
-      profileResponseHandler(resData2);
+      profileResponseHandler(resData2, fetchURLPrefix3);
     }
     return true;
   }

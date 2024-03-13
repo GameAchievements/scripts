@@ -5,7 +5,7 @@ export async function homeMetricsHandler(apiDomain) {
   const $ghContainer = $('#top-page');
   let dataTemplateActual = $ghContainer.prop('outerHTML');
 
-  console.info(`=== #top-page ===`, resData);
+  console.info('=== #top-page ===', resData);
 
   const numKeysToReplace = [
     'registeredUsers', //label: registered gamers
@@ -15,13 +15,14 @@ export async function homeMetricsHandler(apiDomain) {
     'forumPosts', //label: forum posts
   ];
 
-  Object.entries(resData).forEach(([key, value]) => {
+  for (const [key, value] of Object.entries(resData)) {
     if (numKeysToReplace.find((el) => el.toLowerCase() === key.toLowerCase())) {
       dataTemplateActual = dataTemplateActual.replaceAll(
         `{|${key}|}`,
         Math.round(value || 0)
       );
     }
-  });
+  }
+
   $ghContainer.prop('outerHTML', dataTemplateActual);
 }

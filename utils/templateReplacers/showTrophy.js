@@ -3,11 +3,12 @@ export const showTrophy = (
   dataTemplateActual,
   parent = '.gh-row'
 ) => {
-  dataTemplateActual = $(`.trophy-wrapper`, dataTemplateActual)
+  let templateTemp = dataTemplateActual;
+  templateTemp = $('.trophy-wrapper', templateTemp)
     .children(`:not(.trophy-${trophyType.toLowerCase()})`)
     .hide()
     .parents(parent)
     .prop('outerHTML');
 
-  return dataTemplateActual;
+  return templateTemp;
 };

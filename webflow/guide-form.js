@@ -8,9 +8,9 @@ const apiDomain = document.querySelector('meta[name=domain]')?.content;
 const urlParams = new URLSearchParams(window.location.search);
 const guideId = Number(urlParams.get('id')) || 0;
 const isEditing = guideId > 0;
-let achievementId = Number(urlParams.get('achievementId')) || 0;
+const achievementId = Number(urlParams.get('achievementId')) || 0;
 let guideFetchedData;
-const elemIdPrefix = `#gas-guide`;
+const elemIdPrefix = '#gas-guide';
 const elemId = `${elemIdPrefix}-form`;
 const formMessageDelay = 4000;
 const sectionsLimit = 4;
@@ -50,7 +50,7 @@ function delSection() {
     tinyMCE.get($('.gas-form-tinymce', $sec).attr('id')).remove();
     $sec.remove();
     sectionsCount--;
-    $(`.gas-form-section label[for$=-title]`, elemId).each((secIdx, el) =>
+    $('.gas-form-section label[for$=-title]', elemId).each((secIdx, el) =>
       $(el).text(`${secIdx + 1}${$(el).text().slice(1)}`)
     );
     if (sectionsCount <= sectionsLimit) {
@@ -112,13 +112,13 @@ async function setupForm() {
   $('.gas-form-section-del', elemId).on('click', delSection);
   $(`${elemId}-btn-cancel`, elemId).on('click', (evt) => {
     evt.preventDefault();
-    const $popupWrapper = $(`#gas-popup-leave-confirmation`);
+    const $popupWrapper = $('#gas-popup-leave-confirmation');
     $popupWrapper.css({ opacity: 1, display: 'flex' });
-    $(`.gas-popup-btn-close`, $popupWrapper).one('click', (evt) => {
+    $('.gas-popup-btn-close', $popupWrapper).one('click', (evt) => {
       evt.preventDefault();
       $popupWrapper.hide();
     });
-    $(`.gas-popup-btn-leave`, $popupWrapper).one('click', (evt) => {
+    $('.gas-popup-btn-leave', $popupWrapper).one('click', (evt) => {
       evt.preventDefault();
       isUserInputActive = false;
       $popupWrapper.hide();
@@ -132,7 +132,7 @@ async function setupForm() {
   const $errorDiv = $('div', $errEl);
   const txtError = $errEl.text();
   const $successEl = $('.gas-form-success', elemId);
-  $(`input[name][required]`, elemId).on('focusout keyup', function () {
+  $('input[name][required]', elemId).on('focusout keyup', function () {
     canSubmit($(this));
   });
 
@@ -144,7 +144,7 @@ async function setupForm() {
     // disable show popup on leave page (site-settings)
     isUserInputActive = false;
     $(`${elemId}-btn-submit`).val($(`${elemId}-btn-submit`).data('wait'));
-    let sections = [];
+    const sections = [];
     $('.gas-form-section', elemId).each(function () {
       sections.push({
         title: $('input[name$=-title]', this).val(),

@@ -1,12 +1,12 @@
 import { gaDateTime, showImageFromSrc } from '../../utils';
 
-const elemIdPrefix = `#gas-guide`;
+const elemIdPrefix = '#gas-guide';
 
 function listResponseHandler({ listData, elemId, textKeysToReplace }) {
   console.info(`=== ${elemId} results ===`, listData);
   let dataTemplate = $(elemId).prop('outerHTML');
   const $list = $(`${elemId} .gas-list`);
-  const $emptyList = $(`.gas-list-empty`, $list);
+  const $emptyList = $('.gas-list-empty', $list);
   if (listData.count > 0 && listData.results?.length) {
     const $listHeader = $list.children().first();
     const $entryTemplate = $('.gas-list-entry', $list).first();
@@ -16,8 +16,8 @@ function listResponseHandler({ listData, elemId, textKeysToReplace }) {
     $entryTemplate.hide();
     listData.results.forEach((item, resIdx) => {
       let dataTemplateActual = dataTemplate;
-      Object.entries(item).forEach(([key, value]) => {
-        const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+      for (const [key, value] of Object.entries(item)) {
+        const $entryImg = $('.gas-list-entry-cover', dataTemplateActual);
         if ($entryImg.length && item.imageUrl?.length) {
           dataTemplateActual =
             showImageFromSrc($entryImg, item.imageURL) || dataTemplateActual;
@@ -34,7 +34,7 @@ function listResponseHandler({ listData, elemId, textKeysToReplace }) {
             `${date} at ${time}`
           );
         }
-      });
+      }
       $list
         .append(dataTemplateActual)
         .children()

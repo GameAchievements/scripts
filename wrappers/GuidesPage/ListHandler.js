@@ -25,10 +25,10 @@ export function listResponseHandler({
     $list.html($entryTemplate);
     listData.forEach((item, resIdx) => {
       let dataTemplateActual = dataTemplate;
-      dataTemplateActual = dataTemplateActual.replaceAll(`{|idx|}`, resIdx + 1);
-      Object.entries(item).forEach(([key, value]) => {
+      dataTemplateActual = dataTemplateActual.replaceAll('{|idx|}', resIdx + 1);
+      for (const [key, value] of Object.entries(item)) {
         if (item.gameIconURL?.length && !isSteamImage(item.gameIconURL)) {
-          let $entryImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
+          const $entryImg = $('.gas-list-entry-cover-game', dataTemplateActual);
           if ($entryImg.length) {
             const imgCaption = `For achievement: ${achievementNameSlicer(
               item.achievementName
@@ -42,7 +42,7 @@ export function listResponseHandler({
           }
         }
         if (item.iconURL?.length && !isSteamImage(item.iconURL)) {
-          $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+          $entryImg = $('.gas-list-entry-cover', dataTemplateActual);
           if ($entryImg.length && item.iconURL?.length) {
             dataTemplateActual =
               showImageFromSrc($entryImg, item.iconURL) || dataTemplateActual;
@@ -62,7 +62,7 @@ export function listResponseHandler({
         } else if (key === 'platform') {
           dataTemplateActual = showPlatform(value, dataTemplateActual);
         }
-      });
+      }
       $list.append(dataTemplateActual);
     });
   } else {

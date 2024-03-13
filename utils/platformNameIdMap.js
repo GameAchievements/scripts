@@ -4,7 +4,7 @@ export const platformNameIdMap = (platformName) => {
       return 1;
     case 'xbox':
       return 2;
-    case 'steam':
+    // case 'steam':
     default:
       return 3;
   }

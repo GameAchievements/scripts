@@ -7,7 +7,9 @@ import {
 } from '../../utils';
 
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
-let $entryTemplate, $listHeader, $emptyList;
+let $entryTemplate;
+let $listHeader;
+let $emptyList;
 
 function listResponseHandler({
   listData,
@@ -19,7 +21,7 @@ function listResponseHandler({
   let dataTemplate = $(elemId).prop('outerHTML');
   const $list = $(`${elemId} .gas-list`);
   if (!$entryTemplate) {
-    $emptyList = $(`.gas-list-empty`, $list);
+    $emptyList = $('.gas-list-empty', $list);
     $listHeader = $list.children().first();
     $entryTemplate = $('.gas-list-entry', $list).first().clone();
     $('.gas-list-entry', $list).first().remove();
@@ -29,10 +31,10 @@ function listResponseHandler({
     $list.html($listHeader);
     listData.forEach((item, resIdx) => {
       let dataTemplateActual = dataTemplate;
-      Object.entries(item).forEach(([key, value]) => {
+      for (const [key, value] of Object.entries(item)) {
         const imageURL = item.iconURL || item.imageURL;
         if (imageURL?.length && !isSteamImage(imageURL)) {
-          const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+          const $entryImg = $('.gas-list-entry-cover', dataTemplateActual);
           if ($entryImg?.length) {
             dataTemplateActual =
               showImageFromSrc($entryImg, imageURL) || dataTemplateActual;
@@ -71,7 +73,7 @@ function listResponseHandler({
               .prop('outerHTML');
           }
         }
-      });
+      }
       $list
         .append(dataTemplateActual)
         .children()
@@ -104,7 +106,7 @@ export async function fetchGames(elemId, searchTerm = '') {
   );
   const fetchData = await resGames.json();
   $(`${elemId} .gas-list-results-info`).text(
-    (fetchData?.length || 0) + ' result(s)'
+    `${fetchData?.length || 0} result(s)`
   );
 
   listResponseHandler({

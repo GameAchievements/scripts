@@ -1,11 +1,14 @@
 export const rarityClassCalc = (percent) => {
   if (percent < 25) {
     return 'common';
-  } else if (percent < 50) {
+  }
+  if (percent < 50) {
     return 'rare';
-  } else if (percent < 75) {
+  }
+  if (percent < 75) {
     return 'very-rare';
-  } else if (percent >= 75) {
+  }
+  if (percent >= 75) {
     return 'ultra-rare';
   }
 };
@@ -15,13 +18,14 @@ export const showRarityTagAchievement = (
   dataTemplateActual,
   parent = '.hero-section-achievement'
 ) => {
+  let templateTemp = dataTemplateActual;
   const classValue = rarityClassCalc(percentageNumber);
 
-  dataTemplateActual = $(`.rarity-tag-wrapper`, dataTemplateActual)
+  templateTemp = $('.rarity-tag-wrapper', templateTemp)
     .children(`:not(.gas-rarity-tag-${classValue})`)
     .hide()
     .parents(parent)
     .prop('outerHTML');
 
-  return dataTemplateActual;
+  return templateTemp;
 };

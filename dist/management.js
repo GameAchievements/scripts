@@ -4,7 +4,7 @@
   var igdbFormId = "#gas-management-igdb-form";
   var formMessageDelay = 4e3;
   var fieldFocus = (fieldEl) => {
-    const $submitBtn = $(`.submit-button`, igdbFormId);
+    const $submitBtn = $(".submit-button", igdbFormId);
     if (!$(fieldEl).val()?.length) {
       $(fieldEl).prev("label").addClass("field-label-missing");
       $submitBtn.addClass("disabled-button").attr("disabled", true);
@@ -22,10 +22,10 @@
     }
   };
   var setupIGDBForm = () => {
-    const $submitBtn = $(`.submit-button`, igdbFormId);
+    const $submitBtn = $(".submit-button", igdbFormId);
     $submitBtn.attr("disabled", true);
-    const $gameField = $(`[name=game]`, igdbFormId);
-    const $igdbField = $(`[name=igdb]`, igdbFormId);
+    const $gameField = $("[name=game]", igdbFormId);
+    const $igdbField = $("[name=igdb]", igdbFormId);
     const submitText = $submitBtn.text();
     const $errEl = $(".gas-form-error", igdbFormId);
     const $errorDiv = $("div", $errEl);

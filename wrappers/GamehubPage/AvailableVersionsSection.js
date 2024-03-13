@@ -82,7 +82,7 @@ export async function versionsFetcher(gamehubData, gamehubURL) {
         );
       $(`${versionsDropdownId}-options`).append($versionOpt);
       let dataTemplateActual = dataTemplate;
-      Object.entries(item).forEach(([key, value]) => {
+      for (const [key, value] of Object.entries(item)) {
         if (textKeysToReplace.includes(key)) {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
@@ -114,7 +114,7 @@ export async function versionsFetcher(gamehubData, gamehubURL) {
             .parents('.gas-list-entry')
             .prop('outerHTML');
         }
-      });
+      }
       listTemplateAppend($list, dataTemplateActual, itemIdx);
     });
     $selectOptTemplate.remove();

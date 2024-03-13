@@ -1,7 +1,9 @@
 import { showPlatform, showImageFromSrc } from '../../utils';
 import { getPlatformId } from './LeaderboardsData';
 
-let $entryTemplate, $listHeader, $emptyList;
+let $entryTemplate;
+let $listHeader;
+let $emptyList;
 
 export function listResponseHandler({
   listData,
@@ -13,7 +15,7 @@ export function listResponseHandler({
   let dataTemplate = $(elemId).prop('outerHTML');
   const $list = $(`${elemId} .gas-list`);
   if (!$entryTemplate) {
-    $emptyList = $(`.gas-list-empty`, $list);
+    $emptyList = $('.gas-list-empty', $list);
     $listHeader = $list.children().first();
     $entryTemplate = $('.gas-list-entry', $list).first().clone();
     $('.gas-list-entry', $list).first().remove();
@@ -23,10 +25,10 @@ export function listResponseHandler({
     $list.html($listHeader);
     listData.forEach((item, resIdx) => {
       let dataTemplateActual = dataTemplate;
-      dataTemplateActual = dataTemplateActual.replaceAll(`{|idx|}`, resIdx + 1);
-      Object.entries(item).forEach(([key, value]) => {
+      dataTemplateActual = dataTemplateActual.replaceAll('{|idx|}', resIdx + 1);
+      for (const [key, value] of Object.entries(item)) {
         if (key === 'iconURL') {
-          const $profileImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+          const $profileImg = $('.gas-list-entry-cover', dataTemplateActual);
           if ($profileImg?.length && value?.length) {
             dataTemplateActual =
               showImageFromSrc($profileImg, value) || dataTemplateActual;
@@ -39,7 +41,7 @@ export function listResponseHandler({
               dataTemplateActual
             );
           }
-          const $gameImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
+          const $gameImg = $('.gas-list-entry-cover-game', dataTemplateActual);
           if ($gameImg?.length && value?.iconURL?.length) {
             dataTemplateActual =
               showImageFromSrc($gameImg, value.iconURL) || dataTemplateActual;
@@ -55,7 +57,8 @@ export function listResponseHandler({
             Math.round(value || 0)
           );
         }
-      });
+      }
+
       $list
         .append(dataTemplateActual)
         .children()

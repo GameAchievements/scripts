@@ -3,7 +3,7 @@ const igdbFormId = '#gas-management-igdb-form';
 const formMessageDelay = 4000;
 
 const fieldFocus = (fieldEl) => {
-  const $submitBtn = $(`.submit-button`, igdbFormId);
+  const $submitBtn = $('.submit-button', igdbFormId);
   if (!$(fieldEl).val()?.length) {
     // only contentField required
     $(fieldEl).prev('label').addClass('field-label-missing');
@@ -25,10 +25,10 @@ const fieldFocus = (fieldEl) => {
 };
 
 const setupIGDBForm = () => {
-  const $submitBtn = $(`.submit-button`, igdbFormId);
+  const $submitBtn = $('.submit-button', igdbFormId);
   $submitBtn.attr('disabled', true);
-  const $gameField = $(`[name=game]`, igdbFormId);
-  const $igdbField = $(`[name=igdb]`, igdbFormId);
+  const $gameField = $('[name=game]', igdbFormId);
+  const $igdbField = $('[name=igdb]', igdbFormId);
   const submitText = $submitBtn.text();
   const $errEl = $('.gas-form-error', igdbFormId);
   const $errorDiv = $('div', $errEl);

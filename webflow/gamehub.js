@@ -13,7 +13,7 @@ const apiDomain = document.querySelector('meta[name=domain]')?.content;
 const urlParams = new URLSearchParams(location.search);
 const gameId = urlParams.get('id') || 1044;
 const gamehubURL = `https://${apiDomain}/api/game/${gameId}`;
-const elemIdPrefix = `#gas-gh`;
+const elemIdPrefix = '#gas-gh';
 
 $('.ga-loader-container').show();
 $('#ga-sections-container').hide();

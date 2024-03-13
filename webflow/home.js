@@ -6,10 +6,10 @@ import { fetchLatestThreads } from '../wrappers/HomePage/LastestThreadsData';
 
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 
-const elemIdPrefix = `#gas-home`;
+const elemIdPrefix = '#gas-home';
 
 $(async () => {
-  $(`.ga-loader-container`).show();
+  $('.ga-loader-container').show();
   await auth0Bootstrap();
   await Promise.all(
     ['recent', 'top'].map(

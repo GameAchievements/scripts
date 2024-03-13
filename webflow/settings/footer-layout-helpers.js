@@ -10,8 +10,10 @@ $(window).on('beforeunload', (evt) => {
     // Cancel the event as stated by the standard
     evt.preventDefault();
     // Chrome requires returnValue to be set
+    // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
     return (evt.returnValue = '');
   }
+  // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
   return (evt.returnValue = undefined);
 });
 $('.gas-form').on('input', (evt) => {

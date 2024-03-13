@@ -30,12 +30,9 @@ export const gaDateTime = (isoDate) => {
     'Dec',
   ];
 
-  const date =
-    dateObj.getDate() +
-    ' ' +
-    month[dateObj.getMonth()] +
-    ', ' +
-    dateObj.getFullYear();
+  const date = `${dateObj.getDate()} ${
+    month[dateObj.getMonth()]
+  }, ${dateObj.getFullYear()}`;
   const time = dateObj.toLocaleTimeString().toLowerCase();
   return { date, time };
 };

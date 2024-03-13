@@ -4,11 +4,11 @@ const apiDomain = document.querySelector('meta[name=domain]')?.content;
 
 export const getPlatformId = () => {
   switch (window.location.pathname) {
-    case `/playstation-leaderboard`:
+    case '/playstation-leaderboard':
       return 1;
-    case `/xbox-leaderboard`:
+    case '/xbox-leaderboard':
       return 2;
-    case `/steam-leaderboard`:
+    case '/steam-leaderboard':
       return 3;
     default:
       return;

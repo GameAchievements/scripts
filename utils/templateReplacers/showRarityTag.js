@@ -1,15 +1,17 @@
 export const showRarityTag = (percentageNumber, dataTemplateActual) => {
+  let templateTemp = dataTemplateActual;
   const classValue = rarityClassCalc(percentageNumber);
-  dataTemplateActual = dataTemplateActual.replaceAll(
-    `{|rarity|}`,
+  templateTemp = templateTemp.replaceAll(
+    '{|rarity|}',
     classValue.replace('-', ' ')
   );
-  dataTemplateActual = $(`.gas-rarity-tag`, dataTemplateActual)
+  templateTemp = $('.gas-rarity-tag', templateTemp)
     .removeClass('gas-rarity-tag')
     .addClass(`gas-rarity-tag-${classValue}`)
     .children('.p1')
     .addClass(classValue)
     .parents('.gas-list-entry')
     .prop('outerHTML');
-  return dataTemplateActual;
+
+  return templateTemp;
 };

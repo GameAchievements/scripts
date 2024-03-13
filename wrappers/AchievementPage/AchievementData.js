@@ -34,7 +34,7 @@ function achievementResponseHandler(elemIdPrefix, res) {
     }
   });
 
-  Object.entries(res).forEach(([key, value]) => {
+  for (const [key, value] of Object.entries(res)) {
     if (textKeysToReplace.includes(key)) {
       dataTemplateActual = dataTemplateActual.replaceAll(`{|${key}|}`, value);
     } else if (numKeysToReplace.includes(key)) {
@@ -47,7 +47,8 @@ function achievementResponseHandler(elemIdPrefix, res) {
     } else if (key === 'rarity') {
       dataTemplateActual = showRarityTagAchievement(value, dataTemplateActual);
     }
-  });
+  }
+
   $ghContainer.prop('outerHTML', dataTemplateActual);
 }
 

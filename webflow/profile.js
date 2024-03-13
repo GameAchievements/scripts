@@ -8,17 +8,16 @@ import { scrollToURLHash } from '../utils';
 
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 const urlParams = new URLSearchParams(location.search);
-let profileId = urlParams.get('id');
+const profileId = urlParams.get('id');
 const elemIdPrefix = '#gas-profile';
 const fetchURLPrefix = `https://${apiDomain}/api/profile`;
 const noProfileRedirectURL = '/';
 
 $('.ga-loader-container').show();
 $(
-  '.action-message-wrapper,#ga-sections-container,.gas-role-non-regular,.gas-role-regular,' +
-    `[id^=ga-pa-linked],[id^=ga-pa-to-link],[id^=${elemIdPrefix.slice(
-      1
-    )}-btn-avatar],[id^=${elemIdPrefix.slice(1)}-msg]`
+  `.action-message-wrapper,#ga-sections-container,.gas-role-non-regular,.gas-role-regular,[id^=ga-pa-linked],[id^=ga-pa-to-link],[id^=${elemIdPrefix.slice(
+    1
+  )}-btn-avatar],[id^=${elemIdPrefix.slice(1)}-msg]`
 ).hide();
 
 $(async () => {

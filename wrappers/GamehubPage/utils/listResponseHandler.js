@@ -33,16 +33,16 @@ export function listResponseHandler({
         (item) => item[tabMatcher].toLowerCase() === 'steam'
       )?.length,
     };
-    platformsTabNames.forEach((tabName) => {
+    for (const tabName of platformsTabNames) {
       dataTemplate =
         dataTemplate.replaceAll(`{|${tabName}Cnt|}`, tabCounts[tabName]) || '0';
-    });
+    }
   }
   // replace counts
   $listTabs.prop('outerHTML', dataTemplate);
-  Object.keys(tabCounts).forEach((tabName) => {
+  for (const tabName of Object.keys(tabCounts)) {
     const $list = $(`${elemId} .gas-list-${tabName}`);
-    const $emptyList = $(`.gas-list-empty`, $list);
+    const $emptyList = $('.gas-list-empty', $list);
     if (tabCounts[tabName] > 0) {
       const $listHeader = $list.children().first();
       const $entryTemplate = $('.gas-list-entry', $list).first();
@@ -55,15 +55,15 @@ export function listResponseHandler({
         : listData.filter((item) => item[tabMatcher]?.toLowerCase() === tabName)
       ).forEach((item, itemIdx) => {
         let dataTemplateActual = dataTemplate;
-        Object.entries(item).forEach(([key, value]) => {
-          const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+        for (const [key, value] of Object.entries(item)) {
+          const $entryImg = $('.gas-list-entry-cover', dataTemplateActual);
           if ($entryImg && item.iconURL?.length) {
             dataTemplateActual =
               showImageFromSrc($entryImg, item.iconURL) || dataTemplateActual;
           }
           if (elemId.endsWith('achievements') && key === 'name') {
             dataTemplateActual = dataTemplateActual.replaceAll(
-              `{|name|}`,
+              '{|name|}',
               achievementNameSlicer(value) || 'N.A.'
             );
           } else if (textKeysToReplace.includes(key)) {
@@ -82,7 +82,7 @@ export function listResponseHandler({
               Math.round(value || 0)
             );
             const $rateWrapper = $(
-              `.gas-list-entry-rating`,
+              '.gas-list-entry-rating',
               dataTemplateActual
             );
             if ($rateWrapper.length) {
@@ -96,12 +96,13 @@ export function listResponseHandler({
           } else if (key === 'rarity') {
             dataTemplateActual = showRarityTag(value, dataTemplateActual);
           }
-        });
+        }
+
         listTemplateAppend($list, dataTemplateActual, itemIdx);
       });
     } else {
       $list.html($emptyList);
       $emptyList.show();
     }
-  });
+  }
 }

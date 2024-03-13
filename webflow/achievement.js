@@ -6,7 +6,7 @@ import { fetchAchievement } from '../wrappers/AchievementPage/AchievementData';
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 const urlParams = new URLSearchParams(window.location.search);
 const achievementId = urlParams.get('id') || 1044;
-const elemIdPrefix = `#gas-achievement`;
+const elemIdPrefix = '#gas-achievement';
 
 $('.ga-loader-container').show();
 $('#ga-sections-container').hide();

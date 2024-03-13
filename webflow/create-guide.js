@@ -2,54 +2,50 @@
 
 import { gaDate, achievementNameSlicer } from '../utils';
 
-const apiDomain = document.querySelector('meta[name=domain]')?.content,
-  urlParams = new URLSearchParams(window.location.search),
-  guideId = Number(urlParams.get('id')) || 0,
-  isEditing = guideId > 0;
-let guideFetchedData,
-  achievementId = Number(urlParams.get('achievementId')) || 0;
-const elemIdPrefix = '#gas-guide',
-  elemId = '#gas-guide-form',
-  formMessageDelay = 4e3,
-  sectionsLimit = 4;
+const apiDomain = document.querySelector('meta[name=domain]')?.content;
+const urlParams = new URLSearchParams(window.location.search);
+const guideId = Number(urlParams.get('id')) || 0;
+const isEditing = guideId > 0;
+let guideFetchedData;
+let achievementId = Number(urlParams.get('achievementId')) || 0;
+const elemId = '#gas-guide-form';
 let sectionsCount = 2;
-const $sectionTemp = $('.gas-form-section', elemId).last().clone(),
-  templatePrefix = 'section-2';
+const $sectionTemp = $('.gas-form-section', elemId).last().clone();
 $('.ga-loader-container').show(), $('#ga-sections-container').hide();
-const isRequiredFilled = (e, t) => !!t && ((isUserInputActive = !0), !0),
-  highlightRequiredLabel = (e) => {
+const isRequiredFilled = (e, t) => !!t && ((isUserInputActive = !0), !0);
+const highlightRequiredLabel = (e) => {
+  if (
+    (e.hasClass('gas-form-tinymce')
+      ? tinyMCE.get(e.attr('id')).getContent()
+      : e.val()
+    )?.length
+  )
+    return e.prev('label').removeClass('field-label-missing');
+  e.prev('label').addClass('field-label-missing');
+};
+const canSubmit = (e) => {
+  let t = !1;
+  let i = !1;
+  e?.length && highlightRequiredLabel(e);
+  for (const e of $('input[name][required]', elemId))
+    if (((t = isRequiredFilled($(e), $(e).val()?.length)), !t)) break;
+  for (const e of $('.gas-form-tinymce', elemId))
     if (
-      (e.hasClass('gas-form-tinymce')
-        ? tinyMCE.get(e.attr('id')).getContent()
-        : e.val()
-      )?.length
+      ((i = isRequiredFilled(
+        $(e),
+        tinyMCE.get($(e).attr('id')).getContent()?.length
+      )),
+      !i)
     )
-      return e.prev('label').removeClass('field-label-missing');
-    e.prev('label').addClass('field-label-missing');
-  },
-  canSubmit = (e) => {
-    let t = !1,
-      i = !1;
-    e?.length && highlightRequiredLabel(e);
-    for (const e of $('input[name][required]', elemId))
-      if (((t = isRequiredFilled($(e), $(e).val()?.length)), !t)) break;
-    for (const e of $('.gas-form-tinymce', elemId))
-      if (
-        ((i = isRequiredFilled(
-          $(e),
-          tinyMCE.get($(e).attr('id')).getContent()?.length
-        )),
-        !i)
-      )
-        break;
-    t && i
-      ? $(`${elemId}-btn-submit`)
-          .removeClass('disabled-button')
-          .attr('disabled', !1)
-      : $(`${elemId}-btn-submit`)
-          .addClass('disabled-button')
-          .attr('disabled', !0);
-  };
+      break;
+  t && i
+    ? $(`${elemId}-btn-submit`)
+        .removeClass('disabled-button')
+        .attr('disabled', !1)
+    : $(`${elemId}-btn-submit`)
+        .addClass('disabled-button')
+        .attr('disabled', !0);
+};
 let editorChangeHandlerId;
 const tmceObj = {
   selector: '.gas-form-tinymce',
@@ -60,7 +56,7 @@ const tmceObj = {
   toolbar: 'undo redo | bold italic underline | numlist bullist',
   content_style: 'body { font-family:Gantari,sans-serif; font-size:1rem }',
   setup: (e) => {
-    e.on('Paste Change input Undo Redo', (t) => {
+    e.on('Paste Change input Undo Redo', () => {
       clearTimeout(editorChangeHandlerId),
         (editorChangeHandlerId = setTimeout(
           () => canSubmit($(e.targetElm)),
@@ -163,8 +159,8 @@ async function setupForm() {
         description: $('[name=guide-description]', elemId).val(),
         sections: d,
       };
-      let c = 'POST',
-        l = `https://${apiDomain}/api/guide`;
+      let c = 'POST';
+      let l = `https://${apiDomain}/api/guide`;
       if (isEditing)
         (l += `/${guideId}`),
           (c = 'PUT'),
@@ -187,15 +183,15 @@ async function setupForm() {
           (o.achievementId = achievementId);
       }
       const r = await fetch(l, {
-          method: c,
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(o),
-        }),
-        m = await r.json();
+        method: c,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(o),
+      });
+      const m = await r.json();
       if (![200, 201].includes(r.status))
         return (
           t.show(),
@@ -222,14 +218,14 @@ function detailsResponseHandler(e, t = '#gas-guide-details') {
   const i = $(t);
   let a = i.prop('outerHTML');
   const n = [
-      'id',
-      'name',
-      'achievementId',
-      'achievementName',
-      'gameId',
-      'gameName',
-    ],
-    s = e.coverURL || e.imageURL;
+    'id',
+    'name',
+    'achievementId',
+    'achievementName',
+    'gameId',
+    'gameName',
+  ];
+  const s = e.coverURL || e.imageURL;
   s?.length &&
     t.endsWith('details') &&
     (a = i
@@ -264,9 +260,9 @@ async function fetchGuide() {
 }
 async function fetchAchievement() {
   const e = await fetch(
-      `https://${apiDomain}/api/achievement/${achievementId}`
-    ),
-    t = await e.json();
+    `https://${apiDomain}/api/achievement/${achievementId}`
+  );
+  const t = await e.json();
   Object.keys(t).length > 0 &&
     t.id &&
     ((document.title = `Achievement ${t.name?.length ? t.name : t.id} | ${

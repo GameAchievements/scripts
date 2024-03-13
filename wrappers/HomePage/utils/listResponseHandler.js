@@ -26,10 +26,10 @@ export function listResponseHandler({
     $list.html($entryTemplate);
     listData.forEach((item, resIdx) => {
       let dataTemplateActual = dataTemplate;
-      dataTemplateActual = dataTemplateActual.replaceAll(`{|idx|}`, resIdx + 1);
-      Object.entries(item).forEach(([key, value]) => {
+      dataTemplateActual = dataTemplateActual.replaceAll('{|idx|}', resIdx + 1);
+      for (const [key, value] of Object.entries(item)) {
         if (item.gameIconURL?.length && !isSteamImage(item.gameIconURL)) {
-          const $gameImg = $(`.gas-list-entry-cover-game`, dataTemplateActual);
+          const $gameImg = $('.gas-list-entry-cover-game', dataTemplateActual);
           if ($gameImg?.length) {
             dataTemplateActual =
               showImageFromSrc($gameImg, item.gameIconURL) ||
@@ -42,7 +42,7 @@ export function listResponseHandler({
           !isSteamImage(item.imageURL) &&
           !isSteamImage(item.iconURL)
         ) {
-          const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+          const $entryImg = $('.gas-list-entry-cover', dataTemplateActual);
           if ($entryImg?.length) {
             dataTemplateActual = elemId.includes('list-games')
               ? $entryImg
@@ -76,7 +76,7 @@ export function listResponseHandler({
         ) {
           dataTemplateActual = showPlatform(value, dataTemplateActual);
         } else if (drillDown.key && key === drillDown.key) {
-          drillDown.keysToReplace.forEach((drillReplaceKey) => {
+          for (const drillReplaceKey of drillDown.keysToReplace) {
             if (drillReplaceKey === 'platform') {
               dataTemplateActual = showPlatform(
                 value[drillReplaceKey],
@@ -88,9 +88,10 @@ export function listResponseHandler({
                 Math.round(value[drillReplaceKey] || 0)
               );
             }
-          });
+          }
         }
-      });
+      }
+
       $list.append(dataTemplateActual);
     });
   } else {

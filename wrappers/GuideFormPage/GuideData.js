@@ -10,7 +10,7 @@ export async function fetchGuide(apiDomain, guideId) {
         : guideFetchedData.id
     } | ${document.title}`;
     detailsResponseHandler(guideFetchedData);
-    detailsResponseHandler(guideFetchedData, `#gas-guide-form`);
+    detailsResponseHandler(guideFetchedData, '#gas-guide-form');
   }
 
   return guideFetchedData;

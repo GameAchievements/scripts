@@ -1,6 +1,6 @@
 import { achievementNameSlicer, gaDate } from '../../../utils';
 
-export function detailsResponseHandler(res, elemId = `#gas-guide-details`) {
+export function detailsResponseHandler(res, elemId = '#gas-guide-details') {
   const $ghContainer = $(elemId);
   let dataTemplateActual = $ghContainer.prop('outerHTML');
   console.info(`=== ${elemId} ===`, res);
@@ -23,7 +23,7 @@ export function detailsResponseHandler(res, elemId = `#gas-guide-details`) {
       )
       .prop('outerHTML');
   }
-  Object.entries(res).forEach(([key, value]) => {
+  for (const [key, value] of Object.entries(res)) {
     if (key === 'achievementName') {
       dataTemplateActual = dataTemplateActual.replaceAll(
         `{|${key}|}`,
@@ -35,6 +35,6 @@ export function detailsResponseHandler(res, elemId = `#gas-guide-details`) {
         (key.endsWith('At') ? gaDate(value) : value) || ''
       );
     }
-  });
+  }
   $ghContainer.prop('outerHTML', dataTemplateActual);
 }

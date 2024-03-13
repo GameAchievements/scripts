@@ -35,7 +35,8 @@
     e.prev("label").addClass("field-label-missing");
   };
   var canSubmit = (e) => {
-    let t = false, i = false;
+    let t = false;
+    let i = false;
     e?.length && highlightRequiredLabel(e);
     for (const e2 of $("input[name][required]", elemId))
       if (t = isRequiredFilled($(e2), $(e2).val()?.length), !t)
@@ -58,7 +59,7 @@
     toolbar: "undo redo | bold italic underline | numlist bullist",
     content_style: "body { font-family:Gantari,sans-serif; font-size:1rem }",
     setup: (e) => {
-      e.on("Paste Change input Undo Redo", (t) => {
+      e.on("Paste Change input Undo Redo", () => {
         clearTimeout(editorChangeHandlerId), editorChangeHandlerId = setTimeout(
           () => canSubmit($(e.targetElm)),
           100
@@ -114,7 +115,8 @@
         description: $("[name=guide-description]", elemId).val(),
         sections: d
       };
-      let c = "POST", l = `https://${apiDomain}/api/guide`;
+      let c = "POST";
+      let l = `https://${apiDomain}/api/guide`;
       if (isEditing)
         l += `/${guideId}`, c = "PUT", o.author = guideFetchedData.author, o.profileId = guideFetchedData.profileId;
       else {
@@ -134,7 +136,8 @@
           "Content-Type": "application/json"
         },
         body: JSON.stringify(o)
-      }), m = await r.json();
+      });
+      const m = await r.json();
       if (![200, 201].includes(r.status))
         return t.show(), i.text(m?.message), $(`${elemId}-btn-submit`).val(e).removeClass("disabled-button").attr("disabled", false), void setTimeout(() => {
           t.hide(), i.text(a);
@@ -156,7 +159,8 @@
       "achievementName",
       "gameId",
       "gameName"
-    ], s = e.coverURL || e.imageURL;
+    ];
+    const s = e.coverURL || e.imageURL;
     s?.length && t.endsWith("details") && (a = i.css(
       "background-image",
       `linear-gradient(rgba(255,255,255,0),#030922),
@@ -176,7 +180,8 @@
   async function fetchAchievement() {
     const e = await fetch(
       `https://${apiDomain}/api/achievement/${achievementId}`
-    ), t = await e.json();
+    );
+    const t = await e.json();
     Object.keys(t).length > 0 && t.id && (document.title = `Achievement ${t.name?.length ? t.name : t.id} | ${document.title}`, t.achievementName = t.name, detailsResponseHandler(t), detailsResponseHandler(t, "#gas-guide-form"));
   }
   function redirectAway() {

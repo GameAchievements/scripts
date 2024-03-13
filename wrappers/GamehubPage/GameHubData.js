@@ -1,6 +1,6 @@
 import { showImageFromSrc, showPlatform, gaDate } from '../../utils';
 
-const elemIdPrefix = `#gas-gh`;
+const elemIdPrefix = '#gas-gh';
 
 function gamehubResponseHandler(res, elemId) {
   const $ghContainer = $(elemId);
@@ -55,7 +55,7 @@ function gamehubResponseHandler(res, elemId) {
         showImageFromSrc($(elm), res.imageURL, elemId) || dataTemplateActual;
     }
   });
-  Object.entries(res).forEach(([key, value]) => {
+  for (const [key, value] of Object.entries(res)) {
     if (
       textKeysToReplace.find((el) => el.toLowerCase() === key.toLowerCase())
     ) {
@@ -72,7 +72,7 @@ function gamehubResponseHandler(res, elemId) {
       );
     } else if (key === 'platformsInGACount' && elemId.endsWith('top')) {
       dataTemplateActual = showPlatform(
-        value?.length ? value : res['importedFromPlatforms'],
+        value?.length ? value : res.importedFromPlatforms,
         dataTemplateActual,
         elemId
       );
@@ -82,7 +82,7 @@ function gamehubResponseHandler(res, elemId) {
         value?.length ? value.join(', ') : 'N.A.'
       );
     }
-  });
+  }
   $ghContainer.prop('outerHTML', dataTemplateActual);
 
   const resKeys = Object.keys(res);
@@ -92,9 +92,9 @@ function gamehubResponseHandler(res, elemId) {
     ...keysWithArrays,
   ].filter((el) => !resKeys.includes(el));
 
-  emptyElems.forEach((el) => {
+  for (const el of emptyElems) {
     $(`div:contains({|${el}|})`).parent('.entry-wrapper').remove();
-  });
+  }
 
   if (elemId.endsWith('about') && emptyElems.length > 0) {
     $('.about-game-entry-div').each(function () {
@@ -125,9 +125,9 @@ export async function fetchGamehub(gamehubURL, gameId) {
       document.title
     }`;
     if (resData.igdbId?.length) {
-      ['top', 'about'].forEach((elemIdSuf) => {
+      for (const elemIdSuf of ['top', 'about']) {
         gamehubResponseHandler(resData, `${elemIdPrefix}-${elemIdSuf}`);
-      });
+      }
     } else {
       $(
         `${elemIdPrefix}-about,${elemIdPrefix}-igdb-id,[href="${elemIdPrefix}-about"]`

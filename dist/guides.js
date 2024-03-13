@@ -25,19 +25,20 @@
 
   // utils/templateReplacers/showPlatform.js
   var showPlatform = (platformName, dataTemplateActual, parentSelector = ".gas-list-entry") => {
+    let templateTemp = dataTemplateActual;
     const platformVerifier = {
       ps: { rgx: /playstation/gi },
       xbox: { rgx: /xbox/gi },
       steam: { rgx: /steam|pc|windows|mac|linux/gi }
     };
     if (platformVerifier.ps.rgx.test(platformName)) {
-      dataTemplateActual = $(`.gas-platform-psn`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+      templateTemp = $(".gas-platform-psn", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
     if (platformVerifier.steam.rgx.test(platformName)) {
-      dataTemplateActual = $(`.gas-platform-steam`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+      templateTemp = $(".gas-platform-steam", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
     if (platformVerifier.xbox.rgx.test(platformName)) {
-      dataTemplateActual = $(`.gas-platform-xbox`, dataTemplateActual).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+      templateTemp = $(".gas-platform-xbox", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
     return dataTemplateActual;
   };
@@ -78,10 +79,10 @@
       $list.html($entryTemplate);
       listData.forEach((item, resIdx) => {
         let dataTemplateActual = dataTemplate;
-        dataTemplateActual = dataTemplateActual.replaceAll(`{|idx|}`, resIdx + 1);
-        Object.entries(item).forEach(([key, value]) => {
+        dataTemplateActual = dataTemplateActual.replaceAll("{|idx|}", resIdx + 1);
+        for (const [key, value] of Object.entries(item)) {
           if (item.gameIconURL?.length && !isSteamImage(item.gameIconURL)) {
-            let $entryImg2 = $(`.gas-list-entry-cover-game`, dataTemplateActual);
+            const $entryImg2 = $(".gas-list-entry-cover-game", dataTemplateActual);
             if ($entryImg2.length) {
               const imgCaption = `For achievement: ${achievementNameSlicer(
                 item.achievementName
@@ -93,7 +94,7 @@
             }
           }
           if (item.iconURL?.length && !isSteamImage(item.iconURL)) {
-            $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+            $entryImg = $(".gas-list-entry-cover", dataTemplateActual);
             if ($entryImg.length && item.iconURL?.length) {
               dataTemplateActual = showImageFromSrc($entryImg, item.iconURL) || dataTemplateActual;
             }
@@ -111,7 +112,7 @@
           } else if (key === "platform") {
             dataTemplateActual = showPlatform(value, dataTemplateActual);
           }
-        });
+        }
         $list.append(dataTemplateActual);
       });
     } else {
@@ -133,7 +134,7 @@
     );
     const fetchData = await resGuides.json();
     $(`${elemId2} .gas-list-results-info`).text(
-      (fetchData?.count || 0) + " result(s)"
+      `${fetchData?.count || 0} result(s)`
     );
     listResponseHandler({
       listData: fetchData.results,

@@ -62,7 +62,7 @@ export function ratingScale($rateEl, $rateTxtEl) {
     $(this).prevAll().each(rateMark);
   });
 
-  $('li', $rateEl).on('mouseleave', function () {
+  $('li', $rateEl).on('mouseleave', () => {
     const $active = $('.rating-active', $rateEl);
     if (!$active.length) {
       $('li', $rateEl).each(rateReset);
