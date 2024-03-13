@@ -1,5 +1,5 @@
 import { gaDate, gaTime, gaDateTime } from './dateTIme';
-import { platformNameIdMap } from './platformNameIdMap';
+import { platformNameIdMap, platformNameShortMap } from './platformNameIdMap';
 import { cleanupDoubleQuotes } from './cleanupDoubleQuotes';
 import { displayMessage } from './displayMessage';
 import { scrollToURLHash } from './scrollToURLHash';
@@ -25,6 +25,7 @@ export {
   gaDateTime,
   rarityClassCalc,
   platformNameIdMap,
+  platformNameShortMap,
   cleanupDoubleQuotes,
   displayMessage,
   scrollToURLHash,

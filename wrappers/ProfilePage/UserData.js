@@ -1,11 +1,12 @@
-import { showPlatform } from '../../utils';
+import { platformNameShortMap, showPlatform } from '../../utils';
 import { linkPlatform } from './utils/linkPlatform';
 import { profileAvatarUpdater } from './utils/profileAvatarUpdater';
 import { unlinkPlatform } from './utils/unlinkPlatform';
 const formMessageDelay = 4e3;
 
 const elemIdPrefix = '#gas-profile';
-const platformsToLink = Array.from(['playstation', 'xbox', 'steam']);
+
+const platformsToLink = ['playstation', 'xbox', 'steam'];
 
 const setupLinkForms = (platformsLinked = []) => {
   $(`${elemIdPrefix}-pa-code-copied-msg`).hide();
@@ -34,31 +35,41 @@ function profileResponseHandler(res, fetchURLPrefix) {
   const textKeysToReplace = [
     'name',
     'description',
-    'gaPoints',
     'guidesCount',
     'gamesCount',
     'completedCount',
     'completion',
     'achievedCount',
   ];
-  console.log('dataTemplateActual', dataTemplateActual);
+
   for (const [key, value] of Object.entries(res)) {
     if (textKeysToReplace.includes(key)) {
       dataTemplateActual = dataTemplateActual.replaceAll(`{|${key}|}`, value);
-    } else if (key === 'ranking') {
-      for (const [rankKey, rankVal] of Object.entries(value)) {
-        dataTemplateActual = dataTemplateActual.replaceAll(
-          `{|${rankKey}|}`,
-          rankVal
-        );
-      }
+    } else if (key === 'gaPoints') {
+      dataTemplateActual = dataTemplateActual.replaceAll(
+        '{|gaPoints|}',
+        res.platforms.find((el) => el.platform === 'GA')?.gaUserScore ?? 0
+      );
     } else if (key === 'platforms') {
-      for (const { platform, accountName } of value) {
-        dataTemplateActual = dataTemplateActual.replaceAll(
-          `{|${platform.toLowerCase()}Name|}`,
-          accountName
+      const platformKeysToReplace = [
+        'accountName',
+        'totalGames',
+        'completion',
+        'ranking',
+      ];
+      for (const platformItem of value) {
+        for (const platformKey of platformKeysToReplace) {
+          dataTemplateActual = dataTemplateActual.replaceAll(
+            `{|${platformNameShortMap(platformItem.platform)}-${platformKey}|}`,
+            platformItem[platformKey] ?? 'N.A'
+          );
+        }
+
+        dataTemplateActual = showPlatform(
+          platformItem.platform,
+          dataTemplateActual,
+          elemId
         );
-        dataTemplateActual = showPlatform(platform, dataTemplateActual, elemId);
       }
     }
   }

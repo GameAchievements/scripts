@@ -390,6 +390,7 @@
    */
   const logout = async () => {
     try {
+      const apiDomain = document.querySelector('meta[name=domain]')?.content;
       await fetch(`https://${apiDomain}/api/logout`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
