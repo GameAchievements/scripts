@@ -12,6 +12,7 @@ import {
 } from './templateReplacers/showRarityTagAchievement';
 import { listTemplateAppend } from './templateReplacers/listTemplateAppend';
 import { showPlatform } from './templateReplacers/showPlatform';
+import { showConsole } from './templateReplacers/showConsole';
 import { showAchievementUnlocked } from './templateReplacers/showAchievementUnlocked';
 import { showTrophy } from './templateReplacers/showTrophy';
 import { showImageFromSrc } from './templateReplacers/showImageFromSrc';
@@ -34,6 +35,7 @@ export {
   achievementNameSlicer,
   listTemplateAppend,
   showPlatform,
+  showConsole,
   showRarityTagAchievement,
   showAchievementUnlocked,
   showTrophy,

@@ -5,6 +5,7 @@ import {
   cleanupDoubleQuotes,
   isSteamImage,
   isXboxEdsImage,
+  showConsole,
 } from '../../../utils';
 
 export function listResponseHandler({
@@ -76,6 +77,14 @@ export function listResponseHandler({
             dataTemplateActual,
             '.gh-row'
           );
+        } else if (key === 'consoles') {
+          for (const consoleName of value) {
+            dataTemplateActual = showConsole(
+              consoleName,
+              dataTemplateActual,
+              '.gh-row'
+            );
+          }
         }
       }
 
