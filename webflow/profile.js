@@ -27,10 +27,10 @@ $(async () => {
   }
   if (await fetchGAUserData(fetchURLPrefix, profileId)) {
     await Promise.all([
-      await loadGames(elemIdPrefix, profileId, fetchURLPrefix),
+      await loadGames(elemIdPrefix, apiDomain),
       await loadAchievements(elemIdPrefix, profileId, fetchURLPrefix),
-      await loadGuides(elemIdPrefix, profileId, fetchURLPrefix),
-      await loadReviews(elemIdPrefix, profileId, fetchURLPrefix),
+      // await loadGuides(elemIdPrefix, profileId, fetchURLPrefix),
+      // await loadReviews(elemIdPrefix, profileId, fetchURLPrefix),
     ]);
     $('.ga-loader-container').hide();
     $('#ga-sections-container').show();

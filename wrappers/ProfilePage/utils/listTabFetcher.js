@@ -8,7 +8,7 @@ import {
   showPlatform,
 } from '../../../utils';
 
-function listResponseHandler({
+function listTabResponseHandler({
   listData,
   elemId,
   numKeysToReplace,
@@ -19,7 +19,7 @@ function listResponseHandler({
   const $listTabs = $(`${elemId} .gas-list-tabs`);
   console.info(`=== ${elemId} results ===`, listData);
   let dataTemplate = $listTabs.prop('outerHTML');
-  if (!tabCounts) {
+  if (!tabCounts || Object.keys(tabCounts).length < 1) {
     tabMatcher = 'platform';
     tabCounts = {
       allCnt: listData.length,
@@ -35,15 +35,16 @@ function listResponseHandler({
     };
   }
   const tabKeysToReplace = Object.keys(tabCounts);
-  tabKeysToReplace.forEach((key) => {
+
+  for (const key of tabKeysToReplace) {
     dataTemplate = dataTemplate.replaceAll(`{|${key}|}`, tabCounts[key]) || '0';
-  });
+  }
   // replace counts
   $listTabs.prop('outerHTML', dataTemplate);
-  tabKeysToReplace.forEach((key) => {
+  for (const key of tabKeysToReplace) {
     const tabName = key.slice(0, key.indexOf('Cnt'));
     const $list = $(`${elemId} .gas-list-${tabName}`);
-    const $emptyList = $(`.gas-list-empty`, $list);
+    const $emptyList = $('.gas-list-empty', $list);
     if (tabCounts[key] > 0) {
       const $listHeader = $list.children().first();
       const $entryTemplate = $('.gas-list-entry', $list).first();
@@ -56,10 +57,10 @@ function listResponseHandler({
         : listData.filter((item) => item[tabMatcher]?.toLowerCase() === tabName)
       ).forEach((item, resIdx) => {
         let dataTemplateActual = dataTemplate;
-        Object.entries(item).forEach(([key, value]) => {
+        for (const [key, value] of Object.entries(item)) {
           const imageURL = item.imageURL || item.iconURL;
           if (imageURL?.length && !isSteamImage(imageURL)) {
-            const $entryImg = $(`.gas-list-entry-cover`, dataTemplateActual);
+            const $entryImg = $('.gas-list-entry-cover', dataTemplateActual);
             if ($entryImg?.length) {
               dataTemplateActual =
                 showImageFromSrc($entryImg, imageURL) || dataTemplateActual;
@@ -83,7 +84,7 @@ function listResponseHandler({
               Math.round(value || 0)
             );
             const $rateWrapper = $(
-              `.gas-list-entry-rating`,
+              '.gas-list-entry-rating',
               dataTemplateActual
             );
             if ($rateWrapper.length) {
@@ -100,7 +101,7 @@ function listResponseHandler({
               `{|${key}|}`,
               classValue.replace('-', ' ')
             );
-            dataTemplateActual = $(`.gas-rarity-tag`, dataTemplateActual)
+            dataTemplateActual = $('.gas-rarity-tag', dataTemplateActual)
               .removeClass('gas-rarity-tag')
               .addClass(`gas-rarity-tag-${classValue}`)
               .children('.p1')
@@ -108,7 +109,7 @@ function listResponseHandler({
               .parents('.gas-list-entry')
               .prop('outerHTML');
           }
-        });
+        }
         $list
           .append(dataTemplateActual)
           .children()
@@ -120,12 +121,12 @@ function listResponseHandler({
       $list.html($emptyList);
       $emptyList.show();
     }
-  });
+  }
 }
 
-export async function listFetcher(
+export async function listTabFetcher(
   { elemIdPrefix, profileId, fetchURLPrefix },
-  { listName, numKeysToReplace, textKeysToReplace, tabs, tabMatcher }
+  { listName, numKeysToReplace, textKeysToReplace, tabs = [], tabMatcher }
 ) {
   const elemId = `${elemIdPrefix}-${listName}`;
   let resFetch;
@@ -145,18 +146,18 @@ export async function listFetcher(
     let tabCounts;
     if (Array.isArray(tabs)) {
       tabCounts = {};
-      tabs.forEach((tabName) => {
+      for (const tabName of tabs) {
         tabCounts[`${tabName}Cnt`] =
           tabName === 'all'
             ? listData.length
             : listData.filter(
                 (item) => item[tabMatcher]?.toLowerCase() === tabName
               )?.length;
-      });
+      }
     }
     switch (listName) {
       case 'reviews':
-        $(`.gas-count-reviews`).each((idx, revEl) => {
+        $('.gas-count-reviews').each((idx, revEl) => {
           $(revEl).text(
             $(revEl).text().replace('{|reviewsCnt|}', listData.length)
           );
@@ -175,7 +176,8 @@ export async function listFetcher(
       default:
         break;
     }
-    listResponseHandler({
+
+    listTabResponseHandler({
       listData,
       elemId,
       numKeysToReplace,
@@ -185,7 +187,7 @@ export async function listFetcher(
     });
     return;
   }
-  const $emptyList = $(`.gas-list-empty`).first().clone();
+  const $emptyList = $('.gas-list-empty').first().clone();
   $(`${elemId}`).html($emptyList);
   $emptyList.show();
 }

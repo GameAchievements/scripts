@@ -1,7 +1,7 @@
-import { listFetcher } from './utils/listFetcher';
+import { listResponseHandler } from './utils/listResponseHandler';
 
 export async function loadReviews(elemIdPrefix, profileId, fetchURLPrefix) {
-  await listFetcher(
+  await listResponseHandler(
     { elemIdPrefix, profileId, fetchURLPrefix },
     {
       listName: 'reviews',

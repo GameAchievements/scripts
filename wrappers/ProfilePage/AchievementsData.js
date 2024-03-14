@@ -1,11 +1,11 @@
-import { listFetcher } from './utils/listFetcher';
+import { listTabFetcher } from './utils/listTabFetcher';
 
 export async function loadAchievements(
   elemIdPrefix,
   profileId,
   fetchURLPrefix
 ) {
-  await listFetcher(
+  await listTabFetcher(
     { elemIdPrefix, profileId, fetchURLPrefix },
     {
       listName: 'achievements',

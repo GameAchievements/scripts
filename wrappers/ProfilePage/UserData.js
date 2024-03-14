@@ -22,9 +22,11 @@ const setupLinkForms = (platformsLinked = []) => {
   } else {
     $(`${elemIdPrefix}-pa-code-btn`).hide();
   }
+
   for (const el of platformsLinked) {
     unlinkPlatform(el, platformsToLink, formMessageDelay);
   }
+
   platformsToLink.map((el) => linkPlatform(el, formMessageDelay));
 };
 
