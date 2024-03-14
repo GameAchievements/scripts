@@ -20,7 +20,7 @@ $(
   )}-btn-avatar],[id^=${elemIdPrefix.slice(1)}-msg]`
 ).hide();
 
-$(async () => {
+$().ready(async () => {
   await auth0Bootstrap();
   if (profileId?.length) {
     $('#user-settings, #ga-user-settings-tab').hide();

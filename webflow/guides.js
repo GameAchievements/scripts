@@ -3,7 +3,7 @@ import { setupListSearch } from '../utils';
 
 const elemId = '#gas-list-guides';
 
-$(async () => {
+$().ready(async () => {
   await auth0Bootstrap();
   setupListSearch(elemId, fetchGuides);
   await fetchGuides(elemId);
