@@ -1,1 +1,1 @@
-(()=>{$(()=>auth0Bootstrap());})();
+(()=>{$().ready(()=>auth0Bootstrap());})();
