@@ -5,6 +5,8 @@ import {
   cleanupDoubleQuotes,
   isSteamImage,
   isXboxEdsImage,
+  showConsole,
+  listTemplateAppend,
 } from '../../../utils';
 
 export function listResponseHandler({
@@ -31,7 +33,7 @@ export function listResponseHandler({
           const $gameImg = $('.gas-list-entry-cover-game', dataTemplateActual);
           if ($gameImg?.length) {
             dataTemplateActual =
-              showImageFromSrc($gameImg, item.gameIconURL) ||
+              showImageFromSrc($gameImg, item.gameIconURL, '.gh-row') ||
               dataTemplateActual;
           }
         }
@@ -48,8 +50,11 @@ export function listResponseHandler({
                   .css('background-image', `url(${item.imageURL})`)
                   .parents('.gas-list-entry')
                   .prop('outerHTML')
-              : showImageFromSrc($entryImg, item.iconURL || item.imageURL) ||
-                dataTemplateActual;
+              : showImageFromSrc(
+                  $entryImg,
+                  item.iconURL || item.imageURL,
+                  '.gh-row'
+                ) || dataTemplateActual;
           }
         }
         if (textKeysToReplace.includes(key)) {
@@ -63,21 +68,33 @@ export function listResponseHandler({
             `{|${key}|}`,
             Math.round(value || 0)
           );
-          // } else if (key === 'lastPlayed') {
-          //   dataTemplateActual = dataTemplateActual.replaceAll(
-          //     `{|${key}|}`,
-          //     gaDate(value)
-          //   );
         } else if (
           key === 'importedFromPlatform' ||
           key === 'platform' ||
           key === 'platforms'
         ) {
-          dataTemplateActual = showPlatform(value, dataTemplateActual);
+          dataTemplateActual = showPlatform(
+            value,
+            dataTemplateActual,
+            '.gh-row'
+          );
+        } else if (key === 'consoles') {
+          for (const consoleName of value) {
+            dataTemplateActual = showConsole(
+              consoleName,
+              dataTemplateActual,
+              '.gh-row'
+            );
+          }
         }
       }
 
-      $list.append(dataTemplateActual);
+      listTemplateAppend(
+        $list,
+        dataTemplateActual,
+        resIdx,
+        item?.completion === 100
+      );
     });
   } else {
     if (listData?.length && !dataTemplate?.length) {

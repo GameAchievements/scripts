@@ -1,6 +1,7 @@
 import { gaDate, gaTime, gaDateTime } from './dateTIme';
 import { platformNameIdMap, platformNameShortMap } from './platformNameIdMap';
 import { cleanupDoubleQuotes } from './cleanupDoubleQuotes';
+import { truncateText } from './truncateText';
 import { displayMessage } from './displayMessage';
 import { scrollToURLHash } from './scrollToURLHash';
 import { isSteamImage, isXboxEdsImage } from './checkImageType';
@@ -12,6 +13,7 @@ import {
 } from './templateReplacers/showRarityTagAchievement';
 import { listTemplateAppend } from './templateReplacers/listTemplateAppend';
 import { showPlatform } from './templateReplacers/showPlatform';
+import { showConsole } from './templateReplacers/showConsole';
 import { showAchievementUnlocked } from './templateReplacers/showAchievementUnlocked';
 import { showTrophy } from './templateReplacers/showTrophy';
 import { showImageFromSrc } from './templateReplacers/showImageFromSrc';
@@ -20,6 +22,7 @@ import { setupListSearch } from './templateReplacers/setupListSearch';
 import { ratingScale, ratingSVG } from './templateReplacers/ratingSVG';
 
 export {
+  truncateText,
   gaDate,
   gaTime,
   gaDateTime,
@@ -34,6 +37,7 @@ export {
   achievementNameSlicer,
   listTemplateAppend,
   showPlatform,
+  showConsole,
   showRarityTagAchievement,
   showAchievementUnlocked,
   showTrophy,

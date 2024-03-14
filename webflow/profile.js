@@ -27,11 +27,12 @@ $(async () => {
   }
   if (await fetchGAUserData(fetchURLPrefix, profileId)) {
     await Promise.all([
-      await loadGames(elemIdPrefix, apiDomain),
+      await loadGames(elemIdPrefix, apiDomain, profileId),
       await loadAchievements(elemIdPrefix, profileId, fetchURLPrefix),
-      // await loadGuides(elemIdPrefix, profileId, fetchURLPrefix),
-      // await loadReviews(elemIdPrefix, profileId, fetchURLPrefix),
+      await loadGuides(elemIdPrefix, apiDomain, profileId),
+      await loadReviews(elemIdPrefix, apiDomain, profileId),
     ]);
+
     $('.ga-loader-container').hide();
     $('#ga-sections-container').show();
     $(`${elemIdPrefix}-btn-delete`).on('click', deleteProfile);

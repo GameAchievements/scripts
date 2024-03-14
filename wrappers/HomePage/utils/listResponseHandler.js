@@ -5,6 +5,7 @@ import {
   cleanupDoubleQuotes,
   isSteamImage,
   isXboxEdsImage,
+  truncateText,
 } from '../../../utils';
 
 export function listResponseHandler({
@@ -68,6 +69,11 @@ export function listResponseHandler({
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
             gaDate(value)
+          );
+        } else if (key === 'content') {
+          dataTemplateActual = dataTemplateActual.replaceAll(
+            `{|${key}|}`,
+            truncateText(value, 160)
           );
         } else if (
           key === 'importedFromPlatform' ||
