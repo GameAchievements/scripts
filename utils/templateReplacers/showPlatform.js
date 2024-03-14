@@ -27,5 +27,5 @@ export const showPlatform = (
       .parents(parentSelector)
       .prop('outerHTML');
   }
-  return dataTemplateActual;
+  return templateTemp;
 };
