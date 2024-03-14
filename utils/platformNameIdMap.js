@@ -9,3 +9,16 @@ export const platformNameIdMap = (platformName) => {
       return 3;
   }
 };
+
+export const platformNameShortMap = (platformName) => {
+  switch (platformName.toLowerCase()) {
+    case 'playstation':
+      return 'psn';
+    case 'xbox':
+      return 'xbox';
+    case 'steam':
+      return 'steam';
+    default:
+      return 'ga';
+  }
+};
