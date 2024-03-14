@@ -1,6 +1,7 @@
 import { gaDate, gaTime, gaDateTime } from './dateTIme';
 import { platformNameIdMap, platformNameShortMap } from './platformNameIdMap';
 import { cleanupDoubleQuotes } from './cleanupDoubleQuotes';
+import { truncateText } from './truncateText';
 import { displayMessage } from './displayMessage';
 import { scrollToURLHash } from './scrollToURLHash';
 import { isSteamImage, isXboxEdsImage } from './checkImageType';
@@ -21,6 +22,7 @@ import { setupListSearch } from './templateReplacers/setupListSearch';
 import { ratingScale, ratingSVG } from './templateReplacers/ratingSVG';
 
 export {
+  truncateText,
   gaDate,
   gaTime,
   gaDateTime,

@@ -6,6 +6,7 @@ import {
   isSteamImage,
   isXboxEdsImage,
   showConsole,
+  listTemplateAppend,
 } from '../../../utils';
 
 export function listResponseHandler({
@@ -88,7 +89,12 @@ export function listResponseHandler({
         }
       }
 
-      $list.append(dataTemplateActual);
+      listTemplateAppend(
+        $list,
+        dataTemplateActual,
+        resIdx,
+        item?.completion === 100
+      );
     });
   } else {
     if (listData?.length && !dataTemplate?.length) {

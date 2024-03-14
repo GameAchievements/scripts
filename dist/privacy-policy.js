@@ -1,1 +1,4 @@
-(()=>{$(()=>auth0Bootstrap());})();
+(() => {
+  // webflow/privacy-policy.js
+  $(() => auth0Bootstrap());
+})();

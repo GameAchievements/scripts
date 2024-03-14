@@ -1,3 +1,355 @@
-(()=>{var f=e=>{let t=s=>`0${s}`.slice(-2),o=new Date(e);return`${o.getFullYear()} . ${t(o.getMonth()+1)} . ${t(o.getDate())}`};var y=e=>{if(!e)return"N.A.";let t=e.lastIndexOf(" | ");return t>0?e.slice(0,t):e};function d(e,t="#gas-guide-details"){let o=$(t),s=o.prop("outerHTML");console.info(`=== ${t} ===`,e);let n=["id","name","achievementId","achievementName","gameId","gameName"],l=e.coverURL||e.imageURL;l?.length&&t.endsWith("details")&&(s=o.css("background-image",`linear-gradient(rgba(255,255,255,0),#030922),
+(() => {
+  // utils/dateTIme.js
+  var gaDate = (isoDate) => {
+    const pad = (v) => `0${v}`.slice(-2);
+    const dateObj = new Date(isoDate);
+    return `${dateObj.getFullYear()} . ${pad(dateObj.getMonth() + 1)} . ${pad(
+      dateObj.getDate()
+    )}`;
+  };
+
+  // utils/achievementNameSlicer.js
+  var achievementNameSlicer = (name) => {
+    if (!name) {
+      return "N.A.";
+    }
+    const metaDivider = name.lastIndexOf(" | ");
+    return metaDivider > 0 ? name.slice(0, metaDivider) : name;
+  };
+
+  // wrappers/GuideFormPage/utils/detailsResponseHandler.js
+  function detailsResponseHandler(res, elemId2 = "#gas-guide-details") {
+    const $ghContainer = $(elemId2);
+    let dataTemplateActual = $ghContainer.prop("outerHTML");
+    console.info(`=== ${elemId2} ===`, res);
+    const textKeysToReplace = [
+      "id",
+      "name",
+      "achievementId",
+      "achievementName",
+      "gameId",
+      "gameName"
+    ];
+    const guideImg = res.coverURL || res.imageURL;
+    if (guideImg?.length && elemId2.endsWith("details")) {
+      dataTemplateActual = $ghContainer.css(
+        "background-image",
+        `linear-gradient(rgba(255,255,255,0),#030922),
           linear-gradient(rgba(70,89,255,.4),rgba(70,89,255,.4)),
-          url(${l})`).prop("outerHTML"));for(let[i,r]of Object.entries(e))i==="achievementName"?s=s.replaceAll(`{|${i}|}`,y(r)):n.includes(i)&&(s=s.replaceAll(`{|${i}|}`,(i.endsWith("At")?f(r):r)||""));o.prop("outerHTML",s)}async function D(e,t){let s=await(await fetch(`https://${e}/api/achievement/${t}`)).json();Object.keys(s).length>0&&s.id&&(document.title=`Achievement ${s.name?.length?s.name:s.id} | ${document.title}`,s.achievementName=s.name,d(s),d(s,"#gas-guide-form"))}async function k(e,t){let o=await fetch(`https://${e}/api/guide/${t}`);return guideFetchedData=await o.json(),Object.keys(guideFetchedData).length>0&&guideFetchedData.id&&(document.title=`${guideFetchedData.name?.length?guideFetchedData.name:guideFetchedData.id} | ${document.title}`,d(guideFetchedData),d(guideFetchedData,"#gas-guide-form")),guideFetchedData}var M=(e,t)=>t?(isUserInputActive=!0,!0):!1,O=e=>{if((e.hasClass("gas-form-tinymce")?tinyMCE.get(e.attr("id")).getContent():e.val())?.length)return e.prev("label").removeClass("field-label-missing");e.prev("label").addClass("field-label-missing")};function p(e,t="#gas-guide-form"){let o=!1,s=!1;e?.length&&O(e);for(let n of $("input[name][required]",t))if(o=M($(n),$(n).val()?.length),!o)break;for(let n of $(".gas-form-tinymce",t))if(s=M($(n),tinyMCE.get($(n).attr("id")).getContent()?.length),!s)break;o&&s?$(`${t}-btn-submit`).removeClass("disabled-button").attr("disabled",!1):$(`${t}-btn-submit`).addClass("disabled-button").attr("disabled",!0)}var v=document.querySelector("meta[name=domain]")?.content,S=new URLSearchParams(window.location.search),g=Number(S.get("id"))||0,x=g>0,h=Number(S.get("achievementId"))||0,c,N="#gas-guide",a=`${N}-form`,b=4e3,I=4,u=2,R=$(".gas-form-section",a).last().clone(),w="section-2";$(".ga-loader-container").show();$("#ga-sections-container").hide();var L,C={selector:".gas-form-tinymce",height:200,menubar:!1,toolbar_mode:"floating",plugins:"link image lists",toolbar:"undo redo | bold italic underline | numlist bullist",content_style:"body { font-family:Gantari,sans-serif; font-size:1rem }",setup:e=>{e.on("Paste Change input Undo Redo",t=>{clearTimeout(L),L=setTimeout(()=>p($(e.targetElm)),100)})}};function U(){if(confirm("Do you want to remove this section?")){p();let e=$(this).parents(".gas-form-section");tinyMCE.get($(".gas-form-tinymce",e).attr("id")).remove(),e.remove(),u--,$(".gas-form-section label[for$=-title]",a).each((t,o)=>$(o).text(`${t+1}${$(o).text().slice(1)}`)),u<=I&&$(".gas-form-section-add",a).show()}}async function H(){u++,$(`${a}-btn-submit`).addClass("disabled-button").attr("disabled",!0);let e=R.clone().show(),t=`section-${u}`;$(`label[for=${w}-title]`,e).text(`${u} \u203A section name*`).attr("for",`${t}-title`),$(`[name=${w}-title]`,e).attr("name",`${t}-title`).on("focusout keyup",function(){p($(this))}),$(`label[for=${w}-content]`,e).attr("for",`${t}-content`);let o=`${t}-content`;$(".gas-form-tinymce",e).attr("id",o).attr("name",o).attr("data-name",o),$(".gas-form-section-del",e).on("click",U),$(".gas-form-sections",a).append(e),C.selector=`#${o}`,await tinymce.init(C),u>I&&$(".gas-form-section-add",a).hide()}async function V(){$(".gas-form-tinymce",R).removeAttr("id"),await tinymce.init(C),x&&c?.id===g&&($("[name=guide-title]",a).val(c.name),$("[name=guide-description]",a).val(c.description),c.sections.forEach(async(l,i)=>{i>1&&i<c.sections.length&&await H(),$(`[name=section-${i+1}-title]`).val(l.title),tinyMCE.get(`section-${i+1}-content`).setContent(l.content)})),$(".gas-form-section-add",a).on("click",H),$(".gas-form-section-del",a).on("click",U),$(`${a}-btn-cancel`,a).on("click",l=>{l.preventDefault();let i=$("#gas-popup-leave-confirmation");i.css({opacity:1,display:"flex"}),$(".gas-popup-btn-close",i).one("click",r=>{r.preventDefault(),i.hide()}),$(".gas-popup-btn-leave",i).one("click",r=>{r.preventDefault(),isUserInputActive=!1,i.hide(),m()})}),$(`${a}-btn-submit`).attr("disabled",!0);let e=$(`${a}-btn-submit`).val(),t=$(".gas-form-error",a),o=$("div",t),s=t.text(),n=$(".gas-form-success",a);$("input[name][required]",a).on("focusout keyup",function(){p($(this))}),$(`${a}-btn-submit`).on("click",async l=>{l.preventDefault(),$(`${a}-btn-submit`).addClass("disabled-button").attr("disabled",!0),isUserInputActive=!1,$(`${a}-btn-submit`).val($(`${a}-btn-submit`).data("wait"));let i=[];$(".gas-form-section",a).each(function(){i.push({title:$("input[name$=-title]",this).val(),content:tinyMCE.get($(".gas-form-tinymce",this).attr("id")).getContent()})});let r={author:"GA user",title:$("[name=guide-title]",a).val(),description:$("[name=guide-description]",a).val(),sections:i},T="POST",A=`https://${v}/api/guide`;if(x)A+=`/${g}`,T="PUT",r.author=c.author,r.profileId=c.profileId;else{if(!userProfileData){t.show(),o.text("Issue on accessing your data for saving. Please try again later."),$(`${a}-btn-submit`).val(e),setTimeout(()=>{t.hide(),o.text(s)},b);return}r.profileId=userProfileData.id,r.author=userProfileData.name,r.achievementId=h}let F=await fetch(A,{method:T,headers:{Authorization:`Bearer ${token}`,Accept:"application/json","Content-Type":"application/json"},body:JSON.stringify(r)}),P=await F.json();if(![200,201].includes(F.status)){t.show(),o.text(P?.message),$(`${a}-btn-submit`).val(e).removeClass("disabled-button").attr("disabled",!1),setTimeout(()=>{t.hide(),o.text(s)},b);return}n.show(),$(`${a}-btn-submit`).val(e),setTimeout(()=>{$(`${a}-fields`).hide()},b/5),setTimeout(()=>{isUserInputActive=!1,n.hide(),m()},b)})}function m(){window.location.replace(x?`/guide?id=${g}`:h>0?`/achievement?id=${h}`:"/guides")}$(async()=>{if(await auth0Bootstrap(),!token){console.log("User not authenticated"),m();return}if(x){if(c=await k(v,g),c?.achievementId>0){let e=await fetch(`https://${v}/api/achievement/${c.achievementId}/guide-auth-user-data`,{headers:{Authorization:`Bearer ${token}`}});if(e.status!==200){console.log("User not found/issue, cannot access to guide edition"),m();return}if(!(await e.json()).ownedGuideId){console.log("This form does not belong to the creator"),m();return}}}else if(h>0)await D(v,h);else{console.log("no valid parameter provided"),m();return}await V(),$(".ga-loader-container").hide(),$("#ga-sections-container").show()});})();
+          url(${guideImg})`
+      ).prop("outerHTML");
+    }
+    for (const [key, value] of Object.entries(res)) {
+      if (key === "achievementName") {
+        dataTemplateActual = dataTemplateActual.replaceAll(
+          `{|${key}|}`,
+          achievementNameSlicer(value)
+        );
+      } else if (textKeysToReplace.includes(key)) {
+        dataTemplateActual = dataTemplateActual.replaceAll(
+          `{|${key}|}`,
+          (key.endsWith("At") ? gaDate(value) : value) || ""
+        );
+      }
+    }
+    $ghContainer.prop("outerHTML", dataTemplateActual);
+  }
+
+  // wrappers/GuideFormPage/AchievementSection.js
+  async function fetchAchievement(apiDomain2, achievementId2) {
+    const resFetch = await fetch(
+      `https://${apiDomain2}/api/achievement/${achievementId2}`
+    );
+    const achievementFetchedData = await resFetch.json();
+    if (Object.keys(achievementFetchedData).length > 0 && achievementFetchedData.id) {
+      document.title = `Achievement ${achievementFetchedData.name?.length ? achievementFetchedData.name : achievementFetchedData.id} | ${document.title}`;
+      achievementFetchedData.achievementName = achievementFetchedData.name;
+      detailsResponseHandler(achievementFetchedData);
+      detailsResponseHandler(achievementFetchedData, "#gas-guide-form");
+    }
+  }
+
+  // wrappers/GuideFormPage/GuideData.js
+  async function fetchGuide(apiDomain2, guideId2) {
+    const resFetch = await fetch(`https://${apiDomain2}/api/guide/${guideId2}`);
+    guideFetchedData = await resFetch.json();
+    if (Object.keys(guideFetchedData).length > 0 && guideFetchedData.id) {
+      document.title = `${guideFetchedData.name?.length ? guideFetchedData.name : guideFetchedData.id} | ${document.title}`;
+      detailsResponseHandler(guideFetchedData);
+      detailsResponseHandler(guideFetchedData, "#gas-guide-form");
+    }
+    return guideFetchedData;
+  }
+
+  // wrappers/GuideFormPage/utils/canSubmit.js
+  var isRequiredFilled = ($el, hasLen) => {
+    if (hasLen) {
+      isUserInputActive = true;
+      return true;
+    }
+    return false;
+  };
+  var highlightRequiredLabel = ($el) => {
+    if (($el.hasClass("gas-form-tinymce") ? tinyMCE.get($el.attr("id")).getContent() : $el.val())?.length) {
+      return $el.prev("label").removeClass("field-label-missing");
+    }
+    $el.prev("label").addClass("field-label-missing");
+  };
+  function canSubmit($elChanged, elemId2 = "#gas-guide-form") {
+    let allInputsFilled = false;
+    let allTextareasFilled = false;
+    if ($elChanged?.length) {
+      highlightRequiredLabel($elChanged);
+    }
+    for (const inp of $("input[name][required]", elemId2)) {
+      allInputsFilled = isRequiredFilled($(inp), $(inp).val()?.length);
+      if (!allInputsFilled) {
+        break;
+      }
+    }
+    for (const txt of $(".gas-form-tinymce", elemId2)) {
+      allTextareasFilled = isRequiredFilled(
+        $(txt),
+        tinyMCE.get($(txt).attr("id")).getContent()?.length
+      );
+      if (!allTextareasFilled) {
+        break;
+      }
+    }
+    if (allInputsFilled && allTextareasFilled) {
+      $(`${elemId2}-btn-submit`).removeClass("disabled-button").attr("disabled", false);
+    } else {
+      $(`${elemId2}-btn-submit`).addClass("disabled-button").attr("disabled", true);
+    }
+  }
+
+  // webflow/guide-form.js
+  var apiDomain = document.querySelector("meta[name=domain]")?.content;
+  var urlParams = new URLSearchParams(window.location.search);
+  var guideId = Number(urlParams.get("id")) || 0;
+  var isEditing = guideId > 0;
+  var achievementId = Number(urlParams.get("achievementId")) || 0;
+  var guideFetchedData2;
+  var elemIdPrefix = "#gas-guide";
+  var elemId = `${elemIdPrefix}-form`;
+  var formMessageDelay = 4e3;
+  var sectionsLimit = 4;
+  var sectionsCount = 2;
+  var $sectionTemp = $(".gas-form-section", elemId).last().clone();
+  var templatePrefix = "section-2";
+  $(".ga-loader-container").show();
+  $("#ga-sections-container").hide();
+  var editorChangeHandlerId;
+  var tmceObj = {
+    selector: ".gas-form-tinymce",
+    height: 200,
+    menubar: false,
+    toolbar_mode: "floating",
+    plugins: "link image lists",
+    toolbar: "undo redo | bold italic underline | numlist bullist",
+    content_style: "body { font-family:Gantari,sans-serif; font-size:1rem }",
+    setup: (editor) => {
+      editor.on("Paste Change input Undo Redo", (evt) => {
+        clearTimeout(editorChangeHandlerId);
+        editorChangeHandlerId = setTimeout(
+          () => canSubmit($(editor.targetElm)),
+          100
+        );
+      });
+    }
+  };
+  function delSection() {
+    if (confirm("Do you want to remove this section?")) {
+      canSubmit();
+      const $sec = $(this).parents(".gas-form-section");
+      tinyMCE.get($(".gas-form-tinymce", $sec).attr("id")).remove();
+      $sec.remove();
+      sectionsCount--;
+      $(".gas-form-section label[for$=-title]", elemId).each(
+        (secIdx, el) => $(el).text(`${secIdx + 1}${$(el).text().slice(1)}`)
+      );
+      if (sectionsCount <= sectionsLimit) {
+        $(".gas-form-section-add", elemId).show();
+      }
+    }
+  }
+  async function addSection() {
+    sectionsCount++;
+    $(`${elemId}-btn-submit`).addClass("disabled-button").attr("disabled", true);
+    const $newSection = $sectionTemp.clone().show();
+    const curSecId = `section-${sectionsCount}`;
+    $(`label[for=${templatePrefix}-title]`, $newSection).text(`${sectionsCount} \u203A section name*`).attr("for", `${curSecId}-title`);
+    $(`[name=${templatePrefix}-title]`, $newSection).attr("name", `${curSecId}-title`).on("focusout keyup", function() {
+      canSubmit($(this));
+    });
+    $(`label[for=${templatePrefix}-content]`, $newSection).attr(
+      "for",
+      `${curSecId}-content`
+    );
+    const tinyId = `${curSecId}-content`;
+    $(".gas-form-tinymce", $newSection).attr("id", tinyId).attr("name", tinyId).attr("data-name", tinyId);
+    $(".gas-form-section-del", $newSection).on("click", delSection);
+    $(".gas-form-sections", elemId).append($newSection);
+    tmceObj.selector = `#${tinyId}`;
+    await tinymce.init(tmceObj);
+    if (sectionsCount > sectionsLimit) {
+      $(".gas-form-section-add", elemId).hide();
+    }
+  }
+  async function setupForm() {
+    $(".gas-form-tinymce", $sectionTemp).removeAttr("id");
+    await tinymce.init(tmceObj);
+    if (isEditing && guideFetchedData2?.id === guideId) {
+      $("[name=guide-title]", elemId).val(guideFetchedData2.name);
+      $("[name=guide-description]", elemId).val(guideFetchedData2.description);
+      guideFetchedData2.sections.forEach(async (sec, secIdx) => {
+        if (secIdx > 1 && secIdx < guideFetchedData2.sections.length) {
+          await addSection();
+        }
+        $(`[name=section-${secIdx + 1}-title]`).val(sec.title);
+        tinyMCE.get(`section-${secIdx + 1}-content`).setContent(sec.content);
+      });
+    }
+    $(".gas-form-section-add", elemId).on("click", addSection);
+    $(".gas-form-section-del", elemId).on("click", delSection);
+    $(`${elemId}-btn-cancel`, elemId).on("click", (evt) => {
+      evt.preventDefault();
+      const $popupWrapper = $("#gas-popup-leave-confirmation");
+      $popupWrapper.css({ opacity: 1, display: "flex" });
+      $(".gas-popup-btn-close", $popupWrapper).one("click", (evt2) => {
+        evt2.preventDefault();
+        $popupWrapper.hide();
+      });
+      $(".gas-popup-btn-leave", $popupWrapper).one("click", (evt2) => {
+        evt2.preventDefault();
+        isUserInputActive = false;
+        $popupWrapper.hide();
+        redirectAway();
+      });
+    });
+    $(`${elemId}-btn-submit`).attr("disabled", true);
+    const submitText = $(`${elemId}-btn-submit`).val();
+    const $errEl = $(".gas-form-error", elemId);
+    const $errorDiv = $("div", $errEl);
+    const txtError = $errEl.text();
+    const $successEl = $(".gas-form-success", elemId);
+    $("input[name][required]", elemId).on("focusout keyup", function() {
+      canSubmit($(this));
+    });
+    $(`${elemId}-btn-submit`).on("click", async (e) => {
+      e.preventDefault();
+      $(`${elemId}-btn-submit`).addClass("disabled-button").attr("disabled", true);
+      isUserInputActive = false;
+      $(`${elemId}-btn-submit`).val($(`${elemId}-btn-submit`).data("wait"));
+      const sections = [];
+      $(".gas-form-section", elemId).each(function() {
+        sections.push({
+          title: $("input[name$=-title]", this).val(),
+          content: tinyMCE.get($(".gas-form-tinymce", this).attr("id")).getContent()
+        });
+      });
+      const reqData = {
+        author: "GA user",
+        title: $("[name=guide-title]", elemId).val(),
+        description: $("[name=guide-description]", elemId).val(),
+        sections
+      };
+      let method = "POST";
+      let guideURL = `https://${apiDomain}/api/guide`;
+      if (isEditing) {
+        guideURL += `/${guideId}`;
+        method = "PUT";
+        reqData.author = guideFetchedData2.author;
+        reqData.profileId = guideFetchedData2.profileId;
+      } else {
+        if (!userProfileData) {
+          $errEl.show();
+          $errorDiv.text(
+            "Issue on accessing your data for saving. Please try again later."
+          );
+          $(`${elemId}-btn-submit`).val(submitText);
+          setTimeout(() => {
+            $errEl.hide();
+            $errorDiv.text(txtError);
+          }, formMessageDelay);
+          return;
+        }
+        reqData.profileId = userProfileData.id;
+        reqData.author = userProfileData.name;
+        reqData.achievementId = achievementId;
+      }
+      const resFecth = await fetch(guideURL, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(reqData)
+      });
+      const revData = await resFecth.json();
+      if (![200, 201].includes(resFecth.status)) {
+        $errEl.show();
+        $errorDiv.text(revData?.message);
+        $(`${elemId}-btn-submit`).val(submitText).removeClass("disabled-button").attr("disabled", false);
+        setTimeout(() => {
+          $errEl.hide();
+          $errorDiv.text(txtError);
+        }, formMessageDelay);
+        return;
+      }
+      $successEl.show();
+      $(`${elemId}-btn-submit`).val(submitText);
+      setTimeout(() => {
+        $(`${elemId}-fields`).hide();
+      }, formMessageDelay / 5);
+      setTimeout(() => {
+        isUserInputActive = false;
+        $successEl.hide();
+        redirectAway();
+      }, formMessageDelay);
+    });
+  }
+  function redirectAway() {
+    window.location.replace(
+      isEditing ? `/guide?id=${guideId}` : achievementId > 0 ? `/achievement?id=${achievementId}` : "/guides"
+    );
+  }
+  $(async () => {
+    await auth0Bootstrap();
+    if (!token) {
+      console.log("User not authenticated");
+      redirectAway();
+      return;
+    }
+    if (isEditing) {
+      guideFetchedData2 = await fetchGuide(apiDomain, guideId);
+      if (guideFetchedData2?.achievementId > 0) {
+        const resFetch = await fetch(
+          `https://${apiDomain}/api/achievement/${guideFetchedData2.achievementId}/guide-auth-user-data`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (resFetch.status !== 200) {
+          console.log("User not found/issue, cannot access to guide edition");
+          redirectAway();
+          return;
+        }
+        const revData = await resFetch.json();
+        if (!revData.ownedGuideId) {
+          console.log("This form does not belong to the creator");
+          redirectAway();
+          return;
+        }
+      }
+    } else if (achievementId > 0) {
+      await fetchAchievement(apiDomain, achievementId);
+    } else {
+      console.log("no valid parameter provided");
+      redirectAway();
+      return;
+    }
+    await setupForm();
+    $(".ga-loader-container").hide();
+    $("#ga-sections-container").show();
+  });
+})();

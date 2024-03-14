@@ -23,11 +23,21 @@ const setupLinkForms = (platformsLinked = []) => {
     $(`${elemIdPrefix}-pa-code-btn`).hide();
   }
 
+  //setup form TO UNLINK platforms
   for (const el of platformsLinked) {
     unlinkPlatform(el, platformsToLink, formMessageDelay);
   }
 
-  platformsToLink.map((el) => linkPlatform(el, formMessageDelay));
+  //setup form TO LINK platforms
+  const platformsNotLinked = platformsToLink.filter(
+    (el) =>
+      !platformsLinked
+        .map(({ platform }) => platform.toLowerCase())
+        .includes(el)
+  );
+  for (const el of platformsNotLinked) {
+    linkPlatform(el, formMessageDelay);
+  }
 };
 
 function profileResponseHandler(res, fetchURLPrefix) {
@@ -123,6 +133,13 @@ function profileResponseHandler(res, fetchURLPrefix) {
       });
     }
   }
+
+  //replace name with logged user name on community section
+  let $entryElem = $('.community-div .heading-description-wrapper');
+  const $entryElemTemplate = $entryElem
+    .prop('outerHTML')
+    .replaceAll('{|name|}', res.name);
+  $entryElem = $entryElem.prop('outerHTML', $entryElemTemplate);
 }
 
 export async function fetchGAUserData(fetchURLPrefix, profileId) {
