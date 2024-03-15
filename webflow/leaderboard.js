@@ -4,7 +4,7 @@ import { setupListSearch } from '../utils';
 $('.ga-loader-container').show();
 $('#ga-sections-container').hide();
 
-$(async () => {
+$().ready(async () => {
   const elemId = '#gas-leaderboard';
   await auth0Bootstrap();
   setupListSearch(elemId, fetchLeaderboard);

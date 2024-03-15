@@ -2,7 +2,7 @@ import { filterByLetter } from '../wrappers/GamesPage/FilterByLetter';
 import { fetchGames } from '../wrappers/GamesPage/GamesData';
 import { setupListSearch } from '../utils';
 
-$(async () => {
+$().ready(async () => {
   await auth0Bootstrap();
   const gamesElemId = '#gas-list-games';
   $(`${gamesElemId} .gas-filters-sw-li`).on('click', (ev) =>

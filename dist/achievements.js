@@ -166,7 +166,7 @@
   }
 
   // webflow/achievements.js
-  $(async () => {
+  $().ready(async () => {
     await auth0Bootstrap();
     const achievementsElemId = "#gas-list-achievements";
     $(`${achievementsElemId} .gas-filters-sw-li`).on(

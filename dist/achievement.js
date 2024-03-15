@@ -313,7 +313,7 @@
   var elemIdPrefix = "#gas-achievement";
   $(".ga-loader-container").show();
   $("#ga-sections-container").hide();
-  $(async () => {
+  $().ready(async () => {
     await auth0Bootstrap();
     await verifyAuthenticatedUserGuideData(
       elemIdPrefix,

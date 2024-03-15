@@ -279,7 +279,7 @@
   // webflow/home.js
   var apiDomain = document.querySelector("meta[name=domain]")?.content;
   var elemIdPrefix = "#gas-home";
-  $(async () => {
+  $().ready(async () => {
     $(".ga-loader-container").show();
     await auth0Bootstrap();
     await Promise.all(

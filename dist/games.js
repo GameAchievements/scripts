@@ -152,7 +152,7 @@
   }
 
   // webflow/games.js
-  $(async () => {
+  $().ready(async () => {
     await auth0Bootstrap();
     const gamesElemId = "#gas-list-games";
     $(`${gamesElemId} .gas-filters-sw-li`).on(

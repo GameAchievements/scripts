@@ -281,7 +281,7 @@ function redirectAway() {
       : '/guides'
   );
 }
-$(async () => {
+$().ready(async () => {
   if ((await auth0Bootstrap(), token)) {
     if (isEditing) {
       if ((await fetchGuide(), guideFetchedData?.achievementId > 0)) {

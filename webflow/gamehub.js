@@ -18,7 +18,7 @@ const elemIdPrefix = '#gas-gh';
 $('.ga-loader-container').show();
 $('#ga-sections-container').hide();
 
-$(async () => {
+$().ready(async () => {
   await auth0Bootstrap();
   const gamehubData = await fetchGamehub(gamehubURL, gameId);
   if (gamehubData) {

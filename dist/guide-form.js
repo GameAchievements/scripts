@@ -315,7 +315,7 @@
       isEditing ? `/guide?id=${guideId}` : achievementId > 0 ? `/achievement?id=${achievementId}` : "/guides"
     );
   }
-  $(async () => {
+  $().ready(async () => {
     await auth0Bootstrap();
     if (!token) {
       console.log("User not authenticated");

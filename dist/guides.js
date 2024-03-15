@@ -154,7 +154,7 @@
 
   // webflow/guides.js
   var elemId = "#gas-list-guides";
-  $(async () => {
+  $().ready(async () => {
     await auth0Bootstrap();
     setupListSearch(elemId, fetchGuides);
     await fetchGuides(elemId);

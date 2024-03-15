@@ -78,7 +78,7 @@
       }, formMessageDelay);
     });
   };
-  $(async () => {
+  $().ready(async () => {
     await auth0Bootstrap();
     const roleName = userProfileData?.role?.toLowerCase();
     if (roleName !== "manager") {

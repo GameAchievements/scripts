@@ -189,7 +189,7 @@
       isEditing ? `/guide?id=${guideId}` : achievementId > 0 ? `/achievement?id=${achievementId}` : "/guides"
     );
   }
-  $(async () => {
+  $().ready(async () => {
     if (await auth0Bootstrap(), token) {
       if (isEditing) {
         if (await fetchGuide(), guideFetchedData?.achievementId > 0) {
