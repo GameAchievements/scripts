@@ -24,14 +24,7 @@ export async function loadGames(elemIdPrefix, apiDomain, profileId) {
   listResponseHandler({
     listData,
     elemId,
-    numKeysToReplace: [
-      'id',
-      'gaUserScore',
-      'gaTotalScore',
-      'userAchievementsCount',
-      'achievementsCount',
-      'completion',
-    ],
+    numKeysToReplace: ['id', 'gaUserScore', 'gaTotalScore'],
     textKeysToReplace: ['name', 'description'],
   });
   $(`${elemId} .ga-loader-container`).hide();

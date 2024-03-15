@@ -7,6 +7,8 @@ import {
   isXboxEdsImage,
   showConsole,
   listTemplateAppend,
+  showUserAchievements,
+  showCompletion,
 } from '../../../utils';
 
 export function listResponseHandler({
@@ -67,6 +69,21 @@ export function listResponseHandler({
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
             Math.round(value || 0)
+          );
+        } else if (key === 'userAchievementsCount') {
+          dataTemplateActual = showUserAchievements(
+            {
+              userAchievementsCount: item.userAchievementsCount,
+              achievementsCount: item.achievementsCount,
+            },
+            dataTemplateActual,
+            '.gh-row'
+          );
+        } else if (key === 'completion') {
+          dataTemplateActual = showCompletion(
+            value,
+            dataTemplateActual,
+            '.gh-row'
           );
         } else if (
           key === 'importedFromPlatform' ||

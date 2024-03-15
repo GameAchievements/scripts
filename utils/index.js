@@ -14,6 +14,8 @@ import {
 import { listTemplateAppend } from './templateReplacers/listTemplateAppend';
 import { showPlatform } from './templateReplacers/showPlatform';
 import { showConsole } from './templateReplacers/showConsole';
+import { showUserAchievements } from './templateReplacers/showUserAchievements';
+import { showCompletion } from './templateReplacers/showCompletion';
 import { showAchievementUnlocked } from './templateReplacers/showAchievementUnlocked';
 import { showTrophy } from './templateReplacers/showTrophy';
 import { showImageFromSrc } from './templateReplacers/showImageFromSrc';
@@ -38,8 +40,10 @@ export {
   listTemplateAppend,
   showPlatform,
   showConsole,
+  showUserAchievements,
   showRarityTagAchievement,
   showAchievementUnlocked,
+  showCompletion,
   showTrophy,
   showImageFromSrc,
   showRarityTag,
