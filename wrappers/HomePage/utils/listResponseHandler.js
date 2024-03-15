@@ -6,6 +6,7 @@ import {
   isSteamImage,
   isXboxEdsImage,
   truncateText,
+  ratingSVG,
 } from '../../../utils';
 
 export function listResponseHandler({
@@ -94,6 +95,18 @@ export function listResponseHandler({
                 Math.round(value[drillReplaceKey] || 0)
               );
             }
+          }
+        } else if (key === 'rating') {
+          dataTemplateActual = dataTemplateActual.replaceAll(
+            `{|${key}|}`,
+            Math.round(value || 0)
+          );
+          const $rateWrapper = $('.gas-list-entry-rating', dataTemplateActual);
+          if ($rateWrapper.length) {
+            dataTemplateActual = $rateWrapper
+              .prepend(ratingSVG(value))
+              .parents('.gas-list-entry')
+              .prop('outerHTML');
           }
         }
       }

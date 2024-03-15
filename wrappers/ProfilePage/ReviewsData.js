@@ -26,7 +26,7 @@ export async function loadReviews(elemIdPrefix, apiDomain, profileId) {
   listResponseHandler({
     listData,
     elemId,
-    numKeysToReplace: ['id', 'rating'],
+    numKeysToReplace: ['id' /*'rating'*/],
     textKeysToReplace: [
       'name',
       'gameName',
