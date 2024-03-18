@@ -78,13 +78,14 @@ export async function versionAchievementsFetcher(versionGameId, platformId) {
           );
         } else if (key === 'trophyType' && platformId === 1) {
           dataTemplateActual = showTrophy(value, dataTemplateActual);
-        } else if (key === 'userProgress') {
+        } else if (key === 'userProgress' || !item.userProgress) {
           dataTemplateActual = showAchievementUnlocked(
             value,
             dataTemplateActual
           );
         }
       }
+
       listTemplateAppend(
         $list,
         dataTemplateActual,
