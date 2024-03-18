@@ -48,16 +48,16 @@
 
   // utils/templateReplacers/setupListSearch.js
   var setupListSearch = (elemId2, fetchFn, extraParams = {}) => {
+    console.log("first", $(`${elemId2} .search-input`));
+    $(`${elemId2} .search-input`).removeAttr("required");
     $(`${elemId2} form.search`).on("submit", async function(evt) {
       evt.preventDefault();
       searchTerm = new URLSearchParams($(this).serialize()).get("query");
-      if (searchTerm?.length) {
-        $(".ga-loader-container", elemId2).show();
-        $(".gas-list,.gas-list-results-info", elemId2).hide();
-        await fetchFn(elemId2, searchTerm, extraParams);
-        $(".gas-list-results-info", elemId2).show();
-        $(".ga-loader-container").hide();
-      }
+      $(".ga-loader-container", elemId2).show();
+      $(".gas-list,.gas-list-results-info", elemId2).hide();
+      await fetchFn(elemId2, searchTerm, extraParams);
+      $(".gas-list-results-info", elemId2).show();
+      $(".ga-loader-container").hide();
     });
   };
 

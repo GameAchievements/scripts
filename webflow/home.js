@@ -14,10 +14,10 @@ $(async () => {
   await Promise.all(
     ['recent', 'top'].map(
       async (type) => await fetchGames(type, apiDomain, elemIdPrefix)
-    )
+    ),
+    await homeMetricsHandler(apiDomain),
+    await fetchGuides(elemIdPrefix, apiDomain),
+    await fetchAchievements(elemIdPrefix, apiDomain),
+    await fetchLatestThreads(elemIdPrefix)
   );
-  await homeMetricsHandler(apiDomain);
-  await fetchGuides(elemIdPrefix, apiDomain);
-  await fetchAchievements(elemIdPrefix, apiDomain);
-  await fetchLatestThreads(elemIdPrefix);
 });
