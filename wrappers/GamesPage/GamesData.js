@@ -30,6 +30,7 @@ function listResponseHandler({
     dataTemplate = $entryTemplate.prop('outerHTML');
     $list.html($listHeader);
     listData.forEach((item, resIdx) => {
+      console.log('item', item);
       let dataTemplateActual = dataTemplate;
       for (const [key, value] of Object.entries(item)) {
         const imageURL = item.iconURL || item.imageURL;
