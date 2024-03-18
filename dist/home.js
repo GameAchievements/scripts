@@ -36,7 +36,6 @@
       xbox: { rgx: /xbox/gi },
       steam: { rgx: /steam|pc|windows|mac|linux/gi }
     };
-    console.log("platformName", platformName);
     if (platformVerifier.ps.rgx.test(platformName)) {
       templateTemp = $(".gas-platform-psn", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }

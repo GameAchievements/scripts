@@ -22,7 +22,6 @@
       xbox: { rgx: /xbox/gi },
       steam: { rgx: /steam|pc|windows|mac|linux/gi }
     };
-    console.log("platformName", platformName);
     if (platformVerifier.ps.rgx.test(platformName)) {
       templateTemp = $(".gas-platform-psn", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
     }
@@ -98,7 +97,6 @@
               Math.round(value || 0)
             );
           } else if (key === "importedFromPlatform" || key === "platform") {
-            console.log("innnn");
             dataTemplateActual = showPlatform(value, dataTemplateActual);
           } else if (key === "consoles" && value?.length && !value.includes("PC")) {
             const $tags = $(`.gas-tags-${key}`, dataTemplateActual);
