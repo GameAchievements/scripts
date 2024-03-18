@@ -1,5 +1,4 @@
 export const setupListSearch = (elemId, fetchFn, extraParams = {}) => {
-  console.log('first', $(`${elemId} .search-input`));
   $(`${elemId} .search-input`).removeAttr('required');
   $(`${elemId} form.search`).on('submit', async function (evt) {
     evt.preventDefault();

@@ -13,9 +13,10 @@ const apiDomain = document.querySelector('meta[name=domain]')?.content;
 export async function versionAchievementsFetcher(versionGameId, platformId) {
   const elemId = `${elemIdPrefix}-achievements`;
   const $loader = $(`${elemId} .ga-loader-container`);
+  $(`${elemId} .achievement-table`).hide();
   const $list = $(
     `${elemId} .${
-      platformId === 1 ? 'psn' : platformId === 2 ? 'xbox' : 'xbox' //'steam'
+      platformId === 1 ? 'psn' : platformId === 2 ? 'xbox' : 'xbox' //'steam' //TODO: missing the right table for this
     }-achievement-list`
   );
   const $emptyList = $(`${elemId} .empty-state`);
@@ -96,6 +97,7 @@ export async function versionAchievementsFetcher(versionGameId, platformId) {
     $list.css({ display: 'flex', 'flex-direction': 'column' });
     $emptyList.hide();
   } else {
+    console.log('empty');
     $loader.hide();
     $list.hide();
     $emptyList.show();
