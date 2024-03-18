@@ -83,7 +83,7 @@ const setupIGDBForm = () => {
   });
 };
 
-$().ready(async () => {
+$(async () => {
   await auth0Bootstrap();
   const roleName = userProfileData?.role?.toLowerCase();
   if (roleName !== 'manager') {

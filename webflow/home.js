@@ -8,7 +8,7 @@ const apiDomain = document.querySelector('meta[name=domain]')?.content;
 
 const elemIdPrefix = '#gas-home';
 
-$().ready(async () => {
+$(async () => {
   $('.ga-loader-container').show();
   await auth0Bootstrap();
   await Promise.all(

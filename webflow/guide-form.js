@@ -229,7 +229,7 @@ function redirectAway() {
   );
 }
 
-$().ready(async () => {
+$(async () => {
   await auth0Bootstrap();
   if (!token) {
     console.log('User not authenticated');

@@ -51,7 +51,7 @@ function listResponseHandler({
             `{|${key}|}`,
             Math.round(value || 0)
           );
-        } else if (key === 'importedFromPlatform') {
+        } else if (key === 'importedFromPlatform' || key === 'platform') {
           dataTemplateActual = showPlatform(value, dataTemplateActual);
         } else if (
           key === 'consoles' &&

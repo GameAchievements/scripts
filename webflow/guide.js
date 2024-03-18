@@ -9,7 +9,7 @@ const guideId = urlParams.get('id') || 1;
 $('.ga-loader-container').show();
 $('#ga-sections-container').hide();
 
-$().ready(async () => {
+$(async () => {
   await auth0Bootstrap();
   if (await fetchGuide(apiDomain, guideId)) {
     await verifyAuthenticatedUserGuideData();

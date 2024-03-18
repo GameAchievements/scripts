@@ -1,1 +1,1 @@
-(()=>{$().ready(async()=>{await auth0Bootstrap()});})();
+(()=>{$(async()=>{await auth0Bootstrap()});})();
