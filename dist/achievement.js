@@ -1,3 +1,337 @@
-(()=>{async function b(t,r,a,o){if($(`${t}-btn-guide-edit`).hide(),!r)return;let e=await fetch(`https://${a}/api/achievement/${o}/guide-auth-user-data`,{headers:{Authorization:`Bearer ${r}`}});if(e.status!==200)return;let c=await e.json();c?.ownedGuideId>0&&($(`${t}-btn-guide-create`).hide(),$(`${t}-btn-guide-edit`).attr("href",`/guide-form?id=${c.ownedGuideId}`).show())}var v=t=>{let r=new Date(t),a=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],o=`${r.getDate()} ${a[r.getMonth()]}, ${r.getFullYear()}`,e=r.toLocaleTimeString().toLowerCase();return{date:o,time:e}};var T=t=>t?.length?t.replace(/"(\w)/g,"\u201C$1").replace(/(\w)"/g,"$1\u201D").replaceAll('"',"'"):t;var L=t=>{if(t<25)return"common";if(t<50)return"rare";if(t<75)return"very-rare";if(t>=75)return"ultra-rare"},C=(t,r,a=".hero-section-achievement")=>{let o=r,e=L(t);return o=$(".rarity-tag-wrapper",o).children(`:not(.gas-rarity-tag-${e})`).hide().parents(a).prop("outerHTML"),o};var A=(t,r,a=".gas-list-entry")=>{let o=r,e={ps:{rgx:/playstation/gi},xbox:{rgx:/xbox/gi},steam:{rgx:/steam|pc|windows|mac|linux/gi}};return console.log("platformName",t),e.ps.rgx.test(t)&&(o=$(".gas-platform-psn",o).css("display","inherit").parents(a).prop("outerHTML")),e.steam.rgx.test(t)&&(o=$(".gas-platform-steam",o).css("display","inherit").parents(a).prop("outerHTML")),e.xbox.rgx.test(t)&&(o=$(".gas-platform-xbox",o).css("display","inherit").parents(a).prop("outerHTML")),o};var u=(t,r,a=".gas-list-entry")=>t.removeAttr("srcset").removeAttr("sizes").attr("src",r).parents(a).prop("outerHTML");function I({listsData:t,listResultsKey:r,elemId:a,textKeysToReplace:o}){console.info(`=== ${a} results ===`,t);let e=$(a),c=e.prop("outerHTML"),i=$(".gas-list-empty",e),p=e.children().first(),n=$(".gas-list-entry",e).first();e.html(p);let l=t[r];l?.length>0?(n.show(),e.append(n),c=n.prop("outerHTML"),n.hide(),l.forEach((h,f)=>{let s=c;for(let[m,d]of Object.entries(h)){let g=$(".gas-list-entry-cover",s);if(g?.length&&h.iconURL?.length&&(s=u(g,h.iconURL)||s),s=s.replaceAll("{|idx|}",f+1),m==="unlockedAt"){let{date:R,time:S}=v(d);s=s.replaceAll("{|unlockedDt|}",R||"N.A."),s=s.replaceAll(`{|${m}|}`,S||"N.A.")}else o.includes(m)&&(s=s.replaceAll(`{|${m}|}`,d||""))}e.append(s).children().last().removeClass(["bg-light","bg-dark"]).addClass(`bg-${f%2>0?"light":"dark"}`)})):(e.append(i),i.show()),e.show()}async function M({elemIdPrefix:t,apiDomain:r,achievementId:a},{listName:o,type:e,textKeysToReplace:c}){let i=`${t}-${o}-${e==="last"?"latest":e}`,n=await(await fetch(`https://${r}/api/achievement/${a}/${o}?type=${e}`)).json();I({listsData:n,listResultsKey:o,elemId:i,textKeysToReplace:c})}async function H(t,r,a){await M({elemIdPrefix:t,apiDomain:r,achievementId:a},{listName:"achievers",type:"first",textKeysToReplace:["name","profileId"]}),await M({elemIdPrefix:t,apiDomain:r,achievementId:a},{listName:"achievers",type:"last",textKeysToReplace:["name","profileId"]})}function j({listData:t,listResultsKey:r,elemId:a,numKeysToReplace:o,textKeysToReplace:e}){console.info(`=== ${a} results ===`,t);let c=$(a).prop("outerHTML"),i=$(`${a} .gas-list`),p=$(".gas-list-empty",i);if(t.count>0&&t[r]?.length){let n=i.children().first(),l=$(".gas-list-entry",i).first();l.show(),c=l.prop("outerHTML"),i.html(n).append(l),l.hide(),t[r].forEach((h,f)=>{let s=c;for(let[m,d]of Object.entries(h)){let g=$(".gas-list-entry-cover",s);g?.length&&h.iconURL?.length&&(s=u(g,h.iconURL)||s),e.includes(m)?s=s.replaceAll(`{|${m}|}`,T(d)||""):o.includes(m)&&(s=s.replaceAll(`{|${m}|}`,Math.round(d||0)))}i.append(s).children().last().removeClass(["bg-light","bg-dark"]).addClass(`bg-${f%2>0?"light":"dark"}`)})}else i.html(p),p.show();i.css("display","flex")}async function O({elemIdPrefix:t,apiDomain:r,achievementId:a},{listName:o,numKeysToReplace:e,textKeysToReplace:c}){let i=`${t}-${o}`,n=await(await fetch(`https://${r}/api/achievement/${a}/${o}`)).json();j({listData:n,listResultsKey:o,elemId:i,numKeysToReplace:e,textKeysToReplace:c})}async function k(t,r,a){await O({elemIdPrefix:t,apiDomain:r,achievementId:a},{listName:"guides",numKeysToReplace:["id","commentsCount","viewsCount","likesCount"],textKeysToReplace:["profileId","name","description","author"]})}function V(t,r){let a=`${t}-details`,o=$(a),e=o.prop("outerHTML");console.info(`=== ${a} ===`,r);let c=["id","name","description","gameId","gameName"],i=["achievers","completionPercentage","guides","gaPoints"],p=r.coverURL||r.imageURL||r.gameImageURL;p?.length&&(e=o.css("background-image",`linear-gradient(rgba(255,255,255,0),#030922),
+(() => {
+  // wrappers/AchievementPage/VerifyAuthUserGuideData.js
+  async function verifyAuthenticatedUserGuideData(elemIdPrefix2, token2, apiDomain2, achievementId2) {
+    $(`${elemIdPrefix2}-btn-guide-edit`).hide();
+    if (!token2) {
+      return;
+    }
+    const resFetch = await fetch(
+      `https://${apiDomain2}/api/achievement/${achievementId2}/guide-auth-user-data`,
+      { headers: { Authorization: `Bearer ${token2}` } }
+    );
+    if (resFetch.status !== 200) {
+      return;
+    }
+    const revData = await resFetch.json();
+    if (revData?.ownedGuideId > 0) {
+      $(`${elemIdPrefix2}-btn-guide-create`).hide();
+      $(`${elemIdPrefix2}-btn-guide-edit`).attr("href", `/guide-form?id=${revData.ownedGuideId}`).show();
+    }
+  }
+
+  // utils/dateTIme.js
+  var gaDateTime = (isoDate) => {
+    const dateObj = new Date(isoDate);
+    const month = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
+    ];
+    const date = `${dateObj.getDate()} ${month[dateObj.getMonth()]}, ${dateObj.getFullYear()}`;
+    const time = dateObj.toLocaleTimeString().toLowerCase();
+    return { date, time };
+  };
+
+  // utils/cleanupDoubleQuotes.js
+  var cleanupDoubleQuotes = (content) => content?.length ? content.replace(/"(\w)/g, "\u201C$1").replace(/(\w)"/g, "$1\u201D").replaceAll('"', "'") : content;
+
+  // utils/templateReplacers/showRarityTagAchievement.js
+  var rarityClassCalc2 = (percent) => {
+    if (percent < 25) {
+      return "common";
+    }
+    if (percent < 50) {
+      return "rare";
+    }
+    if (percent < 75) {
+      return "very-rare";
+    }
+    if (percent >= 75) {
+      return "ultra-rare";
+    }
+  };
+  var showRarityTagAchievement = (percentageNumber, dataTemplateActual, parent = ".hero-section-achievement") => {
+    let templateTemp = dataTemplateActual;
+    const classValue = rarityClassCalc2(percentageNumber);
+    templateTemp = $(".rarity-tag-wrapper", templateTemp).children(`:not(.gas-rarity-tag-${classValue})`).hide().parents(parent).prop("outerHTML");
+    return templateTemp;
+  };
+
+  // utils/templateReplacers/showPlatform.js
+  var showPlatform = (platformName, dataTemplateActual, parentSelector = ".gas-list-entry") => {
+    let templateTemp = dataTemplateActual;
+    const platformVerifier = {
+      ps: { rgx: /playstation/gi },
+      xbox: { rgx: /xbox/gi },
+      steam: { rgx: /steam|pc|windows|mac|linux/gi }
+    };
+    console.log("platformName", platformName);
+    if (platformVerifier.ps.rgx.test(platformName)) {
+      templateTemp = $(".gas-platform-psn", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+    }
+    if (platformVerifier.steam.rgx.test(platformName)) {
+      templateTemp = $(".gas-platform-steam", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+    }
+    if (platformVerifier.xbox.rgx.test(platformName)) {
+      templateTemp = $(".gas-platform-xbox", templateTemp).css("display", "inherit").parents(parentSelector).prop("outerHTML");
+    }
+    return templateTemp;
+  };
+
+  // utils/templateReplacers/showImageFromSrc.js
+  var showImageFromSrc = ($img, url, parentSelector = ".gas-list-entry") => $img.removeAttr("srcset").removeAttr("sizes").attr("src", url).parents(parentSelector).prop("outerHTML");
+
+  // wrappers/AchievementPage/AchieversSection.js
+  function achieversHandler({
+    listsData,
+    listResultsKey,
+    elemId,
+    textKeysToReplace
+  }) {
+    console.info(`=== ${elemId} results ===`, listsData);
+    const $list = $(elemId);
+    let dataTemplate = $list.prop("outerHTML");
+    const $emptyList = $(".gas-list-empty", $list);
+    const $listHeader = $list.children().first();
+    const $entryTemplate = $(".gas-list-entry", $list).first();
+    $list.html($listHeader);
+    const listDataToRead = listsData[listResultsKey];
+    if (listDataToRead?.length > 0) {
+      $entryTemplate.show();
+      $list.append($entryTemplate);
+      dataTemplate = $entryTemplate.prop("outerHTML");
+      $entryTemplate.hide();
+      listDataToRead.forEach((item, itemIdx) => {
+        let dataTemplateActual = dataTemplate;
+        for (const [key, value] of Object.entries(item)) {
+          const $entryImg = $(".gas-list-entry-cover", dataTemplateActual);
+          if ($entryImg?.length && item.iconURL?.length) {
+            dataTemplateActual = showImageFromSrc($entryImg, item.iconURL) || dataTemplateActual;
+          }
+          dataTemplateActual = dataTemplateActual.replaceAll(
+            "{|idx|}",
+            itemIdx + 1
+          );
+          if (key === "unlockedAt") {
+            const { date, time } = gaDateTime(value);
+            dataTemplateActual = dataTemplateActual.replaceAll(
+              "{|unlockedDt|}",
+              date || "N.A."
+            );
+            dataTemplateActual = dataTemplateActual.replaceAll(
+              `{|${key}|}`,
+              time || "N.A."
+            );
+          } else if (textKeysToReplace.includes(key)) {
+            dataTemplateActual = dataTemplateActual.replaceAll(
+              `{|${key}|}`,
+              value || ""
+            );
+          }
+        }
+        $list.append(dataTemplateActual).children().last().removeClass(["bg-light", "bg-dark"]).addClass(`bg-${itemIdx % 2 > 0 ? "light" : "dark"}`);
+      });
+    } else {
+      $list.append($emptyList);
+      $emptyList.show();
+    }
+    $list.show();
+  }
+  async function achieversFetcher({ elemIdPrefix: elemIdPrefix2, apiDomain: apiDomain2, achievementId: achievementId2 }, { listName, type, textKeysToReplace }) {
+    const elemId = `${elemIdPrefix2}-${listName}-${type === "last" ? "latest" : type}`;
+    const resLists = await fetch(
+      `https://${apiDomain2}/api/achievement/${achievementId2}/${listName}?type=${type}`
+    );
+    const listsData = await resLists.json();
+    achieversHandler({
+      listsData,
+      listResultsKey: listName,
+      elemId,
+      textKeysToReplace
+    });
+  }
+  async function loadAchieversSection(elemIdPrefix2, apiDomain2, achievementId2) {
+    await achieversFetcher(
+      { elemIdPrefix: elemIdPrefix2, apiDomain: apiDomain2, achievementId: achievementId2 },
+      {
+        listName: "achievers",
+        type: "first",
+        textKeysToReplace: ["name", "profileId"]
+      }
+    );
+    await achieversFetcher(
+      { elemIdPrefix: elemIdPrefix2, apiDomain: apiDomain2, achievementId: achievementId2 },
+      {
+        listName: "achievers",
+        type: "last",
+        textKeysToReplace: ["name", "profileId"]
+      }
+    );
+  }
+
+  // wrappers/AchievementPage/GuidesSection.js
+  function listResponseHandler({
+    listData,
+    listResultsKey,
+    elemId,
+    numKeysToReplace,
+    textKeysToReplace
+  }) {
+    console.info(`=== ${elemId} results ===`, listData);
+    let dataTemplate = $(elemId).prop("outerHTML");
+    const $list = $(`${elemId} .gas-list`);
+    const $emptyList = $(".gas-list-empty", $list);
+    if (listData.count > 0 && listData[listResultsKey]?.length) {
+      const $listHeader = $list.children().first();
+      const $entryTemplate = $(".gas-list-entry", $list).first();
+      $entryTemplate.show();
+      dataTemplate = $entryTemplate.prop("outerHTML");
+      $list.html($listHeader).append($entryTemplate);
+      $entryTemplate.hide();
+      listData[listResultsKey].forEach((item, resIdx) => {
+        let dataTemplateActual = dataTemplate;
+        for (const [key, value] of Object.entries(item)) {
+          const $entryImg = $(".gas-list-entry-cover", dataTemplateActual);
+          if ($entryImg?.length && item.iconURL?.length) {
+            dataTemplateActual = showImageFromSrc($entryImg, item.iconURL) || dataTemplateActual;
+          }
+          if (textKeysToReplace.includes(key)) {
+            dataTemplateActual = dataTemplateActual.replaceAll(
+              `{|${key}|}`,
+              cleanupDoubleQuotes(value) || ""
+            );
+          } else if (numKeysToReplace.includes(key)) {
+            dataTemplateActual = dataTemplateActual.replaceAll(
+              `{|${key}|}`,
+              Math.round(value || 0)
+            );
+          }
+        }
+        $list.append(dataTemplateActual).children().last().removeClass(["bg-light", "bg-dark"]).addClass(`bg-${resIdx % 2 > 0 ? "light" : "dark"}`);
+      });
+    } else {
+      $list.html($emptyList);
+      $emptyList.show();
+    }
+    $list.css("display", "flex");
+  }
+  async function listFetcher({ elemIdPrefix: elemIdPrefix2, apiDomain: apiDomain2, achievementId: achievementId2 }, { listName, numKeysToReplace, textKeysToReplace }) {
+    const elemId = `${elemIdPrefix2}-${listName}`;
+    const resList = await fetch(
+      `https://${apiDomain2}/api/achievement/${achievementId2}/${listName}`
+    );
+    const listData = await resList.json();
+    listResponseHandler({
+      listData,
+      listResultsKey: listName,
+      elemId,
+      numKeysToReplace,
+      textKeysToReplace
+    });
+  }
+  async function loadGuidesSection(elemIdPrefix2, apiDomain2, achievementId2) {
+    await listFetcher(
+      { elemIdPrefix: elemIdPrefix2, apiDomain: apiDomain2, achievementId: achievementId2 },
+      {
+        listName: "guides",
+        numKeysToReplace: ["id", "commentsCount", "viewsCount", "likesCount"],
+        textKeysToReplace: ["profileId", "name", "description", "author"]
+      }
+    );
+  }
+
+  // wrappers/AchievementPage/AchievementData.js
+  function achievementResponseHandler(elemIdPrefix2, res) {
+    const elemId = `${elemIdPrefix2}-details`;
+    const $ghContainer = $(elemId);
+    let dataTemplateActual = $ghContainer.prop("outerHTML");
+    console.info(`=== ${elemId} ===`, res);
+    const textKeysToReplace = ["id", "name", "description", "gameId", "gameName"];
+    const numKeysToReplace = [
+      "achievers",
+      "completionPercentage",
+      "guides",
+      "gaPoints"
+    ];
+    const achievementImg = res.coverURL || res.imageURL || res.gameImageURL;
+    if (achievementImg?.length) {
+      dataTemplateActual = $ghContainer.css(
+        "background-image",
+        `linear-gradient(rgba(255,255,255,0),#030922),
           linear-gradient(rgba(70,89,255,.4),rgba(70,89,255,.4)),
-          url(${p})`).prop("outerHTML")),$(".achievement-main-img",e).each((n,l)=>{r.imageURL?.length&&(e=u($(l),r.imageURL,a)||e)});for(let[n,l]of Object.entries(r))c.includes(n)?e=e.replaceAll(`{|${n}|}`,l):i.includes(n)?e=e.replaceAll(`{|${n}|}`,Math.round(l||0)):n==="platform"?e=A(l,e,a):n==="rarity"&&(e=C(l,e));o.prop("outerHTML",e)}async function F(t,r,a){let o=await fetch(`https://${r}/api/achievement/${a}`);if(o.status!==200)return;let e=await o.json();return Object.keys(e).length>0&&e.id&&(document.title=`${e.name?.length?e.name:e.id} | ${document.title}`,V(t,e)),e}var w=document.querySelector("meta[name=domain]")?.content,G=new URLSearchParams(window.location.search),x=G.get("id")||1044,y="#gas-achievement";$(".ga-loader-container").show();$("#ga-sections-container").hide();$(async()=>{if(await auth0Bootstrap(),await b(y,token,w,x),await F(y,w,x)){await Promise.all([await k(y,w,x),await H(y,w,x)]),$(".ga-loader-container").hide(),$("#ga-sections-container").show(),$("#gas-wf-tab-activator").click();return}window.location.replace("/achievements")});})();
+          url(${achievementImg})`
+      ).prop("outerHTML");
+    }
+    $(".achievement-main-img", dataTemplateActual).each((idx, elm) => {
+      if (res.imageURL?.length) {
+        dataTemplateActual = showImageFromSrc($(elm), res.imageURL, elemId) || dataTemplateActual;
+      }
+    });
+    for (const [key, value] of Object.entries(res)) {
+      if (textKeysToReplace.includes(key)) {
+        dataTemplateActual = dataTemplateActual.replaceAll(`{|${key}|}`, value);
+      } else if (numKeysToReplace.includes(key)) {
+        dataTemplateActual = dataTemplateActual.replaceAll(
+          `{|${key}|}`,
+          Math.round(value || 0)
+        );
+      } else if (key === "platform") {
+        dataTemplateActual = showPlatform(value, dataTemplateActual, elemId);
+      } else if (key === "rarity") {
+        dataTemplateActual = showRarityTagAchievement(value, dataTemplateActual);
+      }
+    }
+    $ghContainer.prop("outerHTML", dataTemplateActual);
+  }
+  async function fetchAchievement(elemIdPrefix2, apiDomain2, achievementId2) {
+    const resFetch = await fetch(
+      `https://${apiDomain2}/api/achievement/${achievementId2}`
+    );
+    if (resFetch.status !== 200) {
+      return;
+    }
+    const resData = await resFetch.json();
+    if (Object.keys(resData).length > 0 && resData.id) {
+      document.title = `${resData.name?.length ? resData.name : resData.id} | ${document.title}`;
+      achievementResponseHandler(elemIdPrefix2, resData);
+    }
+    return resData;
+  }
+
+  // webflow/achievement.js
+  var apiDomain = document.querySelector("meta[name=domain]")?.content;
+  var urlParams = new URLSearchParams(window.location.search);
+  var achievementId = urlParams.get("id") || 1044;
+  var elemIdPrefix = "#gas-achievement";
+  $(".ga-loader-container").show();
+  $("#ga-sections-container").hide();
+  $(async () => {
+    await auth0Bootstrap();
+    await verifyAuthenticatedUserGuideData(
+      elemIdPrefix,
+      token,
+      apiDomain,
+      achievementId
+    );
+    if (await fetchAchievement(elemIdPrefix, apiDomain, achievementId)) {
+      await Promise.all([
+        await loadGuidesSection(elemIdPrefix, apiDomain, achievementId),
+        await loadAchieversSection(elemIdPrefix, apiDomain, achievementId)
+      ]);
+      $(".ga-loader-container").hide();
+      $("#ga-sections-container").show();
+      $("#gas-wf-tab-activator").click();
+      return;
+    }
+    window.location.replace("/achievements");
+  });
+})();
