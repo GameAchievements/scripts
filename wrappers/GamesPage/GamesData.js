@@ -52,6 +52,7 @@ function listResponseHandler({
             Math.round(value || 0)
           );
         } else if (key === 'importedFromPlatform' || key === 'platform') {
+          console.log('innnn');
           dataTemplateActual = showPlatform(value, dataTemplateActual);
         } else if (
           key === 'consoles' &&
