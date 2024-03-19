@@ -1,7 +1,7 @@
-import { ratingScale } from '../../utils';
+// import { ratingScale } from '../../utils';
 
 // usage:
-ratingScale($('.gas-rating-scale'), $('.gas-rating-selected'));
+// ratingScale($('.gas-rating-scale'), $('.gas-rating-selected'));
 
 // on gas-form edition, prevent page navigation/close
 let isUserInputActive = false;

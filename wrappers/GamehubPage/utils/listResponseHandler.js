@@ -1,5 +1,6 @@
 import {
   achievementNameSlicer,
+  gaDate,
   listTemplateAppend,
   ratingSVG,
   showImageFromSrc,

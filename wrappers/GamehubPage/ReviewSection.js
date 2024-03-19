@@ -52,6 +52,7 @@ async function setupReviewForm(gamehubURL, token) {
   const $ratingScale = $('.gas-rating-scale', formWrapperId);
   const $rateChosen = $('.gas-rating-selected', formWrapperId);
   ratingScale($ratingScale, $rateChosen);
+  console.log('here', $rateChosen);
   let requiredFilled = false;
   const canSubmit = () => {
     if (requiredFilled && Number($rateChosen.data('rate'))) {
@@ -126,9 +127,9 @@ async function setupReviewForm(gamehubURL, token) {
   });
 }
 
-export function loadReviewSection(gamehubURL, token, gamehubData) {
+export async function loadReviewSection(gamehubURL, token, gamehubData) {
   setupGAReview(gamehubData);
-  setupReviewForm(gamehubURL, token);
+  await setupReviewForm(gamehubURL, token);
 }
 
 export function reviewsBarsHandler({ listData, elemId }) {
