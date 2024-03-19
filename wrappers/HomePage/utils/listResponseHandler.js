@@ -9,6 +9,16 @@ import {
   ratingSVG,
 } from '../../../utils';
 
+function handleEntryCoverGame(gameIconURL, dataTemplateActual) {
+  let templateAtual = dataTemplateActual;
+  const $gameImg = $('.gas-list-entry-cover-game', templateAtual);
+  if ($gameImg?.length) {
+    templateAtual = showImageFromSrc($gameImg, gameIconURL) || templateAtual;
+  }
+
+  return templateAtual;
+}
+
 export function listResponseHandler({
   listData,
   elemId,
@@ -31,12 +41,10 @@ export function listResponseHandler({
       dataTemplateActual = dataTemplateActual.replaceAll('{|idx|}', resIdx + 1);
       for (const [key, value] of Object.entries(item)) {
         if (item.gameIconURL?.length && !isSteamImage(item.gameIconURL)) {
-          const $gameImg = $('.gas-list-entry-cover-game', dataTemplateActual);
-          if ($gameImg?.length) {
-            dataTemplateActual =
-              showImageFromSrc($gameImg, item.gameIconURL) ||
-              dataTemplateActual;
-          }
+          dataTemplateActual = handleEntryCoverGame(
+            item.gameIconURL,
+            dataTemplateActual
+          );
         }
         if (
           (item.iconURL?.length || item.imageURL?.length) &&
@@ -88,6 +96,16 @@ export function listResponseHandler({
               dataTemplateActual = showPlatform(
                 value[drillReplaceKey],
                 dataTemplateActual
+              );
+            } else if (drillReplaceKey === 'gameIconURL') {
+              dataTemplateActual = handleEntryCoverGame(
+                value[drillReplaceKey],
+                dataTemplateActual
+              );
+            } else if (typeof value[drillReplaceKey] === 'string') {
+              dataTemplateActual = dataTemplateActual.replaceAll(
+                `{|${drillReplaceKey}|}`,
+                value[drillReplaceKey]
               );
             } else {
               dataTemplateActual = dataTemplateActual.replaceAll(

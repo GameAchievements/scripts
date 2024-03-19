@@ -10,14 +10,23 @@ export async function fetchAchievements(elemIdPrefix, apiDomain) {
     listData = resData.slice(0, 4);
   }
   const elemId = `${elemIdPrefix}-list-achievements-latest`;
+  console.log('listData', listData);
   listResponseHandler({
     listData,
     elemId,
     numKeysToReplace: ['id'],
-    textKeysToReplace: ['name', 'description'],
+    textKeysToReplace: [],
     drillDown: {
       key: 'gameVersionData',
-      keysToReplace: ['completion', 'platform', 'totalAchievements'],
+      keysToReplace: [
+        'completion',
+        'platform',
+        'totalAchievements',
+        'gameIconURL',
+        'name',
+        'description',
+        'gameIconURL',
+      ],
     },
   });
   $(`${elemId} .ga-loader-container`).hide();
