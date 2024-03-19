@@ -98,7 +98,6 @@ export async function versionAchievementsFetcher(versionGameId, platformId) {
     $list.css({ display: 'flex', 'flex-direction': 'column' });
     $emptyList.hide();
   } else {
-    console.log('empty');
     $loader.hide();
     $list.hide();
     $emptyList.show();
