@@ -1,4 +1,4 @@
-export function renderPageBtn(elemId, totalPages) {
+export function renderPageBtn(elemId, totalPages, pageBreakpoint) {
   const $templateBtn = $('.gas-filters-sw-li.duplicate-btn', $(elemId));
 
   if (totalPages === 1) {
@@ -6,23 +6,19 @@ export function renderPageBtn(elemId, totalPages) {
     return;
   }
 
-  const collapse = totalPages > 6;
-  const lastIndex = !collapse ? totalPages : 6;
+  const collapse = totalPages > pageBreakpoint;
+  const lastIndex = !collapse ? totalPages : pageBreakpoint - 1;
 
-  for (let index = 2; index <= lastIndex; index++) {
-    addPageBtn($templateBtn, index, {
+  for (let index = 1; index <= totalPages; index++) {
+    const isHidden = index >= lastIndex && index !== totalPages;
+    addPageBtn($templateBtn, index, isHidden ? 'hidden' : '', {
       place: 'before',
       elementId: '#btn-page-next',
     });
-
-    if (collapse && index === lastIndex) {
+    if (index === totalPages) {
       addEllipsisBtn($templateBtn, {
-        place: 'after',
-        elementId: `#btn-page-${index}`,
-      });
-      addLastPageBtn($templateBtn, {
         place: 'before',
-        elementId: '#btn-page-next',
+        elementId: `#btn-page-${index}`,
       });
     }
   }
@@ -31,12 +27,14 @@ export function renderPageBtn(elemId, totalPages) {
 function addPageBtn(
   $entryElem,
   index,
+  disabled,
   insert = { place: 'before', elementId: '#btn-page-next' }
 ) {
   const $pageBtn = $entryElem.clone();
   $pageBtn
     .text(index)
     .removeClass('duplicate-btn')
+    .addClass(`btn-page ${disabled ?? ''}`)
     .attr('id', `btn-page-${index}`);
 
   if (insert.place === 'before') {
@@ -54,25 +52,11 @@ function addEllipsisBtn(
   $ellipsisBtn
     .text('...')
     .removeClass('duplicate-btn')
-    .addClass('disabled')
-    .prop('disabled', true);
+    .addClass('disabled btn-ellipsis');
 
   if (insert.place === 'before') {
     $ellipsisBtn.insertBefore(insert.elementId);
   } else {
     $ellipsisBtn.insertAfter(insert.elementId);
-  }
-}
-
-function addLastPageBtn(
-  $entryElem,
-  insert = { place: 'before', elementId: '#btn-page-next' } // place: 'before' | 'after'
-) {
-  const $lastPageBtn = $entryElem.clone();
-  $lastPageBtn.text(totalPages).removeClass('duplicate-btn');
-  if (insert.place === 'before') {
-    $lastPageBtn.insertBefore(insert.elementId);
-  } else {
-    $lastPageBtn.insertAfter(insert.elementId);
   }
 }
