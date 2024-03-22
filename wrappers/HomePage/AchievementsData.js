@@ -10,7 +10,6 @@ export async function fetchAchievements(elemIdPrefix, apiDomain) {
     listData = resData.slice(0, 4);
   }
   const elemId = `${elemIdPrefix}-list-achievements-latest`;
-  console.log('listData', listData);
   listResponseHandler({
     listData,
     elemId,

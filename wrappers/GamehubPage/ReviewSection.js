@@ -52,7 +52,6 @@ async function setupReviewForm(gamehubURL, token) {
   const $ratingScale = $('.gas-rating-scale', formWrapperId);
   const $rateChosen = $('.gas-rating-selected', formWrapperId);
   ratingScale($ratingScale, $rateChosen);
-  console.log('here', $rateChosen);
   let requiredFilled = false;
   const canSubmit = () => {
     if (requiredFilled && Number($rateChosen.data('rate'))) {

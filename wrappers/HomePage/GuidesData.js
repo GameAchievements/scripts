@@ -1,15 +1,34 @@
+import { filterByPage } from './utils/pagination/FilterByPage';
 import { listResponseHandler } from './utils/listResponseHandler';
+import { renderPageBtn } from './utils/pagination/RenderPageBtn';
 
-export async function fetchGuides(elemIdPrefix, apiDomain) {
-  const resFetch = await fetch(
-    `https://${apiDomain}/api/guide/list?perPage=5&orderBy=createdAt:desc`
+let totalPages = 1;
+
+function setupPagination(elemId, apiDomain) {
+  renderPageBtn(elemId, totalPages);
+  $(`${elemId} .gas-filters-sw-li`).on('click', (ev) =>
+    filterByPage('#gas-home-list-guides', totalPages, ev, () =>
+      fetchGuidesData(elemId, apiDomain)
+    )
   );
+}
+
+export async function fetchGuidesData(elemId, apiDomain) {
+  const currentPage = $(`${elemId} .gas-filters-sw-li.active`).text() || 1;
+  const perPage = 4;
+  const resFetch = await fetch(
+    `https://${apiDomain}/api/guide/list?perPage=${perPage}&orderBy=createdAt:desc&offset=${
+      currentPage - 1
+    }`
+  );
+
   let listData = [];
   if (resFetch.ok) {
     const resData = await resFetch.json();
-    listData = resData.results?.slice(0, 4);
+    totalPages = Math.ceil((resData?.count || 0) / perPage);
+    listData = resData.results;
   }
-  const elemId = `${elemIdPrefix}-list-guides`;
+
   listResponseHandler({
     listData,
     elemId,
@@ -17,4 +36,9 @@ export async function fetchGuides(elemIdPrefix, apiDomain) {
     textKeysToReplace: ['name', 'author', 'description', 'profileId'],
   });
   $(`${elemId} .ga-loader-container`).hide();
+}
+
+export async function loadGuides(elemIdPrefix, apiDomain) {
+  await fetchGuidesData(`${elemIdPrefix}-list-guides`, apiDomain);
+  setupPagination(`${elemIdPrefix}-list-guides`, apiDomain);
 }
