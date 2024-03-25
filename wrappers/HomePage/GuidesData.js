@@ -8,7 +8,7 @@ const pageBreakpoint = 7;
 function setupPagination(elemId, apiDomain) {
   renderPageBtn(elemId, totalPages, pageBreakpoint);
   $(`${elemId} .gas-filters-sw-li`).on('click', (ev) =>
-    filterByPage('#gas-home-list-guides', totalPages, pageBreakpoint, ev, () =>
+    filterByPage('#gas-home-list-guides', totalPages, ev, () =>
       fetchGuidesData(elemId, apiDomain)
     )
   );
@@ -22,16 +22,14 @@ export async function fetchGuidesData(elemId, apiDomain) {
   const perPage = 4;
   const resFetch = await fetch(
     `https://${apiDomain}/api/guide/list?perPage=${perPage}&orderBy=createdAt:desc&offset=${
-      // currentPage - 1
-      0
+      currentPage - 1
     }`
   );
 
   let listData = [];
   if (resFetch.ok) {
     const resData = await resFetch.json();
-    // totalPages = Math.ceil((resData?.count || 0) / perPage);
-    totalPages = 15;
+    totalPages = Math.ceil((resData?.count || 0) / perPage);
     listData = resData.results;
   }
 

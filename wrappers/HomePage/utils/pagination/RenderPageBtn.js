@@ -3,7 +3,6 @@ export function renderPageBtn(elemId, totalPages, pageBreakpoint) {
 
   if (totalPages === 1) {
     $('#btn-page-next').addClass('disabled');
-    return;
   }
 
   const collapse = totalPages > pageBreakpoint;
@@ -15,13 +14,14 @@ export function renderPageBtn(elemId, totalPages, pageBreakpoint) {
       place: 'before',
       elementId: '#btn-page-next',
     });
-    if (index === totalPages) {
-      addEllipsisBtn($templateBtn, {
+    if (index === totalPages && totalPages > pageBreakpoint) {
+      addEllipsisBtn({
         place: 'before',
         elementId: `#btn-page-${index}`,
       });
     }
   }
+  $templateBtn.remove();
 }
 
 function addPageBtn(
@@ -44,19 +44,13 @@ function addPageBtn(
   }
 }
 
-function addEllipsisBtn(
-  $entryElem,
+export function addEllipsisBtn(
   insert = { place: 'before', elementId: '#btn-page-next' } // place: 'before' | 'after'
 ) {
-  const $ellipsisBtn = $entryElem.clone();
-  $ellipsisBtn
-    .text('...')
-    .removeClass('duplicate-btn')
-    .addClass('disabled btn-ellipsis');
-
+  const $ellipsis = $('<span class="btn-ellipsis">...</span>');
   if (insert.place === 'before') {
-    $ellipsisBtn.insertBefore(insert.elementId);
+    $ellipsis.insertBefore(insert.elementId);
   } else {
-    $ellipsisBtn.insertAfter(insert.elementId);
+    $ellipsis.insertAfter(insert.elementId);
   }
 }
