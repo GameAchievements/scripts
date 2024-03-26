@@ -1,95 +1,15 @@
-import {
-  showPlatform,
-  showImageFromSrc,
-  gaDate,
-  cleanupDoubleQuotes,
-  isSteamImage,
-} from '../../utils';
+import { setupPagination } from '../../utils/pagination/setupPagination';
+import { listResponseHandler } from './utils/listResponseHandler';
 
+let totalPages = 1;
+const pageBreakpoint = 7;
+const perPage = 20;
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
-let $entryTemplate;
-let $listHeader;
-let $emptyList;
 
-function listResponseHandler({
-  listData,
-  elemId,
-  numKeysToReplace,
-  textKeysToReplace,
-}) {
-  console.info(`=== ${elemId} results ===`, listData);
-  let dataTemplate = $(elemId).prop('outerHTML');
-  const $list = $(`${elemId} .gas-list`);
-  if (!$entryTemplate) {
-    $emptyList = $('.gas-list-empty', $list);
-    $listHeader = $list.children().first();
-    $entryTemplate = $('.gas-list-entry', $list).first().clone();
-    $('.gas-list-entry', $list).first().remove();
-  }
-  if (listData.length > 0) {
-    dataTemplate = $entryTemplate.prop('outerHTML');
-    $list.html($listHeader);
-    listData.forEach((item, resIdx) => {
-      let dataTemplateActual = dataTemplate;
-      for (const [key, value] of Object.entries(item)) {
-        const imageURL = item.iconURL || item.imageURL;
-        if (imageURL?.length && !isSteamImage(imageURL)) {
-          const $entryImg = $('.gas-list-entry-cover', dataTemplateActual);
-          if ($entryImg?.length) {
-            dataTemplateActual =
-              showImageFromSrc($entryImg, imageURL) || dataTemplateActual;
-          }
-        }
-        if (textKeysToReplace.includes(key)) {
-          dataTemplateActual = dataTemplateActual.replaceAll(
-            `{|${key}|}`,
-            (key.endsWith('At') ? gaDate(value) : cleanupDoubleQuotes(value)) ||
-              ''
-          );
-        } else if (numKeysToReplace.includes(key)) {
-          dataTemplateActual = dataTemplateActual.replaceAll(
-            `{|${key}|}`,
-            Math.round(value || 0)
-          );
-        } else if (key === 'importedFromPlatform' || key === 'platform') {
-          dataTemplateActual = showPlatform(value, dataTemplateActual);
-        } else if (
-          key === 'consoles' &&
-          value?.length &&
-          !value.includes('PC')
-        ) {
-          const $tags = $(`.gas-tags-${key}`, dataTemplateActual);
-          if ($tags?.length) {
-            dataTemplateActual = $tags
-              .html(
-                value
-                  .map(
-                    (tag) =>
-                      `<div class="console-tag" title="${tag}"><div class="gas-text-overflow">${tag}</div></div>`
-                  )
-                  .join('\n')
-              )
-              .parents('.gas-list-entry')
-              .prop('outerHTML');
-          }
-        }
-      }
-      $list
-        .append(dataTemplateActual)
-        .children()
-        .last()
-        .removeClass(['bg-light', 'bg-dark'])
-        .addClass(`bg-${resIdx % 2 > 0 ? 'light' : 'dark'}`);
-    });
-  } else {
-    $list.html($emptyList);
-    $emptyList.show();
-  }
-  $list.css('display', 'flex');
-}
-
-export async function fetchGames(elemId, searchTerm = '') {
-  const filterTxt = $('.gas-filters-sw-li.active').first().text();
+export async function fetchGamesData(elemId, searchTerm = '') {
+  const currentPage =
+    $(`${elemId}-pagination .gas-filters-sw-li.active`).text() || 1;
+  const filterTxt = $(`${elemId} .gas-filters-sw-li.active`).first().text();
   const paramsObj = {};
   if (filterTxt !== 'All') {
     paramsObj.startsWith = filterTxt;
@@ -97,14 +17,17 @@ export async function fetchGames(elemId, searchTerm = '') {
   if (searchTerm.length) {
     paramsObj.q = searchTerm;
   }
-  const resGames = await fetch(
-    `https://${apiDomain}/api/game/list${
-      Object.keys(paramsObj)?.length
-        ? `?${new URLSearchParams(paramsObj).toString()}`
-        : ''
-    }`
-  );
+  const urlStr = `https://${apiDomain}/api/game/list?perPage=${perPage}&offset=${
+    currentPage - 1
+  }${
+    Object.keys(paramsObj)?.length
+      ? `&${new URLSearchParams(paramsObj).toString()}`
+      : ''
+  }`;
+
+  const resGames = await fetch(urlStr);
   const fetchData = await resGames.json();
+  totalPages = Math.ceil((fetchData?.count || 1) / perPage);
   $(`${elemId} .gas-list-results-info`).text(
     `${fetchData?.length || 0} result(s)`
   );
@@ -114,5 +37,15 @@ export async function fetchGames(elemId, searchTerm = '') {
     elemId,
     numKeysToReplace: ['completion', 'achievementsCount'],
     textKeysToReplace: ['id', 'name', 'description', 'updatedAt'],
+  });
+}
+
+export async function loadGames(elemId) {
+  await fetchGamesData(elemId);
+  setupPagination({
+    elemId: `${elemId}-pagination`,
+    fetchFn: () => fetchGamesData(elemId),
+    pageBreakpoint,
+    totalPages,
   });
 }

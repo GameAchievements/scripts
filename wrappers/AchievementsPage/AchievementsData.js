@@ -1,95 +1,14 @@
-import {
-  cleanupDoubleQuotes,
-  gaDate,
-  showImageFromSrc,
-  showPlatform,
-} from '../../utils';
+import { setupPagination } from '../../utils/pagination/setupPagination';
+import { listResponseHandler } from './utils/listResponseHandler';
 
+let totalPages = 1;
+const pageBreakpoint = 7;
+const perPage = 20;
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 
-let $entryTemplate;
-let $listHeader;
-let $emptyList;
-
-function listResponseHandler({
-  listData,
-  elemId,
-  numKeysToReplace,
-  textKeysToReplace,
-}) {
-  console.info(`=== ${elemId} results ===`, listData);
-  let dataTemplate = $(elemId).prop('outerHTML');
-  const $list = $(`${elemId} .gas-list`);
-  if (!$entryTemplate) {
-    $emptyList = $('.gas-list-empty', $list);
-    $listHeader = $list.children().first();
-    $entryTemplate = $('.gas-list-entry', $list).first().clone();
-    $('.gas-list-entry', $list).first().remove();
-  }
-  if (listData.length > 0) {
-    dataTemplate = $entryTemplate.prop('outerHTML');
-    $list.html($listHeader);
-    listData.forEach((item, resIdx) => {
-      let dataTemplateActual = dataTemplate;
-      for (const [key, value] of Object.entries(item)) {
-        const $gameImg = $('.gas-list-entry-cover-game', dataTemplateActual);
-        if ($gameImg?.length && item.gameIconURL?.length) {
-          // TODO: why is WF adding gas-list-entry-cover to this element?
-          $gameImg.removeClass('gas-list-entry-cover');
-          dataTemplateActual =
-            showImageFromSrc($gameImg, item.gameIconURL) || dataTemplateActual;
-        }
-        const $entryImg = $('.gas-list-entry-cover', dataTemplateActual);
-        const imageURL = item.iconURL || item.imageURL;
-        if ($entryImg?.length && imageURL?.length) {
-          dataTemplateActual =
-            showImageFromSrc($entryImg, imageURL) || dataTemplateActual;
-        }
-        if (textKeysToReplace.includes(key)) {
-          dataTemplateActual = dataTemplateActual.replaceAll(
-            `{|${key}|}`,
-            (key.endsWith('At') ? gaDate(value) : cleanupDoubleQuotes(value)) ||
-              ''
-          );
-        } else if (numKeysToReplace.includes(key)) {
-          dataTemplateActual = dataTemplateActual.replaceAll(
-            `{|${key}|}`,
-            Math.round(value || 0)
-          );
-        } else if (key === 'importedFromPlatform') {
-          dataTemplateActual = showPlatform(value, dataTemplateActual);
-        } else if (key === 'rarityClass') {
-          dataTemplateActual = dataTemplateActual.replaceAll(
-            `{|${key}|}`,
-            value || ''
-          );
-          if (value.toLowerCase() !== 'common') {
-            const classValue = value.replace(' ', '-')?.toLowerCase();
-            dataTemplateActual = $('.gas-rarity-tag', dataTemplateActual)
-              .removeClass('gas-rarity-tag')
-              .addClass(`gas-rarity-tag-${classValue}`)
-              .children('.p1')
-              .addClass(classValue)
-              .parents('.gas-list-entry')
-              .prop('outerHTML');
-          }
-        }
-      }
-      $list
-        .append(dataTemplateActual)
-        .children()
-        .last()
-        .removeClass(['bg-light', 'bg-dark'])
-        .addClass(`bg-${resIdx % 2 > 0 ? 'light' : 'dark'}`);
-    });
-  } else {
-    $list.html($emptyList);
-    $emptyList.show();
-  }
-  $list.css('display', 'flex');
-}
-
-export async function fetchAchievements(elemId, searchTerm = '') {
+export async function fetchAchievementsData(elemId, searchTerm = '') {
+  const currentPage =
+    $(`${elemId}-pagination .gas-filters-sw-li.active`).text() || 1;
   const filterTxt = $('.gas-filters-sw-li.active').first().text();
   const paramsObj = {};
   if (filterTxt !== 'All') {
@@ -98,14 +17,18 @@ export async function fetchAchievements(elemId, searchTerm = '') {
   if (searchTerm.length) {
     paramsObj.q = searchTerm;
   }
-  const resAchievements = await fetch(
-    `https://${apiDomain}/api/achievement/list${
-      Object.keys(paramsObj)?.length
-        ? `?${new URLSearchParams(paramsObj).toString()}`
-        : ''
-    }`
-  );
+
+  const urlStr = `https://${apiDomain}/api/achievement/list?perPage=${perPage}&offset=${
+    currentPage - 1
+  }${
+    Object.keys(paramsObj)?.length
+      ? `&${new URLSearchParams(paramsObj).toString()}`
+      : ''
+  }`;
+
+  const resAchievements = await fetch(urlStr);
   const fetchData = await resAchievements.json();
+  totalPages = Math.ceil((fetchData?.count || 1) / perPage);
   $(`${elemId} .gas-list-results-info`).text(
     `${fetchData?.length || 0} result(s)`
   );
@@ -128,5 +51,15 @@ export async function fetchAchievements(elemId, searchTerm = '') {
       'updatedAt',
       'platformOriginalAchievementId',
     ],
+  });
+}
+
+export async function loadAchievements(elemId) {
+  await fetchAchievementsData(elemId);
+  setupPagination({
+    elemId: `${elemId}-pagination`,
+    fetchFn: () => fetchAchievementsData(elemId),
+    pageBreakpoint,
+    totalPages,
   });
 }

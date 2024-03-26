@@ -5,7 +5,7 @@ const maxAround = 1;
 // How many pages are displayed if in beginning or end range
 const maxRange = 5;
 
-export function handlePageChange(currentPage, totalPages) {
+export function handlePageChange(currentPage, totalPages, elemId) {
   const endRange = totalPages - maxRange + 1;
   // Check if we're in the starting section
   const inStartRange = currentPage <= maxRange - 1;
@@ -16,10 +16,10 @@ export function handlePageChange(currentPage, totalPages) {
   let lastDotIndex = -1;
 
   // Remove all dots
-  $('.btn-ellipsis').remove();
+  $('.btn-ellipsis', $(elemId)).remove();
 
   // Loop the pages
-  $('.gas-filters-sw')
+  $('.gas-filters-sw', $(elemId))
     .children(':not(#btn-page-previous):not(#btn-page-next)')
     .each((page, element) => {
       // Index starts at 0, pages at 1
@@ -51,7 +51,7 @@ export function handlePageChange(currentPage, totalPages) {
           lastDotIndex === -1 ||
           (!inStartRange &&
             !inEndRange &&
-            $('span.btn-ellipsis').length < 2 &&
+            $('span.btn-ellipsis', elemId).length < 2 &&
             idx > currentPage)
         ) {
           lastDotIndex = idx;

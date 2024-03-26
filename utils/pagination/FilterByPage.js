@@ -18,6 +18,6 @@ export async function filterByPage(elemId, totalPages, event, fetchFn) {
   } else if (targetPage === 1) {
     $('#btn-page-previous', $(elemId)).addClass('disabled');
   }
-  handlePageChange(Number(targetPage), totalPages);
+  handlePageChange(Number(targetPage), totalPages, elemId);
   await fetchFn();
 }
