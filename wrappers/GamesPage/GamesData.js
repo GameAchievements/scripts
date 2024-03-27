@@ -1,3 +1,4 @@
+import { mutationTarget } from '../../utils/pagination/mutationTarget';
 import { setupPagination } from '../../utils/pagination/setupPagination';
 import { listResponseHandler } from './utils/listResponseHandler';
 
@@ -59,31 +60,5 @@ export async function loadGames(elemId) {
     totalPages,
   });
 
-  mutationTarget(elemId);
-}
-
-function mutationTarget(elemId) {
-  const targetNodes = $('.gas-list-total-pages-info');
-  const MutationObserver = window.MutationObserver;
-  const myObserver = new MutationObserver(mutationHandler);
-
-  targetNodes.each(function () {
-    myObserver.observe(this, {
-      childList: true,
-    });
-  });
-
-  function mutationHandler(mutationRecords) {
-    for (const mutation of mutationRecords) {
-      if (mutation.addedNodes.length > 0) {
-        const pages = Number(mutation.addedNodes[0].data);
-        setupPagination({
-          elemId: `${elemId}-pagination`,
-          fetchFn: () => fetchGamesData(elemId),
-          pageBreakpoint,
-          totalPages: pages,
-        });
-      }
-    }
-  }
+  mutationTarget(elemId, () => fetchGamesData(elemId), pageBreakpoint);
 }
