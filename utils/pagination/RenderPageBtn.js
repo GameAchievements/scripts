@@ -1,4 +1,7 @@
 export function renderPageBtn(elemId, totalPages, pageBreakpoint) {
+  $('.gas-filters-sw-li.btn-page', $(elemId)).remove();
+  $('.btn-ellipsis', $(elemId)).remove();
+
   const $templateBtn = $('.gas-filters-sw-li.duplicate-btn', $(elemId));
 
   if (totalPages === 1) {
@@ -21,7 +24,7 @@ export function renderPageBtn(elemId, totalPages, pageBreakpoint) {
       });
     }
   }
-  $templateBtn.remove();
+  // $templateBtn.remove();
 }
 
 function addPageBtn(

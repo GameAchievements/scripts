@@ -7,11 +7,14 @@ export function setupPagination({
   pageBreakpoint,
   totalPages,
 }) {
+  $(`${elemId} .gas-filters-sw-li`).off('click');
   renderPageBtn(elemId, totalPages, pageBreakpoint);
-  $(`${elemId} .gas-filters-sw-li`).on('click', (ev) =>
-    filterByPage(elemId, totalPages, ev, () => fetchFn())
-  );
 
-  //set active on first render
+  $(`${elemId} .gas-filters-sw-li`).on('click', (ev) => {
+    console.log('here');
+    filterByPage(elemId, totalPages, ev, () => fetchFn());
+  });
+
+  // //set active on first render
   $('#btn-page-1').addClass('active');
 }

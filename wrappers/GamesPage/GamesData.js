@@ -25,15 +25,25 @@ export async function fetchGamesData(elemId, searchTerm = '') {
       : ''
   }`;
 
-  const resGames = await fetch(urlStr);
-  const fetchData = await resGames.json();
-  totalPages = Math.ceil((fetchData?.count || 1) / perPage);
+  const resFetch = await fetch(urlStr);
+  let listData = [];
+  const totalPagesAux = totalPages;
+  if (resFetch.ok) {
+    const resGames = await resFetch.json();
+    totalPages = Math.ceil((resGames?.count || 1) / perPage);
+    listData = resGames.results;
+  }
+
   $(`${elemId} .gas-list-results-info`).text(
-    `${fetchData?.length || 0} result(s)`
+    `${listData?.length || 0} result(s)`
   );
 
+  if (totalPagesAux !== totalPages) {
+    $(`${elemId} .gas-list-total-pages-info`).text(totalPages);
+  }
+
   listResponseHandler({
-    listData: fetchData,
+    listData,
     elemId,
     numKeysToReplace: ['completion', 'achievementsCount'],
     textKeysToReplace: ['id', 'name', 'description', 'updatedAt'],
@@ -48,4 +58,32 @@ export async function loadGames(elemId) {
     pageBreakpoint,
     totalPages,
   });
+
+  mutationTarget(elemId);
+}
+
+function mutationTarget(elemId) {
+  const targetNodes = $('.gas-list-total-pages-info');
+  const MutationObserver = window.MutationObserver;
+  const myObserver = new MutationObserver(mutationHandler);
+
+  targetNodes.each(function () {
+    myObserver.observe(this, {
+      childList: true,
+    });
+  });
+
+  function mutationHandler(mutationRecords) {
+    for (const mutation of mutationRecords) {
+      if (mutation.addedNodes.length > 0) {
+        const pages = Number(mutation.addedNodes[0].data);
+        setupPagination({
+          elemId: `${elemId}-pagination`,
+          fetchFn: () => fetchGamesData(elemId),
+          pageBreakpoint,
+          totalPages: pages,
+        });
+      }
+    }
+  }
 }

@@ -2,6 +2,7 @@ import { handlePageChange } from './HandlePageChange';
 
 export async function filterByPage(elemId, totalPages, event, fetchFn) {
   const currentPage = $('.gas-filters-sw-li.active', $(elemId)).first().text();
+  console.log('currentPage', currentPage);
   const targetPage =
     event.target.innerText.toLowerCase() === 'next'
       ? Number(currentPage) + 1

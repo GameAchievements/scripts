@@ -20,7 +20,9 @@ export function handlePageChange(currentPage, totalPages, elemId) {
 
   // Loop the pages
   $('.gas-filters-sw', $(elemId))
-    .children(':not(#btn-page-previous):not(#btn-page-next)')
+    .children(
+      ':not(#btn-page-previous):not(#btn-page-next):not(.duplicate-btn)'
+    )
     .each((page, element) => {
       // Index starts at 0, pages at 1
       const idx = page + 1;
