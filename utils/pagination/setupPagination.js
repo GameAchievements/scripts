@@ -11,7 +11,6 @@ export function setupPagination({
   renderPageBtn(elemId, totalPages, pageBreakpoint);
 
   $(`${elemId} .gas-filters-sw-li`).on('click', (ev) => {
-    console.log('here');
     filterByPage(elemId, totalPages, ev, () => fetchFn());
   });
 

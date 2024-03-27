@@ -1,3 +1,4 @@
+import { mutationTarget } from '../../utils/pagination/mutationTarget';
 import { setupPagination } from '../../utils/pagination/setupPagination';
 import { listResponseHandler } from './utils/listResponseHandler';
 
@@ -26,14 +27,25 @@ export async function fetchAchievementsData(elemId, searchTerm = '') {
       : ''
   }`;
 
-  const resAchievements = await fetch(urlStr);
-  const fetchData = await resAchievements.json();
-  totalPages = Math.ceil((fetchData?.count || 1) / perPage);
+  const resFetch = await fetch(urlStr);
+  let listData = [];
+  const totalPagesAux = totalPages;
+  if (resFetch.ok) {
+    const resAchievements = await resFetch.json();
+    totalPages = Math.ceil((resAchievements?.count || 1) / perPage);
+    listData = resAchievements.results;
+  }
+
   $(`${elemId} .gas-list-results-info`).text(
-    `${fetchData?.length || 0} result(s)`
+    `${listData?.length || 0} result(s)`
   );
+
+  if (totalPagesAux !== totalPages) {
+    $(`${elemId} .gas-list-total-pages-info`).text(totalPages);
+  }
+
   listResponseHandler({
-    listData: fetchData,
+    listData,
     elemId,
     numKeysToReplace: [
       'id',
@@ -62,4 +74,6 @@ export async function loadAchievements(elemId) {
     pageBreakpoint,
     totalPages,
   });
+
+  mutationTarget(elemId, () => fetchAchievementsData(elemId), pageBreakpoint);
 }
