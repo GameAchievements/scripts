@@ -1,6 +1,6 @@
 import { setupPagination } from './setupPagination';
 
-export function mutationTarget(elemId, fetchFn) {
+export function mutationTarget(elemId, fetchFn, pageBreakpoint) {
   const targetNodes = $('.gas-list-total-pages-info');
   const MutationObserver = window.MutationObserver;
   const myObserver = new MutationObserver(mutationHandler);
@@ -18,6 +18,7 @@ export function mutationTarget(elemId, fetchFn) {
         setupPagination({
           elemId: `${elemId}-pagination`,
           fetchFn,
+          pageBreakpoint,
           totalPages: pages,
         });
       }

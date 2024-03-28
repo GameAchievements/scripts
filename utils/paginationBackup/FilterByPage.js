@@ -1,4 +1,4 @@
-import { renderPageBtn } from './RenderPageBtn';
+import { handlePageChange } from './HandlePageChange';
 
 export async function filterByPage(elemId, totalPages, event, fetchFn) {
   const currentPage = $('.gas-filters-sw-li.active', $(elemId)).first().text();
@@ -11,23 +11,13 @@ export async function filterByPage(elemId, totalPages, event, fetchFn) {
   $('.gas-filters-sw-li:not(.btn-ellipsis)', $(elemId))
     .removeClass('active')
     .removeClass('disabled');
+  $(`#btn-page-${targetPage}`, $(elemId)).addClass('active');
 
   if (targetPage === totalPages) {
     $('#btn-page-next', $(elemId)).addClass('disabled');
   } else if (targetPage === 1) {
     $('#btn-page-previous', $(elemId)).addClass('disabled');
   }
-
-  //render buttons
-  renderPageBtn(elemId, totalPages, targetPage);
-
-  //set active page
-  $(`#btn-page-${targetPage}`, $(elemId)).addClass('active');
-
-  //add listeners on new page btn
-  $(`${elemId} .btn-page`).on('click', (ev) => {
-    filterByPage(elemId, totalPages, ev, () => fetchFn());
-  });
-
+  handlePageChange(Number(targetPage), totalPages, elemId);
   await fetchFn();
 }

@@ -1,9 +1,14 @@
 import { filterByPage } from './FilterByPage';
 import { renderPageBtn } from './RenderPageBtn';
 
-export function setupPagination({ elemId, fetchFn, totalPages }) {
+export function setupPagination({
+  elemId,
+  fetchFn,
+  pageBreakpoint,
+  totalPages,
+}) {
   $(`${elemId} .gas-filters-sw-li`).off('click');
-  renderPageBtn(elemId, totalPages);
+  renderPageBtn(elemId, totalPages, pageBreakpoint);
 
   $(`${elemId} .gas-filters-sw-li`).on('click', (ev) => {
     filterByPage(elemId, totalPages, ev, () => fetchFn());

@@ -3,7 +3,6 @@ import { setupPagination } from '../../utils/pagination/setupPagination';
 import { listResponseHandler } from './utils/listResponseHandler';
 
 let totalPages = 1;
-const pageBreakpoint = 7;
 const perPage = 20;
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 
@@ -71,9 +70,8 @@ export async function loadAchievements(elemId) {
   setupPagination({
     elemId: `${elemId}-pagination`,
     fetchFn: () => fetchAchievementsData(elemId),
-    pageBreakpoint,
     totalPages,
   });
 
-  mutationTarget(elemId, () => fetchAchievementsData(elemId), pageBreakpoint);
+  mutationTarget(elemId, () => fetchAchievementsData(elemId));
 }

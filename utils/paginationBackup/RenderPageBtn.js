@@ -1,6 +1,4 @@
-import { generateNumbersArr } from './generateNumbersArr';
-
-export function renderPageBtn(elemId, totalPages, currentPage = 1) {
+export function renderPageBtn(elemId, totalPages, pageBreakpoint) {
   $('.gas-filters-sw-li.btn-page', $(elemId)).remove();
   $('.btn-ellipsis', $(elemId)).remove();
 
@@ -10,13 +8,20 @@ export function renderPageBtn(elemId, totalPages, currentPage = 1) {
     $('#btn-page-next').addClass('disabled');
   }
 
-  const pageNumbersArr = generateNumbersArr(totalPages, currentPage);
+  const collapse = totalPages > pageBreakpoint;
+  const lastIndex = !collapse ? totalPages : pageBreakpoint - 1;
 
-  for (const element of pageNumbersArr) {
-    if (element === 'ellipsis') {
-      addEllipsisBtn();
-    } else {
-      addPageBtn($templateBtn, element);
+  for (let index = 1; index <= totalPages; index++) {
+    const isHidden = index >= lastIndex && index !== totalPages;
+    addPageBtn($templateBtn, index, isHidden ? 'hidden' : '', {
+      place: 'before',
+      elementId: '#btn-page-next',
+    });
+    if (index === totalPages && totalPages > pageBreakpoint) {
+      addEllipsisBtn({
+        place: 'before',
+        elementId: `#btn-page-${index}`,
+      });
     }
   }
 }
@@ -25,7 +30,7 @@ function addPageBtn(
   $entryElem,
   index,
   disabled,
-  insert = { place: 'before', elementId: '#btn-page-next' } // place: 'before' | 'after'
+  insert = { place: 'before', elementId: '#btn-page-next' }
 ) {
   const $pageBtn = $entryElem.clone();
   $pageBtn

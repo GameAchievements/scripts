@@ -3,7 +3,6 @@ import { setupPagination } from '../../utils/pagination/setupPagination';
 import { listResponseHandler } from './utils/listResponseHandler';
 
 let totalPages = 1;
-const pageBreakpoint = 7;
 const perPage = 20;
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 
@@ -56,9 +55,8 @@ export async function loadGames(elemId) {
   setupPagination({
     elemId: `${elemId}-pagination`,
     fetchFn: () => fetchGamesData(elemId),
-    pageBreakpoint,
     totalPages,
   });
 
-  mutationTarget(elemId, () => fetchGamesData(elemId), pageBreakpoint);
+  mutationTarget(elemId, () => fetchGamesData(elemId));
 }
