@@ -37,7 +37,7 @@ export async function fetchLeaderboard(elemId, searchTerm = '') {
       numKeysToReplace.push('silver', 'bronze', 'gold', 'platinum');
       break;
     case 2:
-      numKeysToReplace.push('gamescore');
+      numKeysToReplace.push('gamescore', 'gamerscore');
       break;
     case 3:
       numKeysToReplace.push('games');
