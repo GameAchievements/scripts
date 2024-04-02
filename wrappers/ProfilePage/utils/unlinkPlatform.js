@@ -1,5 +1,6 @@
 export async function unlinkPlatform(
   { platform, accountId, accountName },
+  fetchURLPrefix,
   platformsToLink,
   formMessageDelay
 ) {

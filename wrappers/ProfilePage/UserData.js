@@ -8,7 +8,7 @@ const elemIdPrefix = '#gas-profile';
 
 const platformsToLink = ['playstation', 'xbox', 'steam'];
 
-const setupLinkForms = (platformsLinked = []) => {
+function setupLinkForms(fetchURLPrefix, platformsLinked = []) {
   $(`${elemIdPrefix}-pa-code-copied-msg`).hide();
   if (userProfileData.platformVerifierCode?.length) {
     $(`${elemIdPrefix}-pa-code`).text(userProfileData.platformVerifierCode);
@@ -25,7 +25,7 @@ const setupLinkForms = (platformsLinked = []) => {
 
   //setup form TO UNLINK platforms
   for (const el of platformsLinked) {
-    unlinkPlatform(el, platformsToLink, formMessageDelay);
+    unlinkPlatform(el, fetchURLPrefix, platformsToLink, formMessageDelay);
   }
 
   //setup form TO LINK platforms
@@ -36,9 +36,9 @@ const setupLinkForms = (platformsLinked = []) => {
         .includes(el)
   );
   for (const el of platformsNotLinked) {
-    linkPlatform(el, formMessageDelay);
+    linkPlatform(el, fetchURLPrefix, formMessageDelay);
   }
-};
+}
 
 function profileResponseHandler(res, fetchURLPrefix) {
   const elemId = `${elemIdPrefix}-details`;
@@ -92,7 +92,7 @@ function profileResponseHandler(res, fetchURLPrefix) {
     return;
   }
   profileAvatarUpdater(res.platforms, elemIdPrefix, fetchURLPrefix);
-  setupLinkForms(res.platforms);
+  setupLinkForms(fetchURLPrefix, res.platforms);
   if (res.role?.length) {
     const isRegularRole = res.role.toLowerCase() === 'regular';
     $(`.gas-role${isRegularRole ? '' : '-non'}-regular`).show();

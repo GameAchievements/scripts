@@ -1,6 +1,10 @@
 import { unlinkPlatform } from './unlinkPlatform';
 
-export async function linkPlatform(platformName, formMessageDelay) {
+export async function linkPlatform(
+  platformName,
+  fetchURLPrefix,
+  formMessageDelay
+) {
   const $toLinkCard = $(`#ga-pa-to-link-${platformName}`);
   $toLinkCard.show();
   const $linkField = $('input[name=external]', $toLinkCard);
