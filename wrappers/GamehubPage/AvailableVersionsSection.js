@@ -4,22 +4,10 @@ import {
   showPlatform,
 } from '../../utils';
 import { loadVersionAchievements } from './AchievementsSection';
+import { versionSelectOption } from './utils/versionSelectOption';
 
 const elemIdPrefix = '#gas-gh';
 const versionsDropdownId = '#gas-gh-versions-dropdown';
-
-async function versionSelectOption(e) {
-  const $optSelected = $(e.target);
-  $(`${versionsDropdownId}-options,${versionsDropdownId}-toggle`).removeClass(
-    'w--open'
-  );
-  const selectedGameId = Number($optSelected.data('version-id'));
-  const platformId = Number(
-    platformNameIdMap($optSelected.data('platform')?.toLowerCase()) || 0
-  );
-  $(`${versionsDropdownId}-text-selected`).text($optSelected.text());
-  loadVersionAchievements(selectedGameId, platformId);
-}
 
 export async function versionsFetcher(gamehubData, gamehubURL) {
   const listName = 'versions';
@@ -35,6 +23,7 @@ export async function versionsFetcher(gamehubData, gamehubURL) {
 
   const resLists = await fetch(`${gamehubURL}/${listName}`);
   const listData = await resLists.json();
+  console.log('listData', listData);
   const numKeysToReplace = ['achievementsCount'];
   const textKeysToReplace = ['gameId', 'externalGameId', 'region'];
   console.info(`=== ${elemId} results ===`, listData);
@@ -69,18 +58,26 @@ export async function versionsFetcher(gamehubData, gamehubURL) {
     $selectOptTemplate.addClass(versionOptClass);
 
     listData.forEach((item, itemIdx) => {
-      const $versionOpt = $selectOptTemplate.clone();
-      const versionOptionSuffix =
-        item.consoles[0] + (item.region ? ` — ${item.region} ` : '');
-      $versionOpt
-        .data('version-id', item.gameId)
-        .data('version-external-id', item.externalGameId)
-        .data('platform', item.platform)
-        // append console & region to identify version option
-        .text(
-          (item.name?.length ? `${item.name} | ` : '') + versionOptionSuffix
-        );
-      $(`${versionsDropdownId}-options`).append($versionOpt);
+      // const $versionOpt = $selectOptTemplate.clone();
+      // const versionOptionSuffix =
+      //   item.consoles[0] + (item.region ? ` — ${item.region} ` : '');
+      // $versionOpt
+      //   .data('version-id', item.gameId)
+      //   .data('version-external-id', item.externalGameId)
+      //   .data('platform', item.platform)
+      //   // append console & region to identify version option
+      //   .text(
+      //     `${item.name?.length ? `${item.name} | ` : ''}
+      //     ${versionOptionSuffix ? `${versionOptionSuffix} | ` : ''} All`
+      //   );
+      // $(`${versionsDropdownId}-options`).append($versionOpt);
+      optionRender($selectOptTemplate, item);
+      if (item.achievementsGroups.length > 0) {
+        console.log('itm', item.achievementsGroups);
+        for (const group of item.achievementsGroups) {
+          optionRender($selectOptTemplate, item, group);
+        }
+      }
       let dataTemplateActual = dataTemplate;
       for (const [key, value] of Object.entries(item)) {
         if (textKeysToReplace.includes(key)) {
@@ -123,4 +120,27 @@ export async function versionsFetcher(gamehubData, gamehubURL) {
   $list.css('display', 'flex');
   $(`${elemId}-tab .gas-list-empty`).show();
   $(`${elemId},${elemId}-tab-btn`).css('display', 'flex');
+}
+
+function optionRender($selectOptTemplate, item, group) {
+  const groupName = !group
+    ? 'All'
+    : group?.externalGroupId === 'default'
+    ? 'Game Base'
+    : group?.groupName;
+  const $versionOpt = $selectOptTemplate.clone();
+  const versionOptionSuffix =
+    item.consoles[0] + (item.region ? ` — ${item.region} ` : '');
+  $versionOpt
+    .data('version-id', item.gameId)
+    .data('version-external-id', item.externalGameId)
+    .data('platform', item.platform)
+    // append console & region to identify version option
+    .text(
+      `${item.name?.length ? `${item.name} | ` : ''}
+          ${
+            versionOptionSuffix ? `${versionOptionSuffix} | ` : ''
+          } ${groupName}`
+    );
+  $(`${versionsDropdownId}-options`).append($versionOpt);
 }
