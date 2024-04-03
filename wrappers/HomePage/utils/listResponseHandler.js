@@ -91,6 +91,21 @@ export function listResponseHandler({
           key === 'platforms'
         ) {
           dataTemplateActual = showPlatform(value, dataTemplateActual);
+        } else if (key === 'consoles' && !value.includes('PC')) {
+          const $tags = $(`.gas-tags-${key}`, dataTemplateActual);
+          if ($tags?.length) {
+            dataTemplateActual = $tags
+              .html(
+                value
+                  .map(
+                    (tag) =>
+                      `<div class="console-tag" title="${tag}"><div class="gas-text-overflow">${tag}</div></div>`
+                  )
+                  .join('\n')
+              )
+              .parents('.gas-list-entry')
+              .prop('outerHTML');
+          }
         } else if (drillDown.key && key === drillDown.key) {
           for (const drillReplaceKey of drillDown.keysToReplace) {
             if (drillReplaceKey === 'platform') {
@@ -98,13 +113,26 @@ export function listResponseHandler({
                 value[drillReplaceKey],
                 dataTemplateActual
               );
-            } else if (drillReplaceKey === 'consoles') {
-              for (const consoleName of value[drillReplaceKey]) {
-                console.log('consoleName', consoleName);
-                dataTemplateActual = showConsole(
-                  consoleName,
-                  dataTemplateActual
-                );
+            } else if (
+              drillReplaceKey === 'consoles' &&
+              !value[drillReplaceKey].includes('PC')
+            ) {
+              const $tags = $(
+                `.gas-tags-${drillReplaceKey}`,
+                dataTemplateActual
+              );
+              if ($tags?.length) {
+                dataTemplateActual = $tags
+                  .html(
+                    value[drillReplaceKey]
+                      .map(
+                        (tag) =>
+                          `<div class="console-tag" title="${tag}"><div class="gas-text-overflow">${tag}</div></div>`
+                      )
+                      .join('\n')
+                  )
+                  .parents('.gas-list-entry')
+                  .prop('outerHTML');
               }
             } else if (drillReplaceKey === 'gameIconURL') {
               dataTemplateActual = handleEntryCoverGame(
