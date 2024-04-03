@@ -36,11 +36,9 @@ async function versionAchievementsFetcher(versionGameId, platformId) {
   const resLists = await fetch(urlStr, {
     headers: token ? authHeader : {},
   });
-  console.log('resLists urlStr', urlStr);
   let listData = [];
   if (resLists.ok) {
     const resAchievements = await resLists.json();
-    console.log('resLists', resAchievements);
     totalPages = Math.ceil((resAchievements?.count || 1) / perPage);
     listData = resAchievements.results;
   }

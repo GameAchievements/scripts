@@ -23,7 +23,6 @@ export async function versionsFetcher(gamehubData, gamehubURL) {
 
   const resLists = await fetch(`${gamehubURL}/${listName}`);
   const listData = await resLists.json();
-  console.log('listData', listData);
   const numKeysToReplace = ['achievementsCount'];
   const textKeysToReplace = ['gameId', 'externalGameId', 'region'];
   console.info(`=== ${elemId} results ===`, listData);
@@ -58,22 +57,8 @@ export async function versionsFetcher(gamehubData, gamehubURL) {
     $selectOptTemplate.addClass(versionOptClass);
 
     listData.forEach((item, itemIdx) => {
-      // const $versionOpt = $selectOptTemplate.clone();
-      // const versionOptionSuffix =
-      //   item.consoles[0] + (item.region ? ` — ${item.region} ` : '');
-      // $versionOpt
-      //   .data('version-id', item.gameId)
-      //   .data('version-external-id', item.externalGameId)
-      //   .data('platform', item.platform)
-      //   // append console & region to identify version option
-      //   .text(
-      //     `${item.name?.length ? `${item.name} | ` : ''}
-      //     ${versionOptionSuffix ? `${versionOptionSuffix} | ` : ''} All`
-      //   );
-      // $(`${versionsDropdownId}-options`).append($versionOpt);
       optionRender($selectOptTemplate, item);
       if (item.achievementsGroups.length > 0) {
-        console.log('itm', item.achievementsGroups);
         for (const group of item.achievementsGroups) {
           optionRender($selectOptTemplate, item, group);
         }
