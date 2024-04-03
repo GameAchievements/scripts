@@ -7,6 +7,7 @@ import {
   isXboxEdsImage,
   truncateText,
   ratingSVG,
+  showConsole,
 } from '../../../utils';
 
 function handleEntryCoverGame(gameIconURL, dataTemplateActual) {
@@ -97,6 +98,14 @@ export function listResponseHandler({
                 value[drillReplaceKey],
                 dataTemplateActual
               );
+            } else if (drillReplaceKey === 'consoles') {
+              for (const consoleName of value[drillReplaceKey]) {
+                console.log('consoleName', consoleName);
+                dataTemplateActual = showConsole(
+                  consoleName,
+                  dataTemplateActual
+                );
+              }
             } else if (drillReplaceKey === 'gameIconURL') {
               dataTemplateActual = handleEntryCoverGame(
                 value[drillReplaceKey],

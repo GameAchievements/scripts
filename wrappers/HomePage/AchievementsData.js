@@ -20,6 +20,7 @@ export async function fetchAchievements(elemIdPrefix, apiDomain) {
       keysToReplace: [
         'completion',
         'platform',
+        'consoles',
         'totalAchievements',
         'gameIconURL',
         'name',
