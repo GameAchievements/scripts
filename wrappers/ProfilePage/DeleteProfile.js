@@ -1,6 +1,6 @@
 import { displayMessage } from '../../utils';
 
-export async function deleteProfile() {
+export async function deleteProfile(apiDomain, elemIdPrefix) {
   if (
     confirm(
       'This will unlink all your platforms from your profile and remove your profile. Are you sure?'

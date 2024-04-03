@@ -35,7 +35,9 @@ $(async () => {
 
     $('.ga-loader-container').hide();
     $('#ga-sections-container').show();
-    $(`${elemIdPrefix}-btn-delete`).on('click', deleteProfile);
+    $(`${elemIdPrefix}-btn-delete`).on('click', () =>
+      deleteProfile(apiDomain, elemIdPrefix)
+    );
     scrollToURLHash();
     $('#gas-wf-tab-activator').click();
     return;
