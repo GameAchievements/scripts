@@ -1,4 +1,5 @@
 import { unlinkPlatform } from './unlinkPlatform';
+import { platformNameIdMap } from '../../../utils';
 
 export async function linkPlatform(
   platformName,

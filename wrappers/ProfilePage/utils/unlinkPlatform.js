@@ -1,3 +1,6 @@
+import { platformNameIdMap } from '../../../utils';
+import { linkPlatform } from './linkPlatform';
+
 export async function unlinkPlatform(
   { platform, accountId, accountName },
   fetchURLPrefix,
