@@ -3,7 +3,7 @@ import {
   platformNameIdMap,
   showPlatform,
 } from '../../utils';
-import { versionAchievementsFetcher } from './AchievementsSection';
+import { loadVersionAchievements } from './AchievementsSection';
 
 const elemIdPrefix = '#gas-gh';
 const versionsDropdownId = '#gas-gh-versions-dropdown';
@@ -18,7 +18,7 @@ async function versionSelectOption(e) {
     platformNameIdMap($optSelected.data('platform')?.toLowerCase()) || 0
   );
   $(`${versionsDropdownId}-text-selected`).text($optSelected.text());
-  versionAchievementsFetcher(selectedGameId, platformId);
+  loadVersionAchievements(selectedGameId, platformId);
 }
 
 export async function versionsFetcher(gamehubData, gamehubURL) {
@@ -30,7 +30,7 @@ export async function versionsFetcher(gamehubData, gamehubURL) {
       platform?.length >= 1 ? platformNameIdMap(platform[0].toLowerCase()) : 0
     );
     $(versionsDropdownId).remove();
-    return versionAchievementsFetcher(gamehubData.id, platformId);
+    return loadVersionAchievements(gamehubData.id, platformId);
   }
 
   const resLists = await fetch(`${gamehubURL}/${listName}`);

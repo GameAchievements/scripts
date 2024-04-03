@@ -6,6 +6,7 @@ import {
   ratingSVG,
   showImageFromSrc,
   showPlatform,
+  toTitleCase,
 } from '../../../utils';
 
 function listTabResponseHandler({
@@ -99,7 +100,7 @@ function listTabResponseHandler({
             const classValue = rarityClassCalc(value);
             dataTemplateActual = dataTemplateActual.replaceAll(
               `{|${key}|}`,
-              classValue.replace('-', ' ')
+              toTitleCase(classValue.replace('-', ' '))
             );
             dataTemplateActual = $('.gas-rarity-tag', dataTemplateActual)
               .removeClass('gas-rarity-tag')

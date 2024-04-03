@@ -6,12 +6,17 @@ import {
   showRarityTagAchievement,
   showTrophy,
 } from '../../utils';
+import { mutationTarget } from '../../utils/pagination/mutationTarget';
+import { setupPagination } from '../../utils/pagination/setupPagination';
 
-const elemIdPrefix = '#gas-gh';
+const elemId = '#gas-gh-achievements';
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
+let totalPages = 1;
+const perPage = 20;
 
-export async function versionAchievementsFetcher(versionGameId, platformId) {
-  const elemId = `${elemIdPrefix}-achievements`;
+async function versionAchievementsFetcher(versionGameId, platformId) {
+  const currentPage =
+    $(`${elemId}-pagination .gas-filters-sw-li.active`).text() || 1;
   const $loader = $(`${elemId} .ga-loader-container`);
   $(`${elemId} .achievement-table`).hide();
   const $list = $(
@@ -19,20 +24,26 @@ export async function versionAchievementsFetcher(versionGameId, platformId) {
       platformId === 1 ? 'psn' : platformId === 2 ? 'xbox' : 'xbox' //'steam' //TODO: missing the right table for this
     }-achievement-list`
   );
+  const $paginationList = $(`${elemId} .pagination-section`);
   const $emptyList = $(`${elemId} .empty-state`);
   $emptyList.hide();
   $list.hide();
   $loader.show();
   const authHeader = { Authorization: `Bearer ${token}` };
-  const resLists = await fetch(
-    `https://${apiDomain}/api/game/${versionGameId}/achievements${
-      platformId ? `?platform=${platformId}` : ''
-    }`,
-    {
-      headers: token ? authHeader : {},
-    }
-  );
-  const listData = await resLists.json();
+  const urlStr = `https://${apiDomain}/api/game/${versionGameId}/achievements?perPage=${100}&offset=${
+    currentPage - 1
+  }${platformId ? `&platform=${platformId}` : ''}`;
+  const resLists = await fetch(urlStr, {
+    headers: token ? authHeader : {},
+  });
+  console.log('resLists urlStr', urlStr);
+  let listData = [];
+  if (resLists.ok) {
+    const resAchievements = await resLists.json();
+    console.log('resLists', resAchievements);
+    totalPages = Math.ceil((resAchievements?.count || 1) / perPage);
+    listData = resAchievements.results;
+  }
   console.info(`=== ${elemId} results ===`, listData);
 
   const textKeysToReplace = ['name', 'description'];
@@ -95,11 +106,26 @@ export async function versionAchievementsFetcher(versionGameId, platformId) {
     });
     $loader.hide();
     $listParent.removeClass('hidden');
+    $paginationList.removeClass('hidden');
     $list.css({ display: 'flex', 'flex-direction': 'column' });
     $emptyList.hide();
   } else {
     $loader.hide();
+    $paginationList.addClass('hidden');
     $list.hide();
     $emptyList.show();
   }
+}
+
+export async function loadVersionAchievements(versionGameId, platformId) {
+  await versionAchievementsFetcher(versionGameId, platformId);
+  setupPagination({
+    elemId: '#gas-gh-pagination',
+    fetchFn: () => versionAchievementsFetcher(versionGameId, platformId),
+    totalPages,
+  });
+
+  // mutationTarget(elemId, () =>
+  //   versionAchievementsFetcher(versionGameId, platformId)
+  // );
 }
