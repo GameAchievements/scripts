@@ -6,7 +6,7 @@ import {
   showRarityTagAchievement,
   showTrophy,
 } from '../../utils';
-import { mutationTarget } from '../../utils/pagination/mutationTarget';
+
 import { setupPagination } from '../../utils/pagination/setupPagination';
 
 const elemId = '#gas-gh-achievements';
@@ -14,7 +14,11 @@ const apiDomain = document.querySelector('meta[name=domain]')?.content;
 let totalPages = 1;
 const perPage = 20;
 
-async function versionAchievementsFetcher(versionGameId, platformId) {
+async function versionAchievementsFetcher(
+  versionGameId,
+  platformId,
+  extraParams
+) {
   const currentPage =
     $(`${elemId}-pagination .gas-filters-sw-li.active`).text() || 1;
   const $loader = $(`${elemId} .ga-loader-container`);
@@ -33,6 +37,10 @@ async function versionAchievementsFetcher(versionGameId, platformId) {
   const urlStr = `https://${apiDomain}/api/game/${versionGameId}/achievements?perPage=${100}&offset=${
     currentPage - 1
   }${platformId ? `&platform=${platformId}` : ''}`;
+  // const urlStr = `https://${apiDomain}/api/game/${versionGameId}/achievements?perPage=${100}&offset=${
+  //   currentPage - 1
+  // }${extraParams ? extraParams : ''}`;
+  console.log('urlStr', urlStr);
   const resLists = await fetch(urlStr, {
     headers: token ? authHeader : {},
   });
@@ -115,15 +123,16 @@ async function versionAchievementsFetcher(versionGameId, platformId) {
   }
 }
 
-export async function loadVersionAchievements(versionGameId, platformId) {
-  await versionAchievementsFetcher(versionGameId, platformId);
+export async function loadVersionAchievements(
+  versionGameId,
+  platformId,
+  extraParams = undefined
+) {
+  await versionAchievementsFetcher(versionGameId, platformId, extraParams);
   setupPagination({
     elemId: '#gas-gh-pagination',
-    fetchFn: () => versionAchievementsFetcher(versionGameId, platformId),
+    fetchFn: () =>
+      versionAchievementsFetcher(versionGameId, platformId, extraParams),
     totalPages,
   });
-
-  // mutationTarget(elemId, () =>
-  //   versionAchievementsFetcher(versionGameId, platformId)
-  // );
 }

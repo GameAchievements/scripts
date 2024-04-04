@@ -111,14 +111,18 @@ function optionRender($selectOptTemplate, item, group) {
   const groupName = !group
     ? 'All'
     : group?.externalGroupId === 'default'
-    ? 'Game Base'
+    ? 'Base Game'
     : group?.groupName;
   const $versionOpt = $selectOptTemplate.clone();
   const versionOptionSuffix =
     item.consoles[0] + (item.region ? ` — ${item.region} ` : '');
+  if (group?.externalGroupId) {
+    $versionOpt.data('external-group-id', group.externalGroupId);
+  }
   $versionOpt
     .data('version-id', item.gameId)
     .data('version-external-id', item.externalGameId)
+    .data('gpe-id', item.gPEId)
     .data('platform', item.platform)
     // append console & region to identify version option
     .text(

@@ -12,6 +12,13 @@ export async function versionSelectOption(e) {
   const platformId = Number(
     platformNameIdMap($optSelected.data('platform')?.toLowerCase()) || 0
   );
+  const gpeId = $optSelected.data('gpe-id');
+  const externalGroupId = $optSelected.data('external-group-id');
+
+  const extraParams = `&gpeId=${gpeId}${
+    externalGroupId ? `&achExtGroupId=${externalGroupId}` : ''
+  }`;
+
   $(`${versionsDropdownId}-text-selected`).text($optSelected.text());
-  loadVersionAchievements(selectedGameId, platformId);
+  loadVersionAchievements(selectedGameId, platformId, extraParams);
 }
