@@ -3,6 +3,7 @@ import { generateNumbersArr } from './generateNumbersArr';
 export function renderPageBtn(elemId, totalPages, currentPage = 1) {
   $('.gas-filters-sw-li.btn-page', $(elemId)).remove();
   $('.btn-ellipsis', $(elemId)).remove();
+  $('#btn-page-next').removeClass('disabled');
 
   const $templateBtn = $('.gas-filters-sw-li.duplicate-btn', $(elemId));
 
