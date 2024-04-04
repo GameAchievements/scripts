@@ -12,7 +12,7 @@ import { setupPagination } from '../../utils/pagination/setupPagination';
 const elemId = '#gas-gh-achievements';
 const apiDomain = document.querySelector('meta[name=domain]')?.content;
 let totalPages = 1;
-const perPage = 20;
+const perPage = 10;
 
 async function versionAchievementsFetcher(
   versionGameId,
@@ -34,12 +34,16 @@ async function versionAchievementsFetcher(
   $list.hide();
   $loader.show();
   const authHeader = { Authorization: `Bearer ${token}` };
-  const urlStr = `https://${apiDomain}/api/game/${versionGameId}/achievements?perPage=${100}&offset=${
-    currentPage - 1
-  }${platformId ? `&platform=${platformId}` : ''}`;
-  // const urlStr = `https://${apiDomain}/api/game/${versionGameId}/achievements?perPage=${100}&offset=${
+  // const urlStr = `https://${apiDomain}/api/game/${versionGameId}/achievements?perPage=${perPage}&offset=${
   //   currentPage - 1
-  // }${extraParams ? extraParams : ''}`;
+  // }${platformId ? `&platform=${platformId}` : ''}`;
+  console.log(
+    'urlStr currentPage',
+    $(`${elemId}-pagination .gas-filters-sw-li.active`)
+  );
+  const urlStr = `https://${apiDomain}/api/game/${versionGameId}/achievements?perPage=${perPage}&offset=${
+    currentPage - 1
+  }${extraParams ? extraParams : ''}`;
   console.log('urlStr', urlStr);
   const resLists = await fetch(urlStr, {
     headers: token ? authHeader : {},
@@ -47,6 +51,7 @@ async function versionAchievementsFetcher(
   let listData = [];
   if (resLists.ok) {
     const resAchievements = await resLists.json();
+    console.log('urlStr resAchievements', resAchievements);
     totalPages = Math.ceil((resAchievements?.count || 1) / perPage);
     listData = resAchievements.results;
   }
@@ -128,9 +133,14 @@ export async function loadVersionAchievements(
   platformId,
   extraParams = undefined
 ) {
+  const elemIdPagination = `${elemId}-pagination`;
+  //run this to reset pagination before load achievements by version
+  $('.gas-filters-sw-li.btn-page', $(elemId)).remove();
+  $('.btn-ellipsis', $(elemId)).remove();
+
   await versionAchievementsFetcher(versionGameId, platformId, extraParams);
   setupPagination({
-    elemId: '#gas-gh-pagination',
+    elemId: elemIdPagination,
     fetchFn: () =>
       versionAchievementsFetcher(versionGameId, platformId, extraParams),
     totalPages,

@@ -1,4 +1,9 @@
-import { listTemplateAppend, showPlatform } from '../../utils';
+import {
+  listTemplateAppend,
+  platformNameIdMap,
+  showPlatform,
+} from '../../utils';
+import { loadVersionAchievements } from './AchievementsSection';
 import { versionSelectOption } from './utils/versionSelectOption';
 
 const elemIdPrefix = '#gas-gh';
@@ -7,6 +12,14 @@ const versionsDropdownId = '#gas-gh-versions-dropdown';
 export async function versionsFetcher(gamehubData, gamehubURL) {
   const listName = 'versions';
   const elemId = `${elemIdPrefix}-${listName}`;
+  if (!gamehubData.versionDetails) {
+    const platform = gamehubData.platforms ?? gamehubData.importedFromPlatforms;
+    const platformId = Number(
+      platform?.length >= 1 ? platformNameIdMap(platform[0].toLowerCase()) : 0
+    );
+    $(versionsDropdownId).remove();
+    return loadVersionAchievements(gamehubData.id, platformId);
+  }
 
   const resLists = await fetch(`${gamehubURL}/${listName}`);
   const listData = await resLists.json();
@@ -66,11 +79,7 @@ export async function versionsFetcher(gamehubData, gamehubURL) {
           dataTemplateActual = dataTemplateActual.replaceAll(
             `{|${key}|}`,
             // when the name is empty, identify by console & region
-            item.name?.length
-              ? item.name
-              : `${item.consoles[0] ?? ''} ${
-                  item.region ? ` | ${item.region}` : ''
-                }`
+            item.name?.length ? item.name : versionOptionSuffix
           );
         } else if (key === 'platform') {
           dataTemplateActual = showPlatform(value, dataTemplateActual);
