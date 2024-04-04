@@ -33,25 +33,18 @@ async function versionAchievementsFetcher(
   $emptyList.hide();
   $list.hide();
   $loader.show();
+
   const authHeader = { Authorization: `Bearer ${token}` };
-  // const urlStr = `https://${apiDomain}/api/game/${versionGameId}/achievements?perPage=${perPage}&offset=${
-  //   currentPage - 1
-  // }${platformId ? `&platform=${platformId}` : ''}`;
-  console.log(
-    'urlStr currentPage',
-    $(`${elemId}-pagination .gas-filters-sw-li.active`)
-  );
   const urlStr = `https://${apiDomain}/api/game/${versionGameId}/achievements?perPage=${perPage}&offset=${
     currentPage - 1
   }${extraParams ? extraParams : ''}`;
-  console.log('urlStr', urlStr);
+
   const resLists = await fetch(urlStr, {
     headers: token ? authHeader : {},
   });
   let listData = [];
   if (resLists.ok) {
     const resAchievements = await resLists.json();
-    console.log('urlStr resAchievements', resAchievements);
     totalPages = Math.ceil((resAchievements?.count || 1) / perPage);
     listData = resAchievements.results;
   }
