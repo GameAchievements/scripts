@@ -18,6 +18,7 @@ export async function fetchAchievements(elemIdPrefix, apiDomain) {
     drillDown: {
       key: 'gameVersionData',
       keysToReplace: [
+        'gameId',
         'completion',
         'platform',
         'consoles',
