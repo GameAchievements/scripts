@@ -21,10 +21,10 @@ export async function versionsFetcher(gamehubData, gamehubURL) {
   let $headerDescTemplate = $headerDesc.prop('outerHTML');
 
   if ($headerDescTemplate) {
-    $headerDescTemplate = $headerDescTemplate.replaceAll(
-      '{|name|}',
-      gamehubData.name
-    );
+    console.log('$headerDescTemplate', $headerDescTemplate);
+    $headerDescTemplate = $headerDescTemplate
+      .replaceAll('{|name|}', gamehubData.name)
+      .replaceAll('%7B%7Cname%7C%7D', gamehubData.name);
     $headerDesc.prop('outerHTML', $headerDescTemplate);
   }
 
