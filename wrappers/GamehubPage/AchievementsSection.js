@@ -25,7 +25,7 @@ async function versionAchievementsFetcher(
   $(`${elemId} .achievement-table`).hide();
   const $list = $(
     `${elemId} .${
-      platformId === 1 ? 'psn' : platformId === 2 ? 'xbox' : 'xbox' //'steam' //TODO: missing the right table for this
+      platformId === 1 ? 'psn' : platformId === 2 ? 'xbox' : 'steam'
     }-achievement-list`
   );
   const $paginationList = $(`${elemId} .pagination-section`);
